@@ -15,6 +15,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private Camera mainCamera;
     [SerializeField] private float[] sectionPositions = new float[5] { -10f, -5f, 0f, 5f, 10f };
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float overscrollLimit = 0.5f;
 
     [Header("Swipe Settings")]
     [SerializeField] private float swipeThresholdRatio = 0.33f;
@@ -112,11 +113,6 @@ public class CameraController : MonoBehaviour
             {
                 EndDrag(currentPointerPos);
             }
-            else if (!_isProcessingDrag)
-            {
-                // 드래그 임계값을 넘지 않은 경우 click으로 간주하여 UI 요소와 상호작용
-                HandlePress(_touchStartPos);
-            }
         }
 
         UpdateCameraPosition();
@@ -137,8 +133,8 @@ public class CameraController : MonoBehaviour
 
         float newX = Mathf.Clamp(
             _originalPosition.x + worldDragDelta,
-            sectionPositions[0],
-            sectionPositions[sectionPositions.Length - 1]
+            sectionPositions[0] - overscrollLimit,
+            sectionPositions[sectionPositions.Length - 1] + overscrollLimit
         );
 
         _targetPosition = new Vector3(newX, mainCamera.transform.position.y, mainCamera.transform.position.z);
@@ -169,27 +165,6 @@ public class CameraController : MonoBehaviour
         }
 
         _isProcessingDrag = false;
-    }
-
-    private void HandlePress(Vector2 screenPosition)
-    {
-        if (EventSystem.current == null) return;
-
-        // 화면 좌표를 기반으로 이벤트 발생
-        PointerEventData pointerData = new PointerEventData(EventSystem.current)
-        {
-            position = screenPosition
-        };
-
-        List<RaycastResult> raycastResults = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(pointerData, raycastResults);
-
-        if (raycastResults.Count > 0)
-        {
-            // 터치된 가장 앞에 있는 UI 요소에 이벤트 전달
-            GameObject targetUI = raycastResults[0].gameObject;
-            ExecuteEvents.Execute(targetUI, pointerData, ExecuteEvents.pointerClickHandler);
-        }
     }
 
     private void UpdateCameraPosition()
@@ -225,6 +200,10 @@ public class CameraController : MonoBehaviour
         {
             MoveToSection(currentSection + 1);
         }
+        else
+        {
+            MoveToSection(currentSection); // 오버스크롤 허용 범위 내에서 현재 위치로 이동
+        }
     }
 
     public void MoveToPreviousSection()
@@ -232,6 +211,10 @@ public class CameraController : MonoBehaviour
         if (currentSection > 0)
         {
             MoveToSection(currentSection - 1);
+        }
+        else
+        {
+            MoveToSection(currentSection); // 오버스크롤 허용 범위 내에서 현재 위치로 이동
         }
     }
 
