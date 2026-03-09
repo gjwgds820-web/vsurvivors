@@ -978,8 +978,9 @@ GameObject:
   - component: {fileID: 8891002785012430974}
   - component: {fileID: 8416632045028729616}
   - component: {fileID: 1397583291724731331}
+  - component: {fileID: 6914705317789470798}
   m_Layer: 5
-  m_Name: UI_StageSelectPopup
+  m_Name: UI_StagePopup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1049,3 +1050,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6914705317789470798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7216775860596503701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fecee68b836db64f88e081e4cac0205, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_StagePopup
+  stageIndexText: {fileID: 2719299721555269700}
+  stageNameText: {fileID: 999450529730590171}
+  selectButton: {fileID: 7107943614416978411}
+  backButton: {fileID: 451894170581449760}
+  nextButton: {fileID: 6354222889053423934}
+  prevButton: {fileID: 7945873906395273512}
+  stageThumbnail: {fileID: 8112564714850624029}

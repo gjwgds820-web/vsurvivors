@@ -61,4 +61,9 @@ public class DataManager : MonoBehaviour
             // SaveGame();
         }
     }
+
+    private void OnApplicationQuit()
+    {
+        // SaveGame();
+    }
 }

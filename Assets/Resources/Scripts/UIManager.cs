@@ -8,7 +8,7 @@ public class UIManager : MonoBehaviour
     [Header("Popup Prefabs")]
     [SerializeField] private List<GameObject> popupPrefabs;
 
-    private Dictionary<string, GameObject> _popupCache = new Dictionary<string, GameObject>();
+    private Dictionary<string, GameObject> _popupInstanceCache = new Dictionary<string, GameObject>();
 
     private Stack<GameObject> _activePopups = new Stack<GameObject>();
 
@@ -25,17 +25,6 @@ public class UIManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
-        }
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (_activePopups.Count > 0)
-            {
-                CloseTopPopup();
-            }
         }
     }
 
@@ -61,19 +50,18 @@ public class UIManager : MonoBehaviour
 
     private GameObject GetOrCreatePopup(string popupName)
     {
-        if (_popupCache.TryGetValue(popupName, out GameObject popup))
+        if (_popupInstanceCache.TryGetValue(popupName, out GameObject popup))
         {
             return popup;
         }
 
-        GameObject prefab = popupPrefabs.Find(p => p.name == popupName);
+        string prefabPath = $"UI/Popups/{popupName}";
+        GameObject prefab = ResourceManager.Instance.Instantiate(prefabPath, popupParent);
         if (prefab != null)
         {
-            GameObject newPopup = Instantiate(prefab, popupParent);
-            newPopup.name = popupName;
-            newPopup.SetActive(false);
-            _popupCache.Add(popupName, newPopup);
-            return newPopup;
+            prefab.SetActive(false);
+            _popupInstanceCache.Add(popupName, prefab);
+            return prefab;
         }
 
         Debug.LogError($"Popup prefab '{popupName}' not found in the list.");

@@ -1,36 +1,72 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BottomMenuController : MonoBehaviour
+public class BottomMenuController : UI_Base
 {
+    enum MenuSlots
+    {
+        Slot0,
+        Slot1,
+        Slot2,
+        Slot3,
+        Slot4,
+    }
+
+    enum MenuButtons
+    {
+        ShopButton,
+        InventoryButton,
+        MainButton,
+        UpgradeButton,
+        EventButton
+    }
+
+    enum MenuFrames
+    {
+        ShopButtonFrame,
+        InventoryButtonFrame,
+        MainButtonFrame,
+        UpgradeButtonFrame,
+        EventButtonFrame
+    }
     [Header("References")]
     [SerializeField] private CameraController cameraController;
-    [SerializeField] private GameObject[] menuButtons;
 
     [Header("Visual Settings")]
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color selectedColor = Color.yellow;
 
-    private void Start()
+    public override bool Init()
     {
-        // 버튼에 클릭 이벤트 등록
-        for (int i = 0; i < menuButtons.Length; i++)
+        if (base.Init() == false)
+            return false;
+        
+        BindObject(typeof(MenuSlots));
+        BindImage(typeof(MenuFrames));
+        BindButton(typeof(MenuButtons));
+
+        int count = Enum.GetValues(typeof(MenuSlots)).Length;
+
+        for (int i = 0; i < count; i++)
         {
-            int index = i; // 클로저 문제 방지
-            Button button = menuButtons[i].GetComponentInChildren<Button>();
+            int index = i;
+            Button button = GetButton(i);
             if (button != null)
             {
                 button.onClick.AddListener(() => OnButtonClicked(index));
             }
         }
 
-        // 카메라 섹션 변경 이벤트 구독
         if (cameraController != null)
         {
+            cameraController.OnSectionChanged -= UpdateMenuButtonVisuals;
             cameraController.OnSectionChanged += UpdateMenuButtonVisuals;
-            // 초기 상태 업데이트
+
             UpdateMenuButtonVisuals(cameraController.GetCurrentSection());
         }
+
+        return true;
     }
 
     private void OnDestroy()
@@ -53,16 +89,22 @@ public class BottomMenuController : MonoBehaviour
 
     private void UpdateMenuButtonVisuals(int selectedIndex)
     {
-        // 모든 버튼의 색상을 초기화
-        for (int i = 0; i < menuButtons.Length; i++)
+        int count = Enum.GetValues(typeof(MenuSlots)).Length;
+
+        for (int i = 0; i < count; i++)
         {
-            Image buttonImage = menuButtons[i].GetComponent<Image>();
+            Image buttonImage = GetObject(i).GetComponentInChildren<Image>();
+            GameObject buttonObject = GetObject(i);
+
             if (buttonImage != null)
             {
                 buttonImage.color = (i == selectedIndex) ? selectedColor : normalColor;
             }
 
-            menuButtons[i].transform.localScale = (i == selectedIndex) ? Vector3.one * 1.2f : Vector3.one;
+            if (buttonObject != null)
+            {
+                buttonObject.transform.localScale = (i == selectedIndex) ? Vector3.one * 1.2f : Vector3.one;
+            }
         }
     }
 }

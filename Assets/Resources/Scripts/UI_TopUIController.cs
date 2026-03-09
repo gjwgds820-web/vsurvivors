@@ -1,45 +1,69 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Unity.Android.Gradle.Manifest;
 
-public class UI_TopUIController : MonoBehaviour
+public class UI_TopUIController : UI_Base
 {
-    [Header("Profile UI")]
-    [SerializeField] private Button profileButton;
-    [SerializeField] private TMP_Text userNameText;
-    [SerializeField] private TMP_Text levelText;
-    [SerializeField] private Slider expProgressBar;
-    [SerializeField] private TMP_Text expProgressText;
 
-    [Header("Energy UI")]
-    [SerializeField] private Button energyButton;
-    [SerializeField] private TMP_Text energyText;
-    [SerializeField] private TMP_Text energyTimerText;
+    enum Buttons
+    {
+        ProfileButton,
+        EnergyButton,
+        GoldButton,
+        DiamondButton
+    }
 
-    [Header("Currency UI")]
-    [SerializeField] private Button goldButton;
-    [SerializeField] private TMP_Text goldText;
+    enum Texts
+    {
+        Nickname,
+        LevelText,
+        ProgressText,
+        EnergyAmountText,
+        EnergyRegenTimer,
+        GoldAmountText,
+        DiamondAmountText
+    }
 
-    [SerializeField] private Button diamondButton;
-    [SerializeField] private TMP_Text diamondText;
+    enum Sliders
+    {
+        LevelProgress
+    }
 
+    enum Images
+    {
+        CharacterImage
+    }
+
+    private CameraController _cameraController;
     private float _energyRechargeTimer = 300f;
     private const float ENERGY_RECHARGE_TIME = 300f;
 
-    private void Start()
+    public override bool Init()
     {
-        profileButton.onClick.AddListener(OpenProfilePopup);
-        energyButton.onClick.AddListener(() => OpenShopTab("Energy"));
-        goldButton.onClick.AddListener(() => OpenShopTab("Gold"));
-        diamondButton.onClick.AddListener(() => OpenShopTab("Diamond"));
+        if (base.Init() == false)
+            return false;
+
+        _cameraController = FindAnyObjectByType<CameraController>();
+
+        BindButton(typeof(Buttons));
+        BindText(typeof(Texts));
+        BindImage(typeof(Images));
+        Bind<Slider>(typeof(Sliders));
+
+        Get<Button>((int)Buttons.ProfileButton).onClick.AddListener(OpenProfilePopup);
+        Get<Button>((int)Buttons.EnergyButton).onClick.AddListener(() => OpenShopTab("Energy"));
+        Get<Button>((int)Buttons.GoldButton).onClick.AddListener(() => OpenShopTab("Gold"));
+        Get<Button>((int)Buttons.DiamondButton).onClick.AddListener(() => OpenShopTab("Diamond"));
 
         ProcessOfflineEnergy();
         UpdateAllUI();
+
+        return true;
     }
 
     private void Update()
     {
+        if (!_init) return;
         HandleEnergyRecharge();
     }
 
@@ -95,7 +119,7 @@ public class UI_TopUIController : MonoBehaviour
 
         if (data.CurrentEnergy >= data.MaxEnergy)
         {
-            energyTimerText.text = "MAX";
+            GetText((int)Texts.EnergyRegenTimer).text = "MAX";
             _energyRechargeTimer = ENERGY_RECHARGE_TIME; // 타이머 초기화
             return;
         }
@@ -114,11 +138,12 @@ public class UI_TopUIController : MonoBehaviour
 
         int minutes = Mathf.FloorToInt(_energyRechargeTimer / 60f);
         int seconds = Mathf.FloorToInt(_energyRechargeTimer % 60f);
-        energyTimerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        GetText((int)Texts.EnergyRegenTimer).text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
-    private void OnAcationPause(bool pause)
+    private void OnApplicationPause(bool pause)
     {
+        if (!_init) return;
         if (pause)
         {
             UserData data = DataManager.Instance.currentUserData;
@@ -135,10 +160,10 @@ public class UI_TopUIController : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+        if (!_init) return;
         UserData data = DataManager.Instance.currentUserData;
         System.DateTime adjustedTime = System.DateTime.Now.AddSeconds(-(ENERGY_RECHARGE_TIME - _energyRechargeTimer));
         data.LastEnergyUpdateTime = adjustedTime.Ticks;
-        // DataManager.Instance.SaveGame();
     }
 
     public void UpdateAllUI()
@@ -153,29 +178,30 @@ public class UI_TopUIController : MonoBehaviour
     {
         UserData data = DataManager.Instance.currentUserData;
 
-        userNameText.text = data.UserName;
-        levelText.text = data.CurrentLevel.ToString();
+        GetText((int)Texts.Nickname).text = data.UserName;
+        GetImage((int)Images.CharacterImage).sprite = ResourceManager.Instance.LoadSprite($"UI/Portraits/Portrait_{data.PortraitIndex}");
+        GetText((int)Texts.LevelText).text = data.CurrentLevel.ToString();
         float maxExp = data.CurrentLevel * 100f;
-        expProgressBar.value = data.CurrentExp / maxExp;
-        expProgressText.text = $"{data.CurrentExp / maxExp * 100f:0}%";
+        Get<Slider>((int)Sliders.LevelProgress).value = data.CurrentExp / maxExp;
+        GetText((int)Texts.ProgressText).text = $"{data.CurrentExp / maxExp * 100f:0}%";
     }
 
     private void UpdateEnergyUI()
     {
         UserData data = DataManager.Instance.currentUserData;
-        energyText.text = $"{data.CurrentEnergy}/{data.MaxEnergy}";
+        GetText((int)Texts.EnergyAmountText).text = $"{data.CurrentEnergy}/{data.MaxEnergy}";
     }
 
     private void UpdateGoldUI()
     {
         UserData data = DataManager.Instance.currentUserData;
-        goldText.text = FormatCurrency(data.Gold);
+        GetText((int)Texts.GoldAmountText).text = FormatCurrency(data.Gold);
     }
 
     private void UpdateDiamondUI()
     {
         UserData data = DataManager.Instance.currentUserData;
-        diamondText.text = data.Diamond.ToString();
+        GetText((int)Texts.DiamondAmountText).text = data.Diamond.ToString();
     }
 
     private string FormatCurrency(int amount)
@@ -192,11 +218,16 @@ public class UI_TopUIController : MonoBehaviour
 
     private void OpenProfilePopup()
     {
-        Debug.Log("프로필 팝업 열기");
+        // UIManager.Instance.ShowPopup("UI_ProfilePopup");
     }
 
     private void OpenShopTab(string tabName)
     {
-        Debug.Log($"{tabName} 상점 탭 열기");
+        _cameraController.OnSectionButtonClick(0);
+        UI_ShopSection shopSection = FindAnyObjectByType<UI_ShopSection>();
+        if (shopSection != null)
+        {
+            shopSection.TopUIClick(tabName);
+        }
     }
 }
