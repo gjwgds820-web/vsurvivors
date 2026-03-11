@@ -31,6 +31,8 @@ public class UI_ShopSection : UI_Base
         EnergyShopContainer
     }
 
+    [SerializeField] private GameObject limitedContents;
+
     public override bool Init()
     {
         if (base.Init() == false)
@@ -38,30 +40,63 @@ public class UI_ShopSection : UI_Base
 
         BindButton(typeof(ShopTab));
         BindObject(typeof(Containers));
+        GetButton((int)ShopTab.DailyShop).onClick.AddListener(() => OpenShopTab("DailyShop"));
+        GetButton((int)ShopTab.SpecialPackage).onClick.AddListener(() => OpenShopTab("SpecialPackage"));
+        GetButton((int)ShopTab.LimitedPackage).onClick.AddListener(() => OpenShopTab("LimitedPackage"));
+        GetButton((int)ShopTab.LimitedPackageDaily).onClick.AddListener(() => OpenShopTab("LimitedPackageDaily"));
+        GetButton((int)ShopTab.LimitedPackageWeekly).onClick.AddListener(() => OpenShopTab("LimitedPackageWeekly"));
+        GetButton((int)ShopTab.LimitedPackageMonthly).onClick.AddListener(() => OpenShopTab("LimitedPackageMonthly"));
+        GetButton((int)ShopTab.DiamondShop).onClick.AddListener(() => OpenShopTab("DiamondShop"));
+        GetButton((int)ShopTab.GoldShop).onClick.AddListener(() => OpenShopTab("GoldShop"));
+        GetButton((int)ShopTab.EnergyShop).onClick.AddListener(() => OpenShopTab("EnergyShop"));
 
-        Get<Button>((int)ShopTab.DailyShop).onClick.AddListener(() => OpenShopTab("DailyShop"));
-        Get<Button>((int)ShopTab.SpecialPackage).onClick.AddListener(() => OpenShopTab("SpecialPackage"));
-        Get<Button>((int)ShopTab.LimitedPackage).onClick.AddListener(() => OpenShopTab("LimitedPackage"));
-        Get<Button>((int)ShopTab.LimitedPackageDaily).onClick.AddListener(() => OpenShopTab("LimitedPackageDaily"));
-        Get<Button>((int)ShopTab.LimitedPackageWeekly).onClick.AddListener(() => OpenShopTab("LimitedPackageWeekly"));
-        Get<Button>((int)ShopTab.LimitedPackageMonthly).onClick.AddListener(() => OpenShopTab("LimitedPackageMonthly"));
-        Get<Button>((int)ShopTab.DiamondShop).onClick.AddListener(() => OpenShopTab("DiamondShop"));
-        Get<Button>((int)ShopTab.GoldShop).onClick.AddListener(() => OpenShopTab("GoldShop"));
-        Get<Button>((int)ShopTab.EnergyShop).onClick.AddListener(() => OpenShopTab("EnergyShop"));
+        GetButton((int)ShopTab.DailyShop).onClick.Invoke();
 
         return true;
     }
 
     private void OpenShopTab(string tabName)
     {
-        int count = Enum.GetValues(typeof(Containers)).Length;
+        if (!Enum.TryParse(tabName, out ShopTab selectedTab)) return;
 
-        for (int i = 0; i < count; i++)
+        if (selectedTab == ShopTab.LimitedPackage)
         {
-            GameObject container = GetObject(i);
-            if (container != null)
+            selectedTab = ShopTab.LimitedPackageDaily;
+        }
+
+        bool isLimitedSubTab = selectedTab == ShopTab.LimitedPackageDaily ||
+                                selectedTab == ShopTab.LimitedPackageWeekly ||
+                                selectedTab == ShopTab.LimitedPackageMonthly;
+
+        if (limitedContents != null)
+        {
+            limitedContents.SetActive(isLimitedSubTab);
+        }
+        
+        string targetContainerName = selectedTab.ToString() + "Container";
+
+        foreach (Containers container in Enum.GetValues(typeof(Containers)))
+        {
+            GameObject containerObj = GetObject((int)container);
+            if (containerObj != null)
             {
-                container.SetActive(container.name == $"{tabName}Container");
+                containerObj.SetActive(container.ToString() == targetContainerName);
+            }
+        }
+
+        foreach (ShopTab tab in Enum.GetValues(typeof(ShopTab)))
+        {
+            Button btn = GetButton((int)tab);
+            if (btn != null)
+            {
+                if (tab == ShopTab.LimitedPackage)
+                {
+                    btn.image.color = isLimitedSubTab ? Color.yellow : Color.white;
+                }
+                else
+                {
+                    btn.image.color = (tab == selectedTab) ? Color.yellow : Color.white;
+                }
             }
         }
     }

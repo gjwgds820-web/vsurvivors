@@ -135,6 +135,54 @@ public partial class @NewActions: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Battle"",
+            ""id"": ""cf8ffb2f-cac8-450b-bdcc-c75539917564"",
+            ""actions"": [
+                {
+                    ""name"": ""PointerPosition"",
+                    ""type"": ""Value"",
+                    ""id"": ""192ab8b1-f03f-4d9c-8484-097c2892434e"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""PointerContact"",
+                    ""type"": ""Button"",
+                    ""id"": ""42d76c0f-2f7f-40a0-911d-ea93c0269512"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""51857719-32c7-44c4-bb6d-acc78956c72f"",
+                    ""path"": ""<Pointer>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PointerPosition"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a83bb736-53c8-40ed-a29e-b48e4e8728b1"",
+                    ""path"": ""<Pointer>/press"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PointerContact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -143,11 +191,16 @@ public partial class @NewActions: IInputActionCollection2, IDisposable
         m_Lobby = asset.FindActionMap("Lobby", throwIfNotFound: true);
         m_Lobby_PointerPosition = m_Lobby.FindAction("PointerPosition", throwIfNotFound: true);
         m_Lobby_PointerContact = m_Lobby.FindAction("PointerContact", throwIfNotFound: true);
+        // Battle
+        m_Battle = asset.FindActionMap("Battle", throwIfNotFound: true);
+        m_Battle_PointerPosition = m_Battle.FindAction("PointerPosition", throwIfNotFound: true);
+        m_Battle_PointerContact = m_Battle.FindAction("PointerContact", throwIfNotFound: true);
     }
 
     ~@NewActions()
     {
         UnityEngine.Debug.Assert(!m_Lobby.enabled, "This will cause a leak and performance issues, NewActions.Lobby.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Battle.enabled, "This will cause a leak and performance issues, NewActions.Battle.Disable() has not been called.");
     }
 
     /// <summary>
@@ -326,12 +379,141 @@ public partial class @NewActions: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="LobbyActions" /> instance referencing this action map.
     /// </summary>
     public LobbyActions @Lobby => new LobbyActions(this);
+
+    // Battle
+    private readonly InputActionMap m_Battle;
+    private List<IBattleActions> m_BattleActionsCallbackInterfaces = new List<IBattleActions>();
+    private readonly InputAction m_Battle_PointerPosition;
+    private readonly InputAction m_Battle_PointerContact;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "Battle".
+    /// </summary>
+    public struct BattleActions
+    {
+        private @NewActions m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public BattleActions(@NewActions wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/PointerPosition".
+        /// </summary>
+        public InputAction @PointerPosition => m_Wrapper.m_Battle_PointerPosition;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/PointerContact".
+        /// </summary>
+        public InputAction @PointerContact => m_Wrapper.m_Battle_PointerContact;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_Battle; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="BattleActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(BattleActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="BattleActions" />
+        public void AddCallbacks(IBattleActions instance)
+        {
+            if (instance == null || m_Wrapper.m_BattleActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_BattleActionsCallbackInterfaces.Add(instance);
+            @PointerPosition.started += instance.OnPointerPosition;
+            @PointerPosition.performed += instance.OnPointerPosition;
+            @PointerPosition.canceled += instance.OnPointerPosition;
+            @PointerContact.started += instance.OnPointerContact;
+            @PointerContact.performed += instance.OnPointerContact;
+            @PointerContact.canceled += instance.OnPointerContact;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="BattleActions" />
+        private void UnregisterCallbacks(IBattleActions instance)
+        {
+            @PointerPosition.started -= instance.OnPointerPosition;
+            @PointerPosition.performed -= instance.OnPointerPosition;
+            @PointerPosition.canceled -= instance.OnPointerPosition;
+            @PointerContact.started -= instance.OnPointerContact;
+            @PointerContact.performed -= instance.OnPointerContact;
+            @PointerContact.canceled -= instance.OnPointerContact;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="BattleActions.UnregisterCallbacks(IBattleActions)" />.
+        /// </summary>
+        /// <seealso cref="BattleActions.UnregisterCallbacks(IBattleActions)" />
+        public void RemoveCallbacks(IBattleActions instance)
+        {
+            if (m_Wrapper.m_BattleActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="BattleActions.AddCallbacks(IBattleActions)" />
+        /// <seealso cref="BattleActions.RemoveCallbacks(IBattleActions)" />
+        /// <seealso cref="BattleActions.UnregisterCallbacks(IBattleActions)" />
+        public void SetCallbacks(IBattleActions instance)
+        {
+            foreach (var item in m_Wrapper.m_BattleActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_BattleActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="BattleActions" /> instance referencing this action map.
+    /// </summary>
+    public BattleActions @Battle => new BattleActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Lobby" which allows adding and removing callbacks.
     /// </summary>
     /// <seealso cref="LobbyActions.AddCallbacks(ILobbyActions)" />
     /// <seealso cref="LobbyActions.RemoveCallbacks(ILobbyActions)" />
     public interface ILobbyActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "PointerPosition" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPointerPosition(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "PointerContact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPointerContact(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Battle" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="BattleActions.AddCallbacks(IBattleActions)" />
+    /// <seealso cref="BattleActions.RemoveCallbacks(IBattleActions)" />
+    public interface IBattleActions
     {
         /// <summary>
         /// Method invoked when associated input action "PointerPosition" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
