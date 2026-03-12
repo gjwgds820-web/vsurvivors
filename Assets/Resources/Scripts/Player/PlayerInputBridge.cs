@@ -2,10 +2,6 @@ using TMPro;
 using Unity.Entities;
 using UnityEngine;
 
-public class SubSceneVisualModel : IComponentData
-{
-    public Transform Value;
-}
 public class PlayerInputBridge : MonoBehaviour
 {
     [SerializeField] private FloatingJoystick joystick;

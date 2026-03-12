@@ -21,6 +21,7 @@ public class PlayerAuthoring : MonoBehaviour
                 RotationSpeed = authoring.rotationSpeed
             });
             AddComponent<CameraTargetTag>(entity);
+            AddComponent<SubSceneVisualModel>(entity);
             AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);
         }
     }
