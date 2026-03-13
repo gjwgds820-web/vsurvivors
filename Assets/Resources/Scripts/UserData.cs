@@ -18,10 +18,11 @@ public class UserData
 
     private List<int> _unlockedStages = new List<int>();
     private List<string> _unlockedCharacters = new List<string>();
-    private Dictionary<int, int> _Inventory = new Dictionary<int, int>();
-    private Dictionary<int, int> _UpgradeLevels = new Dictionary<int, int>();
-    private Dictionary<int, bool> _PurchasedItems = new Dictionary<int, bool>();
+    private Dictionary<int, int> _inventory = new Dictionary<int, int>();
+    private Dictionary<int, int> _upgradeLevels = new Dictionary<int, int>();
+    private Dictionary<int, bool> _purchasedItems = new Dictionary<int, bool>();
     private Dictionary<int, int[]> _formationData = new Dictionary<int, int[]>();
+    private List<int> _selectedShadows = new List<int>(10);
 
     public string UserName { get => _userName; set => _userName = value; }
     public int PortraitIndex { get => _portraitIndex; set => _portraitIndex = value; }
@@ -37,8 +38,31 @@ public class UserData
     public int CurrentStage { get => _currentStage; set => _currentStage = value; }
     public List<int> UnlockedStages { get => _unlockedStages; set => _unlockedStages = value; }
     public List<string> UnlockedCharacters { get => _unlockedCharacters; set => _unlockedCharacters = value; }
-    public Dictionary<int, int> Inventory { get => _Inventory; set => _Inventory = value; }
-    public Dictionary<int, int> UpgradeLevels { get => _UpgradeLevels; set => _UpgradeLevels = value; }
-    public Dictionary<int, bool> PurchasedItems { get => _PurchasedItems; set => _PurchasedItems = value; }
+    public Dictionary<int, int> Inventory { get => _inventory; set => _inventory = value; }
+    public Dictionary<int, int> UpgradeLevels { get => _upgradeLevels; set => _upgradeLevels = value; }
+    public Dictionary<int, bool> PurchasedItems { get => _purchasedItems; set => _purchasedItems = value; }
     public Dictionary<int, int[]> FormationData { get => _formationData; set => _formationData = value; }
+    public List<int> SelectedShadows { get => _selectedShadows; set => _selectedShadows = value; }
+
+    public void AddGold(int amount)
+    {
+        _gold += amount;
+    }
+
+    public void AddDiamond(int amount)
+    {
+        _diamond += amount;
+    }
+
+    public void AddEnergy(int amount)
+    {
+        if (_currentEnergy + amount < _maxEnergy)
+        {
+            _currentEnergy += amount;
+        }
+        else
+        {
+            _currentEnergy = _maxEnergy;
+        }
+    }
 }

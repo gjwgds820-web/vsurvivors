@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 #region EnemyEnums
 public enum EnemyType
@@ -19,7 +20,7 @@ public struct EnemyData : IComponentData
 {
     public EnemyType Type;
     public EnemyState CurrentState;
-
+    public Entity AttackPrefab;
     public float MaxHealth;
     public float CurrentHealth;
 
@@ -30,6 +31,11 @@ public struct EnemyData : IComponentData
 
     public float MoveSpeed;
     public float SearchTimer;
+
+    public float HitboxRadius;
+    public float HitboxDuration;
+    public bool IsPiercing;
+    public bool IsAlive;
 }
 #endregion
 #region EnemyTargetData

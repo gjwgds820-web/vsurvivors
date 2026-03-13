@@ -3,7 +3,10 @@ using Unity.Transforms;
 using Unity.Physics.GraphicsIntegration;
 using UnityEngine;
 using Unity.Collections;
+using Unity.Burst;
+using Unity.Mathematics;
 
+#region VisualSync
 [UpdateInGroup(typeof(SimulationSystemGroup))] 
 public partial class VisualSyncSystem : SystemBase
 {
@@ -18,9 +21,7 @@ public partial class VisualSyncSystem : SystemBase
     }
     protected override void OnUpdate()
     {
-        // =========================================================
-        // 1. 런타임 생성 엔티티 껍데기 세팅 (초기화)
-        // =========================================================
+        // 런타임 생성 엔티티 껍데기 세팅 (초기화)
         if (VisualManager.Instance != null)
         {
             // 에너미
@@ -55,9 +56,7 @@ public partial class VisualSyncSystem : SystemBase
             }
         }
 
-        // =========================================================
-        // 2. 통합 동기화 시작 (플레이어, 에너미, 게이트 등 모두 포함)
-        // =========================================================
+        // 통합 동기화 시작 (플레이어, 에너미, 게이트 등 모두 포함)
 
         // [A] 물리 보간(PhysicsGraphicalInterpolationBuffer)이 있는 엔티티 (플레이어, 이동하는 에너미 등)
         // 떨림(Jitter) 현상 방지를 위해 이전/현재 프레임을 보간한 Transforms 사용
@@ -83,3 +82,26 @@ public partial class VisualSyncSystem : SystemBase
         }
     }
 }
+#endregion
+
+#region ItemVisual
+[UpdateInGroup(typeof(PresentationSystemGroup))]
+[BurstCompile]
+public partial struct ItemVisualSystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        float time = (float)SystemAPI.Time.ElapsedTime;
+
+        // 드랍된 아이템들만 찾아서 돌리기
+        foreach (var (transform, itemData) in
+                 SystemAPI.Query<RefRW<LocalTransform>, RefRO<DroppedItemData>>())
+        {
+            transform.ValueRW.Rotation = quaternion.RotateY(time * 2f);
+
+            transform.ValueRW.Position.y = 0.5f + math.sin(time * 5f) * 0.1f;
+        }
+    }
+}
+#endregion

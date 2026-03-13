@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 public enum FormationState
 {
@@ -35,11 +36,19 @@ public struct TargetPositionData : IComponentData
 
 public struct ShadowCombatData : IComponentData
 {
+    public float MaxHealth;
+    public float CurrentHealth;
+    public float AttackPower;
     public float AttackRange;
     public float AttackCooldown;
     public float CurrentCooldown;
     public TargetingType TargetPriority;
     public AttackType AttackType;
+    public Entity AttackPrefab;
     public Entity CurrentTarget;
     public float ScanTimer;
+    public float InvincibilityTimer;
+    public bool IsAlive;
 }
+
+public struct ShadowTag : IComponentData { }

@@ -262,3 +262,160 @@ public partial struct EnemyMovementSystem : ISystem
     }
 }
 #endregion
+
+#region Combat System
+[BurstCompile]
+public partial struct EnemyCombatSystem : ISystem
+{
+    private ComponentLookup<LocalTransform> _transformLookup;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
+    {
+        _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+    }
+
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        _transformLookup.Update(ref state);
+        float deltaTime = SystemAPI.Time.DeltaTime;
+
+        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+
+        foreach (var (enemyData, targetData, transform) in
+                 SystemAPI.Query<RefRW<EnemyData>, RefRO<EnemyTargetData>, RefRO<LocalTransform>>())
+        {
+            enemyData.ValueRW.CurrentCooldown -= deltaTime;
+
+            if (enemyData.ValueRO.CurrentState != EnemyState.Attack) continue;
+            if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget)) continue;
+
+            if (enemyData.ValueRO.CurrentCooldown <= 0)
+            {
+                if (_transformLookup.TryGetComponent(targetData.ValueRO.CurrentTarget, out var targetTransform))
+                {
+                    float3 targetPos = targetTransform.Position;
+                    Entity hitbox = ecb.Instantiate(enemyData.ValueRO.AttackPrefab);
+
+                    ecb.SetComponent(hitbox, new LocalTransform
+                    {
+                        Position = transform.ValueRO.Position,
+                        Scale = 1f,
+                        Rotation = quaternion.LookRotationSafe(targetPos - transform.ValueRO.Position, math.up())
+                    });
+
+                    ecb.AddComponent(hitbox, new HitBoxData
+                    {
+                        Damage = enemyData.ValueRO.AttackPower,
+                        Radius = enemyData.ValueRO.HitboxRadius,
+                        Duration = enemyData.ValueRO.HitboxDuration,
+                        TargetFaction = 1, // Assuming 1 is for player/shadow
+                        IsPiercing = enemyData.ValueRO.IsPiercing,
+                        Shape = HitBoxShape.Circle
+                    });
+
+                    enemyData.ValueRW.CurrentCooldown = enemyData.ValueRO.AttackCooldown;
+                }
+            }
+        }
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
+    }
+}
+#endregion
+
+#region Death & Drop System
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[BurstCompile]
+public partial struct EnemyDeathSystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        if (!SystemAPI.TryGetSingleton<DropBankData>(out var dropBank)) return;
+
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        float time = (float)SystemAPI.Time.ElapsedTime;
+
+        foreach (var (enemyData, transform, entity) in
+                 SystemAPI.Query<RefRO<EnemyData>, RefRO<LocalTransform>>().WithEntityAccess())
+        {
+            if (enemyData.ValueRO.CurrentHealth <= 0)
+            {
+                uint seed = (uint)(entity.Index + time * 100000f) + 1;
+                var random = Random.CreateFromIndex(seed);
+
+                // 경험치 드랍
+                Entity expEntity = ecb.Instantiate(dropBank.ExpPrefab);
+                ecb.SetComponent(expEntity, new LocalTransform
+                {
+                    Position = transform.ValueRO.Position,
+                    Rotation = quaternion.identity,
+                    Scale = 1f
+                });
+                ecb.SetComponent(expEntity, new DroppedItemData
+                {
+                    Type = DropItemType.Exp,
+                    Amount = 10f,
+                    MoveSpeed = 15f,
+                });
+
+                float dropChance = random.NextFloat();
+                if (dropChance <= 0.15f)
+                {
+                    Entity goldEntity = ecb.Instantiate(dropBank.GoldPrefab);
+                    ecb.SetComponent(goldEntity, new LocalTransform
+                    {
+                        Position = transform.ValueRO.Position + new float3(0.5f, 0, 0),
+                        Rotation = quaternion.identity,
+                        Scale = 1f
+                    });
+                    ecb.SetComponent(goldEntity, new DroppedItemData
+                    {
+                        Type = DropItemType.Gold,
+                        Amount = random.NextInt(100, 501),
+                        MoveSpeed = 15f,
+                    });
+                }
+                else if (dropChance <= 0.20f)
+                {
+                    Entity magnetEntity = ecb.Instantiate(dropBank.MagnetPrefab);
+                    ecb.SetComponent(magnetEntity, new LocalTransform
+                    {
+                        Position = transform.ValueRO.Position + new float3(-0.5f, 0, 0),
+                        Rotation = quaternion.identity,
+                        Scale = 1f
+                    });
+                    ecb.SetComponent(magnetEntity, new DroppedItemData
+                    {
+                        Type = DropItemType.Magnet,
+                        Amount = 1f,
+                        MoveSpeed = 15f,
+                    });
+                }
+                else if (dropChance <= 0.25f)
+                {
+                    Entity bombEntity = ecb.Instantiate(dropBank.BombPrefab);
+                    ecb.SetComponent(bombEntity, new LocalTransform
+                    {
+                        Position = transform.ValueRO.Position + new float3(0, 0, 0.5f),
+                        Rotation = quaternion.identity,
+                        Scale = 1f
+                    });
+                    ecb.SetComponent(bombEntity, new DroppedItemData
+                    {
+                        Type = DropItemType.Bomb,
+                        Amount = 1f,
+                        MoveSpeed = 15f,
+                    });
+                }
+                ecb.DestroyEntity(entity);
+            }
+        }
+
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
+    }
+}
+#endregion

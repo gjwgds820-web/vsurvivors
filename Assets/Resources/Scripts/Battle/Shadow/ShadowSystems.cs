@@ -7,6 +7,9 @@ using Unity.Transforms;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Collections;
+using NUnit.Framework;
+using Unity.Entities.UniversalDelegates;
+using UnityEngine.UIElements;
 
 #region FormationSystem
 [BurstCompile]
@@ -104,9 +107,11 @@ public partial struct ShadowMovementSystem : ISystem
         float separationRadius = 1.2f;
         float separationWeight = 1.5f;
 
-        foreach (var (transform, physicsVelocity, physicsMass, targetPos, shadow) in
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<ShadowData>>())
+        foreach (var (transform, physicsVelocity, physicsMass, targetPos, shadow, shadowCombatData) in
+                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<ShadowData>, RefRO<ShadowCombatData>>())
         {
+            if (!shadowCombatData.ValueRO.IsAlive) continue;
+
             // 그림자도 회전 시 물리적으로 방해받지 않도록 관성 고정
             physicsMass.ValueRW.InverseInertia = new float3(0, 0, 0);
 
@@ -196,54 +201,150 @@ public partial struct ShadowMovementSystem : ISystem
 [BurstCompile]
 public partial struct ShadowCombatSystem : ISystem
 {
+    private ComponentLookup<LocalTransform> _transformLookup;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
+    {
+        _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+    }
+
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        _transformLookup.Update(ref state);
         float deltaTime = SystemAPI.Time.DeltaTime;
         
-        // var enemyQuery = SystemAPI.Query<RefRO<LocalTransform>, RefRO<EnemyData>>().WithEntityAccess();
+        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+
+        // 빠른 타겟 검색을 위해 살아있는 모든 적의 위치를 메모리에 로드
+        var enemyQuery = SystemAPI.QueryBuilder().WithAll<EnemyTag, EnemyData, LocalTransform>().Build();
+        var enemyEntities = enemyQuery.ToEntityArray(Allocator.TempJob);
+        var enemyTransforms = enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
 
         foreach (var (combatData, transform) in SystemAPI.Query<RefRW<ShadowCombatData>, RefRO<LocalTransform>>())
         {
+            if (!combatData.ValueRO.IsAlive) continue;
             combatData.ValueRW.ScanTimer -= deltaTime;
             combatData.ValueRW.CurrentCooldown -= deltaTime;
 
             // 타겟 유효성 검사
-            bool needsNewTarget = combatData.ValueRO.CurrentTarget == Entity.Null;
+            bool needsNewTarget = combatData.ValueRO.CurrentTarget == Entity.Null || 
+                                  !SystemAPI.Exists(combatData.ValueRO.CurrentTarget);
 
             // 거리 초과 여부 확인
-            if (!needsNewTarget && SystemAPI.Exists(combatData.ValueRO.CurrentTarget))
+            if (!needsNewTarget && _transformLookup.TryGetComponent(combatData.ValueRO.CurrentTarget, out var targetTransform))
             {
-                float3 targetPos = SystemAPI.GetComponent<LocalTransform>(combatData.ValueRO.CurrentTarget).Position;
-                if (math.distance(transform.ValueRO.Position, targetPos) > combatData.ValueRO.AttackRange)
+                if (math.distancesq(transform.ValueRO.Position, targetTransform.Position) > combatData.ValueRO.AttackRange * combatData.ValueRO.AttackRange)
                 {
                     needsNewTarget = true; // 사거리 벗어난 경우 타겟 초기화
+                    combatData.ValueRW.CurrentTarget = Entity.Null;
                 }
-            }
-            else if (!needsNewTarget && !SystemAPI.Exists(combatData.ValueRO.CurrentTarget)) // 타겟이 사망/삭제됨
-            {
-                needsNewTarget = true;
             }
 
             // 새로운 타겟 탐색
             if (needsNewTarget && combatData.ValueRO.ScanTimer <= 0)
             {
                 combatData.ValueRW.ScanTimer = 0.3f;
-                // TODO : 타겟 탐색 로직 (쿼리 최적화 필요)
+                float closestDistSq = float.MaxValue;
+                Entity bestTarget = Entity.Null;
+
+                for (int i = 0; i < enemyEntities.Length; i++)
+                {
+                    float distSq = math.distancesq(transform.ValueRO.Position, enemyTransforms[i].Position);
+                    if (distSq < combatData.ValueRO.AttackRange * combatData.ValueRO.AttackRange && distSq < closestDistSq)
+                    {
+                        closestDistSq = distSq;
+                        bestTarget = enemyEntities[i];
+                    }
+                }
+                combatData.ValueRW.CurrentTarget = bestTarget;
+                needsNewTarget = bestTarget == Entity.Null;
             }
 
             // 공격 실행
             if (!needsNewTarget && combatData.ValueRO.CurrentCooldown <= 0)
             {
+                float3 targetPos = _transformLookup[combatData.ValueRO.CurrentTarget].Position;
+
+                Entity hitbox = ecb.Instantiate(combatData.ValueRO.AttackPrefab);
+
                 if (combatData.ValueRO.AttackType == AttackType.Melee)
                 {
-                    // TODO : 근접 공격 로직 (충돌체 활성화 등)
+                    ecb.SetComponent(hitbox, new LocalTransform
+                    {
+                        Position = targetPos,
+                        Scale = 1f,
+                        Rotation = quaternion.identity
+                    });
                 }
                 else
                 {
-                    // TODO : 원거리 공격 로직 (투사체 생성 등)
+                    ecb.SetComponent(hitbox, new LocalTransform
+                    {
+                        Position = transform.ValueRO.Position,
+                        Scale = 1f,
+                        Rotation = quaternion.LookRotationSafe(targetPos - transform.ValueRO.Position, math.up())
+                    });
                 }
+                ecb.AddComponent(hitbox, new HitBoxData
+                    {
+                        Damage = combatData.ValueRO.AttackPower,
+                        Radius = 0.5f,
+                        Duration = 0.5f,
+                        TargetFaction = 0, 
+                        IsPiercing = true
+                    });
                 combatData.ValueRW.CurrentCooldown = combatData.ValueRO.AttackCooldown;
+            }
+        }
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
+        enemyEntities.Dispose();
+        enemyTransforms.Dispose();
+    }
+}
+#endregion
+
+#region HealthSystem
+[BurstCompile]
+public partial struct ShadowHealthSystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        float deltaTime = SystemAPI.Time.DeltaTime;
+
+        foreach (var (combatData, damageBuffer) in SystemAPI.Query<RefRW<ShadowCombatData>, DynamicBuffer<DamageBufferElement>>())
+        {
+            if (!combatData.ValueRO.IsAlive)
+            {
+                damageBuffer.Clear(); // 이미 사망한 경우 피해 무시
+                continue;
+            }
+
+            // 무적 타이머 감소
+            if (combatData.ValueRO.InvincibilityTimer > 0f)
+            {
+                combatData.ValueRW.InvincibilityTimer -= deltaTime;
+                damageBuffer.Clear(); // 무적 상태에서는 받은 피해 무시
+                continue;
+            }
+
+            if (damageBuffer.Length > 0)
+            {
+                float finalDamage = math.max(0f, damageBuffer[0].Damage - 0f); // 방어력 등 추가 계산 가능
+                combatData.ValueRW.CurrentHealth -= finalDamage;
+                combatData.ValueRW.InvincibilityTimer = 0.5f; // 피해를 받은 후 0.5초간 무적
+
+                damageBuffer.Clear();
+
+                // 사망 처리
+                if (combatData.ValueRO.CurrentHealth <= 0f)
+                {
+                    combatData.ValueRW.CurrentHealth = 0f;
+                    combatData.ValueRW.IsAlive = false;
+                }
             }
         }
     }
