@@ -1,0 +1,67 @@
+{
+    "relics": [
+        {
+            "ID": 30000001,
+            "Name": "Relic_1",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000002,
+            "Name": "Relic_2",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000003,
+            "Name": "Relic_3",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000004,
+            "Name": "Relic_4",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000005,
+            "Name": "Relic_5",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000006,
+            "Name": "Relic_6",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000007,
+            "Name": "Relic_7",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000008,
+            "Name": "Relic_8",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 30000009,
+            "Name": "Relic_9",
+            "Description": "This is a test relic.",
+            "MaxLevel": 10,
+            "CurrentLevel": 0
+        }
+    ]
+}

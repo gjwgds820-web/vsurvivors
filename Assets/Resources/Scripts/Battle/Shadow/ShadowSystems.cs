@@ -31,7 +31,7 @@ public partial struct ShadowFormationSystem : ISystem
 
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (var (shadow, targetPos, transform) in SystemAPI.Query<RefRW<ShadowData>, RefRW<TargetPositionData>, RefRO<LocalTransform>>())
+        foreach (var (shadow, targetPos, transform) in SystemAPI.Query<RefRW<CShadowData>, RefRW<TargetPositionData>, RefRO<LocalTransform>>())
         {
             FormationState targetState = isPlayerMoving ? FormationState.Moveing : FormationState.Idle;
             if (shadow.ValueRO.CurrentState != targetState)
@@ -108,7 +108,7 @@ public partial struct ShadowMovementSystem : ISystem
         float separationWeight = 1.5f;
 
         foreach (var (transform, physicsVelocity, physicsMass, targetPos, shadow, shadowCombatData) in
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<ShadowData>, RefRO<ShadowCombatData>>())
+                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<CShadowData>, RefRO<ShadowCombatData>>())
         {
             if (!shadowCombatData.ValueRO.IsAlive) continue;
 

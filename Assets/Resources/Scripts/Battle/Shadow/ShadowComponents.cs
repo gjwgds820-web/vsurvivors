@@ -21,7 +21,7 @@ public enum AttackType
     Ranged,
 }
 
-public struct ShadowData : IComponentData
+public struct CShadowData : IComponentData
 {
     public int Index;
     public float MoveSpeed;

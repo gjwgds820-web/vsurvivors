@@ -51,9 +51,9 @@ public class UI_TopUIController : UI_Base
         Bind<Slider>(typeof(Sliders));
 
         Get<Button>((int)Buttons.ProfileButton).onClick.AddListener(OpenProfilePopup);
-        Get<Button>((int)Buttons.EnergyButton).onClick.AddListener(() => OpenShopTab("Energy"));
-        Get<Button>((int)Buttons.GoldButton).onClick.AddListener(() => OpenShopTab("Gold"));
-        Get<Button>((int)Buttons.DiamondButton).onClick.AddListener(() => OpenShopTab("Diamond"));
+        Get<Button>((int)Buttons.EnergyButton).onClick.AddListener(() => OpenShopTab("EnergyShop"));
+        Get<Button>((int)Buttons.GoldButton).onClick.AddListener(() => OpenShopTab("GoldShop"));
+        Get<Button>((int)Buttons.DiamondButton).onClick.AddListener(() => OpenShopTab("DiamondShop"));
 
         ProcessOfflineEnergy();
         UpdateAllUI();

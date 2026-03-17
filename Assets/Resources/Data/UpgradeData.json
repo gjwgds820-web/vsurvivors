@@ -1,0 +1,88 @@
+{
+    "upgrades": [
+        {
+            "ID": 50000101,
+            "Type": 0,
+            "Name": "Upgrade_1",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 100,
+            "EffectType": "Damage",
+            "EffectAmount": 10.0
+        },
+        {
+            "ID": 50000102,
+            "Type": 0,
+            "Name": "Upgrade_2",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 200,
+            "EffectType": "Health",
+            "EffectAmount": 20.0
+        },
+        {
+            "ID": 50000103,
+            "Type": 0,
+            "Name": "Upgrade_3",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 300,
+            "EffectType": "Speed",
+            "EffectAmount": 5.0
+        },
+        {
+            "ID": 50000104,
+            "Type": 0,
+            "Name": "Upgrade_4",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 400,
+            "EffectType": "CriticalChance",
+            "EffectAmount": 2.0
+        },
+        {
+            "ID": 50000105,
+            "Type": 0,
+            "Name": "Upgrade_5",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 500,
+            "EffectType": "CriticalDamage",
+            "EffectAmount": 50.0
+        },
+        {
+            "ID": 50000201,
+            "Type": 1,
+            "Name": "Upgrade_6",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 600,
+            "EffectType": "Damage",
+            "EffectAmount": 15.0
+        },
+        {
+            "ID": 50000202,
+            "Type": 1,
+            "Name": "Upgrade_7",
+            "Description": "This is a test upgrade.",
+            "MaxLevel": 10,
+            "CurrentLevel": 1,
+            "CostType": "Gold",
+            "CostAmount": 700,
+            "EffectType": "Health",
+            "EffectAmount": 30.0
+        }
+    ]
+}

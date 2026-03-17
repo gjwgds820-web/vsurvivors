@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2a8a9a309190ef48b54ee458f39379a, type: 3}
+  m_Name: CharacterDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterDatabase
+  characters:
+  - ID: 10000001
+    Name: Mage
+    Description: This is a test character.
+    MaxLevel: 50
+    CurrentLevel: 1
+    Icon: {fileID: 21300000, guid: 9be46eed85a109b4db2e19b7bac60661, type: 3}
+  - ID: 10000002
+    Name: Warrior
+    Description: This is a test character.
+    MaxLevel: 50
+    CurrentLevel: 1
+    Icon: {fileID: 21300000, guid: ded078c480e0b174aba1011b428fa17c, type: 3}
+  - ID: 10000003
+    Name: Rogue
+    Description: This is a test character.
+    MaxLevel: 50
+    CurrentLevel: 1
+    Icon: {fileID: 21300000, guid: 4c84791f4284b5245af08d7bb046c484, type: 3}

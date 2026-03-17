@@ -3,6 +3,7 @@ using System.IO;
 using System;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public class DataManager : MonoBehaviour
 {
@@ -10,7 +11,11 @@ public class DataManager : MonoBehaviour
 
     public UserData currentUserData;
     private String saveFilePath;
-    private Dictionary<int, SkillData> skillDatabase = new Dictionary<int, SkillData>();
+    public Dictionary<int, SkillData> SkillDict { get; private set; } = new Dictionary<int, SkillData>();
+    public Dictionary<int, CharacterData> CharacterDict { get; private set; } = new Dictionary<int, CharacterData>();
+    public Dictionary<int, RelicData> RelicDict { get; private set; } = new Dictionary<int, RelicData>();
+    public Dictionary<int, ShadowData> ShadowDict { get; private set; } = new Dictionary<int, ShadowData>();
+    public Dictionary<int, UpgradeData> UpgradeDict { get; private set; } = new Dictionary<int, UpgradeData>();
 
     public List<SkillData> SelectedOptions = new List<SkillData>();
 
@@ -22,6 +27,7 @@ public class DataManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             saveFilePath = Path.Combine(Application.persistentDataPath, "UserData.json");
             LoadGame();
+            LoadData();
         }
         else
         {
@@ -63,19 +69,42 @@ public class DataManager : MonoBehaviour
         {
             // Debug.Log("No save file found. Starting a new game.");
             currentUserData = new UserData();
+            InitializeUserData();
             // SaveGame();
         }
     }
 
+    private void InitializeUserData()
+    {
+        currentUserData.UnlockedStages = new List<int> { 1, 2, 3 };
+        currentUserData.UnlockedCharactersID = new List<int> { 10000001, 10000002 };
+        currentUserData.CurrentEnergy = currentUserData.MaxEnergy;
+        currentUserData.LastEnergyUpdateTime = DateTime.Now.Ticks;
+        currentUserData.CurrentStage = 1;
+        currentUserData.SelectedCharacterID = 10000001;
+        currentUserData.Gold = 10000;
+        currentUserData.Diamond = 500;
+        foreach (var shadow in ShadowDict.Values)
+        {
+            currentUserData.Inventory[shadow.ID] = 0;
+        }
+        foreach (var relic in RelicDict.Values)
+        {
+            currentUserData.Inventory[relic.ID] = 0;
+        }
+        foreach (var character in CharacterDict.Values)
+        {
+            currentUserData.Inventory[character.ID] = 0;
+        }
+        currentUserData.AddItem(new List<int> {10000001, 10000002}, 1); // 기본 캐릭터 지급
+        currentUserData.AddItem(new List<int> { 30000001, 30000002, 30000003 }, new List<int> { 1, 1, 1 }); // 기본 유물 지급
+        currentUserData.AddItem(new List<int> { 40000001, 40000002, 40000003, 40000004, 40000005, 40000006, 40000007, 40000008 }, 1); // 기본 그림자 지급
+    }
+
     public List<int> GetFormation(int formationIndex)
     {
-        int[] formation = currentUserData.FormationData[formationIndex];
-        List<int> shadowIDs = new List<int>();
-        for (int i = 0; i < formation.Length; i++)
-        {
-            shadowIDs.Add(formation[i]);
-        }
-        return shadowIDs;
+        List<int> formation = currentUserData.FormationData[formationIndex];
+        return formation;
     }
 
     private void OnApplicationQuit()
@@ -84,21 +113,122 @@ public class DataManager : MonoBehaviour
     }
     #endregion
 
-    #region Skill Database
-    public void LoadDataFromCSV()
+    #region Database
+
+    private void LoadData()
     {
-        // TODO: CSV 파일에서 스킬 데이터를 읽어와 skillDatabase 딕셔너리에 저장하는 로직 구현
+        LoadSkillData();
+        LoadCharacterData();
+        LoadRelicData();
+        LoadShadowData();
+        LoadUpgradeData();
+        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeDict.Count} Upgrades");
     }
 
-    public SkillData GetSkillData(int id)
+    private void LoadSkillData()
     {
-        return skillDatabase.ContainsKey(id) ? skillDatabase[id] : null;
+        SkillDatabase skillDB = Resources.Load<SkillDatabase>("Data/SkillDatabase");
+
+        if (skillDB != null)
+        {
+            foreach (SkillData skill in skillDB.skills)
+            {
+                if (!SkillDict.ContainsKey(skill.ID))
+                {
+                    SkillDict.Add(skill.ID, skill);
+                }
+                else
+                {
+                    Debug.LogWarning($"Duplicate Skill ID found: {skill.ID}");
+                }
+            }
+        }
+    }
+
+    private void LoadCharacterData()
+    {
+        CharacterDatabase characterDB = Resources.Load<CharacterDatabase>("Data/CharacterDatabase");
+
+        if (characterDB != null)
+        {
+            foreach (CharacterData character in characterDB.characters)
+            {
+                if (!CharacterDict.ContainsKey(character.ID))
+                {
+                    CharacterDict.Add(character.ID, character);
+                }
+                else
+                {
+                    Debug.LogWarning($"Duplicate Character ID found: {character.ID}");
+                }
+            }
+        }
+    }
+
+    private void LoadRelicData()
+    {
+        RelicDatabase relicDB = Resources.Load<RelicDatabase>("Data/RelicDatabase");
+
+        if (relicDB != null)
+        {
+            foreach (RelicData relic in relicDB.relics)
+            {
+                if (!RelicDict.ContainsKey(relic.ID))
+                {
+                    RelicDict.Add(relic.ID, relic);
+                }
+                else
+                {
+                    Debug.LogWarning($"Duplicate Relic ID found: {relic.ID}");
+                }
+            }
+        }
+    }
+
+    private void LoadShadowData()
+    {
+        ShadowDatabase shadowDB = Resources.Load<ShadowDatabase>("Data/ShadowDatabase");
+
+        if (shadowDB != null)
+        {
+            foreach (ShadowData shadow in shadowDB.shadows)
+            {
+                if (!ShadowDict.ContainsKey(shadow.ID))
+                {
+                    ShadowDict.Add(shadow.ID, shadow);
+                }
+                else
+                {
+                    Debug.LogWarning($"Duplicate Shadow ID found: {shadow.ID}");
+                }
+            }
+        }
+    }
+
+    private void LoadUpgradeData()
+    {
+        UpgradeDatabase upgradeDB = Resources.Load<UpgradeDatabase>("Data/UpgradeDatabase");
+
+        if (upgradeDB != null)
+        {
+            foreach (UpgradeData upgrade in upgradeDB.upgrades)
+            {
+                if (!UpgradeDict.ContainsKey(upgrade.ID))
+                {
+                    UpgradeDict.Add(upgrade.ID, upgrade);
+                }
+                else
+                {
+                    Debug.LogWarning($"Duplicate Upgrade ID found: {upgrade.ID}");
+                }
+            }
+        }
     }
 
     public List<SkillData> GetAllPassiveSkills()
     {
         List<SkillData> passiveSkills = new List<SkillData>();
-        foreach (var skill in skillDatabase.Values)
+        foreach (var skill in SkillDict.Values)
         {
             if (skill.Type == SkillType.Passive)
             {

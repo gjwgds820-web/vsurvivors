@@ -26,7 +26,7 @@ public class ShadowAuthoring : MonoBehaviour
         {
             var entity = GetEntity(TransformUsageFlags.Dynamic);
             
-            AddComponent(entity, new ShadowData
+            AddComponent(entity, new CShadowData
             {
                 Index = 0,
                 CurrentState = FormationState.Idle,

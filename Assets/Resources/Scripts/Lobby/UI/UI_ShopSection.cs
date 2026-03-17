@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -33,6 +34,9 @@ public class UI_ShopSection : UI_Base
 
     [SerializeField] private GameObject limitedContents;
 
+    private CameraController _cameraController;
+    private string _pendingTabName = "DailyShop";
+
     public override bool Init()
     {
         if (base.Init() == false)
@@ -50,9 +54,37 @@ public class UI_ShopSection : UI_Base
         GetButton((int)ShopTab.GoldShop).onClick.AddListener(() => OpenShopTab("GoldShop"));
         GetButton((int)ShopTab.EnergyShop).onClick.AddListener(() => OpenShopTab("EnergyShop"));
 
-        GetButton((int)ShopTab.DailyShop).onClick.Invoke();
+        _cameraController = FindAnyObjectByType<CameraController>();
+        if (_cameraController != null)
+        {
+            _cameraController.OnSectionChanged += HandleSectionChanged;
+        }
+
+        OpenShopTab("DailyShop");
 
         return true;
+    }
+
+    private void OnDestroy()
+    {
+        if (_cameraController != null)
+        {
+            _cameraController.OnSectionChanged -= HandleSectionChanged;
+        }
+    }
+
+    private void HandleSectionChanged(int sectionIndex)
+    {
+        int shopSectionIndex = 0;
+
+        if (sectionIndex == shopSectionIndex)
+        {
+            OpenShopTab(_pendingTabName);
+        }
+        else
+        {
+            _pendingTabName = "DailyShop";
+        }
     }
 
     private void OpenShopTab(string tabName)
@@ -103,6 +135,7 @@ public class UI_ShopSection : UI_Base
 
     public void TopUIClick(string tabName)
     {
+        _pendingTabName = tabName;
         OpenShopTab(tabName);
     }
 }

@@ -191,7 +191,7 @@ public partial struct ShadowSpawnerSystem : ISystem
 
                             // 진형 내 인덱스 및 초기 데이터 주입
                             ecb.SetComponent(targetShadow, new LocalTransform { Position = playerTransform.ValueRO.Position, Scale = 1f, Rotation = quaternion.identity }); 
-                            ecb.SetComponent(targetShadow, new ShadowData { Index = targetIndex, CurrentState = FormationState.Idle, StateChangeTimer = 0f });
+                            ecb.SetComponent(targetShadow, new CShadowData { Index = targetIndex, CurrentState = FormationState.Idle, StateChangeTimer = 0f });
 
                             if (needInstantiate)
                             {

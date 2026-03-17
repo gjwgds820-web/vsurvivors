@@ -1,0 +1,25 @@
+{
+    "characters": [
+        {
+            "ID": 10000001,
+            "Name": "Mage",
+            "Description": "This is a test character.",
+            "MaxLevel": 50,
+            "CurrentLevel": 1
+        },
+        {
+            "ID": 10000002,
+            "Name": "Warrior",
+            "Description": "This is a test character.",
+            "MaxLevel": 50,
+            "CurrentLevel": 1
+        },
+        {
+            "ID": 10000003,
+            "Name": "Rogue",
+            "Description": "This is a test character.",
+            "MaxLevel": 50,
+            "CurrentLevel": 1
+        }
+    ]
+}

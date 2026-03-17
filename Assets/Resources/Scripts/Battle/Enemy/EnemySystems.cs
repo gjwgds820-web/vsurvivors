@@ -17,7 +17,7 @@ public partial struct EnemyTargetingSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerInput, LocalTransform>().Build();
-        _shadowQuery = SystemAPI.QueryBuilder().WithAll<ShadowData, LocalTransform>().Build();
+        _shadowQuery = SystemAPI.QueryBuilder().WithAll<CShadowData, LocalTransform>().Build();
     }
 
     [BurstCompile]

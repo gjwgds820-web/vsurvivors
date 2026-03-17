@@ -1,0 +1,196 @@
+{
+    "skills" : [
+        {
+            "ID": 20000101,
+            "Type": "0",
+            "Name": "Shadow_1",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000102,
+            "Type": "0",
+            "Name": "Shadow_2",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000103,
+            "Type": "0",
+            "Name": "Shadow_3",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000104,
+            "Type": "0",
+            "Name": "Shadow_4",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000105,
+            "Type": "0",
+            "Name": "Shadow_5",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000106,
+            "Type": "0",
+            "Name": "Shadow_6",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000107,
+            "Type": "0",
+            "Name": "Shadow_7",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000108,
+            "Type": "0",
+            "Name": "Shadow_8",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000109,
+            "Type": "0",
+            "Name": "Shadow_9",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000110,
+            "Type": "0",
+            "Name": "Shadow_10",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000111,
+            "Type": "0",
+            "Name": "Shadow_11",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000112,
+            "Type": "0",
+            "Name": "Shadow_12",
+            "Description": "This is a test skill.",
+            "MaxLevel": 6,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000201,
+            "Type": "1",
+            "Name": "Passive_1",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000202,
+            "Type": "1",
+            "Name": "Passive_2",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000203,
+            "Type": "1",
+            "Name": "Passive_3",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000204,
+            "Type": "1",
+            "Name": "Passive_4",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000205,
+            "Type": "1",
+            "Name": "Passive_5",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000206,
+            "Type": "1",
+            "Name": "Passive_6",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000207,
+            "Type": "1",
+            "Name": "Passive_7",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000208,
+            "Type": "1",
+            "Name": "Passive_8",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000209,
+            "Type": "1",
+            "Name": "Passive_9",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000210,
+            "Type": "1",
+            "Name": "Passive_10",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000211,
+            "Type": "1",
+            "Name": "Passive_11",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        },
+        {
+            "ID": 20000212,
+            "Type": "1",
+            "Name": "Passive_12",
+            "Description": "This is a test skill.",
+            "MaxLevel": 5,
+            "CurrentLevel": 0
+        }
+    ]
+}

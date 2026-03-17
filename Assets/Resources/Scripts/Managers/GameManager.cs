@@ -9,7 +9,9 @@ public class GameManager : MonoBehaviour
     private EntityQuery _goldLootQuery;
 
     private List<SkillData> currentShadows = new List<SkillData>();
+    public List<SkillData> CurrentShadows => currentShadows;
     private List<SkillData> currentPassives = new List<SkillData>();
+    public List<SkillData> CurrentPassives => currentPassives;
     private List<SkillData> availableSkills = new List<SkillData>();
     private const int MAX_SLOTS = 6;
 
@@ -26,12 +28,11 @@ public class GameManager : MonoBehaviour
     {
         availableSkills.Clear();
 
-        List<int> deckIDs = DataManager.Instance.currentUserData.SelectedShadows;
+        List<int> deckIDs = DataManager.Instance.currentUserData.SelectedShadowsID;
 
         foreach (int id in deckIDs)
         {
-            SkillData skill = DataManager.Instance.GetSkillData(id);
-            if (skill != null)
+            if (DataManager.Instance.SkillDict.TryGetValue(id, out SkillData skill))
             {
                 availableSkills.Add(skill);
             }
@@ -156,5 +157,24 @@ public class GameManager : MonoBehaviour
         // 남은 풀에서 1개 리턴
         int randomIndex = Random.Range(0, validPool.Count);
         return validPool[randomIndex];
+    }
+
+    public SkillData LevelUp(SkillData selectedSkill)
+    {
+        SkillData ownedSkill = null;
+        if (selectedSkill.Type == SkillType.Shadow)
+        {
+            ownedSkill = currentShadows.Find(s => s.ID == selectedSkill.ID);
+            if (ownedSkill != null) ownedSkill.CurrentLevel++;
+            else currentShadows.Add(selectedSkill);
+        }
+        else
+        {
+            ownedSkill = currentPassives.Find(s => s.ID == selectedSkill.ID);
+            if (ownedSkill != null) ownedSkill.CurrentLevel++;
+            else currentPassives.Add(selectedSkill);
+        }
+
+        return ownedSkill;
     }
 }

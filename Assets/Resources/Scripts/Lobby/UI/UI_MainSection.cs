@@ -23,11 +23,8 @@ public class UI_MainSection : UI_Base
         CostText
     }
 
-    enum Images
-    {
-        MainImage
-    }
     private int _battleEnergyCost = 10;
+    private CameraController _cameraController;
 
     public override bool Init()
     {
@@ -36,7 +33,7 @@ public class UI_MainSection : UI_Base
 
         BindButton(typeof(Buttons));
         BindText(typeof(Texts));
-        BindImage(typeof(Images));
+        _cameraController = FindAnyObjectByType<CameraController>();
 
         Get<Button>((int)Buttons.PassFrame).onClick.AddListener(OnPassButtonClicked);
         Get<Button>((int)Buttons.StageFrame).onClick.AddListener(OnStageSelectButtonClicked);
@@ -64,7 +61,6 @@ public class UI_MainSection : UI_Base
         GetText((int)Texts.PassLevelText).text = $"Level {userData.CurrentPassLevel}";
         GetText((int)Texts.StageIndexText).text = $"Stage {userData.CurrentStage}";
         GetText((int)Texts.StageNameText).text = $"Stage Name {userData.CurrentStage}";
-        GetImage((int)Images.MainImage).sprite = ResourceManager.Instance.LoadSprite($"UI/Stages/Thumbnails/Stage_{userData.CurrentStage}");
         GetText((int)Texts.CostText).text = _battleEnergyCost.ToString();
     }
 
@@ -75,6 +71,7 @@ public class UI_MainSection : UI_Base
 
     private void OnStageSelectButtonClicked()
     {
+        _cameraController.BlockInput(true);
         UIManager.Instance.ShowPopup("UI_StagePopup");
     }
 

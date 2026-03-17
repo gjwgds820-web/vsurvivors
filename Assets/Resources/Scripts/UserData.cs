@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 [System.Serializable]
 public class UserData
@@ -15,14 +16,16 @@ public class UserData
     private bool _isPassBought = false;
     private int _currentPassLevel = 1;
     private int _currentStage = 1;
+    private int _selectedCharacterID = 10000001; // 기본 캐릭터 ID
 
     private List<int> _unlockedStages = new List<int>();
-    private List<string> _unlockedCharacters = new List<string>();
+    private List<int> _unlockedCharactersID = new List<int>(); // 기본 캐릭터는 처음부터 잠금 해제
     private Dictionary<int, int> _inventory = new Dictionary<int, int>();
     private Dictionary<int, int> _upgradeLevels = new Dictionary<int, int>();
     private Dictionary<int, bool> _purchasedItems = new Dictionary<int, bool>();
-    private Dictionary<int, int[]> _formationData = new Dictionary<int, int[]>();
-    private List<int> _selectedShadows = new List<int>(10);
+    private Dictionary<int, List<int>> _formationData = new Dictionary<int, List<int>>();
+    private List<int> _selectedShadowsID = new List<int>(10);
+    private List<int> _equippedRelicsID = new List<int>(6);
 
     public string UserName { get => _userName; set => _userName = value; }
     public int PortraitIndex { get => _portraitIndex; set => _portraitIndex = value; }
@@ -36,14 +39,15 @@ public class UserData
     public bool IsPassBought { get => _isPassBought; set => _isPassBought = value; }
     public int CurrentPassLevel { get => _currentPassLevel; set => _currentPassLevel = value; }
     public int CurrentStage { get => _currentStage; set => _currentStage = value; }
+    public int SelectedCharacterID { get => _selectedCharacterID; set => _selectedCharacterID = value; }
     public List<int> UnlockedStages { get => _unlockedStages; set => _unlockedStages = value; }
-    public List<string> UnlockedCharacters { get => _unlockedCharacters; set => _unlockedCharacters = value; }
+    public List<int> UnlockedCharactersID { get => _unlockedCharactersID; set => _unlockedCharactersID = value; }
     public Dictionary<int, int> Inventory { get => _inventory; set => _inventory = value; }
     public Dictionary<int, int> UpgradeLevels { get => _upgradeLevels; set => _upgradeLevels = value; }
     public Dictionary<int, bool> PurchasedItems { get => _purchasedItems; set => _purchasedItems = value; }
-    public Dictionary<int, int[]> FormationData { get => _formationData; set => _formationData = value; }
-    public List<int> SelectedShadows { get => _selectedShadows; set => _selectedShadows = value; }
-
+    public Dictionary<int, List<int>> FormationData { get => _formationData; set => _formationData = value; }
+    public List<int> SelectedShadowsID { get => _selectedShadowsID; set => _selectedShadowsID = value; }
+    public List<int> EquippedRelicsID { get => _equippedRelicsID; set => _equippedRelicsID = value; }
     public void AddGold(int amount)
     {
         _gold += amount;
@@ -63,6 +67,46 @@ public class UserData
         else
         {
             _currentEnergy = _maxEnergy;
+        }
+    }
+
+    public void AddItem(int itemID, int quantity)
+    {
+        if (_inventory.ContainsKey(itemID))
+        {
+            _inventory[itemID] += quantity;
+        }
+        else
+        {
+            _inventory[itemID] = quantity;
+        }
+    }
+
+    public void AddItem(List<int> itemIDs, int quantity)
+    {
+        foreach (int itemID in itemIDs)
+        {
+            AddItem(itemID, quantity);
+        }
+    }
+
+    public void AddItem(List<int> itemIDs, List<int> quantities)
+    {
+        for (int i = 0; i < itemIDs.Count; i++)
+        {
+            AddItem(itemIDs[i], quantities[i]);
+        }
+    }
+
+    public void Upgrade(int ID)
+    {
+        if (_upgradeLevels.ContainsKey(ID))
+        {
+            _upgradeLevels[ID]++;
+        }
+        else
+        {
+            _upgradeLevels[ID] = 1;
         }
     }
 }

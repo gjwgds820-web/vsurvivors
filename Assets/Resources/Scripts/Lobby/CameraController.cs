@@ -30,6 +30,7 @@ public class CameraController : MonoBehaviour
     private Vector3 _targetPosition;
     private Vector3 _velocity = Vector3.zero;
     private Vector3 _originalPosition;
+    private bool _isInputBlocked = false;
 
     [Header("Touch Input")]
     private Vector2 _touchStartPos;
@@ -74,44 +75,47 @@ public class CameraController : MonoBehaviour
         if (Pointer.current == null) return;
 
         Vector2 currentPointerPos = Pointer.current.position.ReadValue();
-
-        // 입력 감지
-        if (Pointer.current.press.wasPressedThisFrame)
-        {
-            if (!_isProcessingDrag)
-            {
-                _touchStartPos = currentPointerPos;
-                _isTouchDown = true;
-                _isDragging = false;
-            }
-        }
         
-        // 드래그 처리
-        if (_isTouchDown && Pointer.current.press.isPressed)
+        if (!_isInputBlocked)
         {
-            if (!_isDragging && !_isProcessingDrag)
+            // 입력 감지
+            if (Pointer.current.press.wasPressedThisFrame)
             {
-                float distance = Vector2.Distance(_touchStartPos, currentPointerPos);
-                if (distance > dragActivationThreshold)
+                if (!_isProcessingDrag)
                 {
-                    StartDrag();
+                    _touchStartPos = currentPointerPos;
+                    _isTouchDown = true;
+                    _isDragging = false;
+                }
+            }
+            
+            // 드래그 처리
+            if (_isTouchDown && Pointer.current.press.isPressed)
+            {
+                if (!_isDragging && !_isProcessingDrag)
+                {
+                    float distance = Vector2.Distance(_touchStartPos, currentPointerPos);
+                    if (distance > dragActivationThreshold)
+                    {
+                        StartDrag();
+                    }
+                }
+
+                if (_isDragging)
+                {
+                    HandleDrag(currentPointerPos);
                 }
             }
 
-            if (_isDragging)
+            // 입력 종료 감지
+            if (Pointer.current.press.wasReleasedThisFrame && _isTouchDown)
             {
-                HandleDrag(currentPointerPos);
-            }
-        }
+                _isTouchDown = false;
 
-        // 입력 종료 감지
-        if (Pointer.current.press.wasReleasedThisFrame && _isTouchDown)
-        {
-            _isTouchDown = false;
-
-            if (_isDragging)
-            {
-                EndDrag(currentPointerPos);
+                if (_isDragging)
+                {
+                    EndDrag(currentPointerPos);
+                }
             }
         }
 
@@ -232,5 +236,17 @@ public class CameraController : MonoBehaviour
     public int GetCurrentSection()
     {
         return currentSection;
+    }
+
+    public void BlockInput(bool block)
+    {
+        _isInputBlocked = block;
+
+        if (block)
+        {
+            _isTouchDown = false;
+            _isDragging = false;
+            _isProcessingDrag = false;
+        }
     }
 }
