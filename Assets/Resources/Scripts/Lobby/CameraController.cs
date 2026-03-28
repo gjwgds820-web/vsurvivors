@@ -13,14 +13,14 @@ public class CameraController : MonoBehaviour
 
     [Header("Camera Settings")]
     [SerializeField] private Camera mainCamera;
-    [SerializeField] private float[] sectionPositions = new float[5] { -10f, -5f, 0f, 5f, 10f };
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float overscrollLimit = 0.5f;
+    [SerializeField] private float[] sectionPositions = new float[5] { -2160f, -720f, 720f, 2160f, 3600f };
+    [SerializeField] private float moveSpeed = 10f;
+    [SerializeField] private float overscrollLimit = 720f;
 
     [Header("Swipe Settings")]
     [SerializeField] private float swipeThresholdRatio = 0.33f;
-    [SerializeField] private float dragSensitivity = 0.01f;
-    [SerializeField] private float dragActivationThreshold = 10f;
+    [SerializeField] private float dragSensitivity = 1f;
+    [SerializeField] private float dragActivationThreshold = 20f;
 
     [Header("Input")]
     [SerializeField] private InputSystem_Actions inputAction;
@@ -147,7 +147,7 @@ public class CameraController : MonoBehaviour
     private void EndDrag(Vector2 touchEndPos)
     {
         float swipeDelta = touchEndPos.x - _touchStartPos.x;
-        float swipeThreshold = _screenWidth * swipeThresholdRatio;
+        float swipeThreshold = Screen.width * swipeThresholdRatio;
 
         _isDragging = false;
 

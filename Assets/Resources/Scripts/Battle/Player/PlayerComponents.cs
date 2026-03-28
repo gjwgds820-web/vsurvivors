@@ -45,3 +45,10 @@ public struct ShadowSlotElement : IBufferElementData
 public struct CameraTargetTag : IComponentData { }
 
 public struct LevelUpEventTag : IComponentData {}
+
+public struct ElementAscensionEventTag : IComponentData
+{
+    public int BossLevel;
+}
+
+public struct PlayerDeathEventTag : IComponentData {}

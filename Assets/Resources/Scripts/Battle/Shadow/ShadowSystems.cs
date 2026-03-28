@@ -31,8 +31,10 @@ public partial struct ShadowFormationSystem : ISystem
 
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (var (shadow, targetPos, transform) in SystemAPI.Query<RefRW<CShadowData>, RefRW<TargetPositionData>, RefRO<LocalTransform>>())
+        foreach (var (shadow, targetPos, transform, entity) in SystemAPI.Query<RefRW<CShadowData>, RefRW<TargetPositionData>, RefRO<LocalTransform>>().WithEntityAccess())
         {
+            if (entity.Index < 0) continue; // 유효하지 않은 엔티티 무시
+
             FormationState targetState = isPlayerMoving ? FormationState.Moveing : FormationState.Idle;
             if (shadow.ValueRO.CurrentState != targetState)
             {
@@ -55,12 +57,12 @@ public partial struct ShadowFormationSystem : ISystem
                 if (index < 8)
                 {
                     float angle = (index / 8f) * math.PI * 2f;
-                    desiredPos += new float3(math.cos(angle) * 2f, 0, math.sin(angle) * 2f);
+                    desiredPos += new float3(math.cos(angle) * 2f, 0.5f, math.sin(angle) * 2f);
                 }
                 else
                 {
                     float angle = ((index - 8) / 12f) * math.PI * 2f;
-                    desiredPos += new float3(math.cos(angle) * 4f, 0, math.sin(angle) * 4f);
+                    desiredPos += new float3(math.cos(angle) * 4f, 0.5f, math.sin(angle) * 4f);
                 }
             }
             else
@@ -68,7 +70,7 @@ public partial struct ShadowFormationSystem : ISystem
                 if (index < 8)
                 {
                     float angle = (index / 8f) * math.PI * 2f;
-                    desiredPos += new float3(math.cos(angle) * 1.5f, 0, math.sin(angle) * 1.5f);
+                    desiredPos += new float3(math.cos(angle) * 1.5f, 0.5f, math.sin(angle) * 1.5f);
                 }
                 else
                 {
@@ -107,9 +109,10 @@ public partial struct ShadowMovementSystem : ISystem
         float separationRadius = 1.2f;
         float separationWeight = 1.5f;
 
-        foreach (var (transform, physicsVelocity, physicsMass, targetPos, shadow, shadowCombatData) in
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<CShadowData>, RefRO<ShadowCombatData>>())
+        foreach (var (transform, physicsVelocity, physicsMass, targetPos, shadow, shadowCombatData, entity) in
+                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<CShadowData>, RefRO<ShadowCombatData>>().WithEntityAccess())
         {
+            if (entity.Index < 0) continue; // 유효하지 않은 엔티티 무시
             if (!shadowCombatData.ValueRO.IsAlive) continue;
 
             // 그림자도 회전 시 물리적으로 방해받지 않도록 관성 고정
@@ -218,12 +221,14 @@ public partial struct ShadowCombatSystem : ISystem
         var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
         // 빠른 타겟 검색을 위해 살아있는 모든 적의 위치를 메모리에 로드
-        var enemyQuery = SystemAPI.QueryBuilder().WithAll<EnemyTag, EnemyData, LocalTransform>().Build();
+        var enemyQuery = SystemAPI.QueryBuilder().WithAll<EnemyTag, CEnemyData, LocalTransform>().Build();
         var enemyEntities = enemyQuery.ToEntityArray(Allocator.TempJob);
         var enemyTransforms = enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
+        var enemyData = enemyQuery.ToComponentDataArray<CEnemyData>(Allocator.TempJob);
 
-        foreach (var (combatData, transform) in SystemAPI.Query<RefRW<ShadowCombatData>, RefRO<LocalTransform>>())
+        foreach (var (combatData, transform, entity) in SystemAPI.Query<RefRW<ShadowCombatData>, RefRO<LocalTransform>>().WithEntityAccess())
         {
+            if (entity.Index < 0) continue; // 유효하지 않은 엔티티 무시
             if (!combatData.ValueRO.IsAlive) continue;
             combatData.ValueRW.ScanTimer -= deltaTime;
             combatData.ValueRW.CurrentCooldown -= deltaTime;
@@ -251,8 +256,11 @@ public partial struct ShadowCombatSystem : ISystem
 
                 for (int i = 0; i < enemyEntities.Length; i++)
                 {
+                    if (!enemyData[i].IsAlive) continue; // 죽은 적은 무시
+
                     float distSq = math.distancesq(transform.ValueRO.Position, enemyTransforms[i].Position);
-                    if (distSq < combatData.ValueRO.AttackRange * combatData.ValueRO.AttackRange && distSq < closestDistSq)
+                    float effectiveRange = combatData.ValueRO.AttackRange + enemyData[i].HitboxRadius; // 적의 히트박스 크기 고려
+                    if (distSq < effectiveRange * effectiveRange && distSq < closestDistSq)
                     {
                         closestDistSq = distSq;
                         bestTarget = enemyEntities[i];
@@ -268,6 +276,8 @@ public partial struct ShadowCombatSystem : ISystem
                 float3 targetPos = _transformLookup[combatData.ValueRO.CurrentTarget].Position;
 
                 Entity hitbox = ecb.Instantiate(combatData.ValueRO.AttackPrefab);
+
+                ecb.AddBuffer<HitRecordElement>(hitbox);
 
                 if (combatData.ValueRO.AttackType == AttackType.Melee)
                 {
@@ -302,6 +312,7 @@ public partial struct ShadowCombatSystem : ISystem
         ecb.Dispose();
         enemyEntities.Dispose();
         enemyTransforms.Dispose();
+        enemyData.Dispose();
     }
 }
 #endregion
@@ -315,8 +326,9 @@ public partial struct ShadowHealthSystem : ISystem
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (var (combatData, damageBuffer) in SystemAPI.Query<RefRW<ShadowCombatData>, DynamicBuffer<DamageBufferElement>>())
+        foreach (var (combatData, damageBuffer, entity) in SystemAPI.Query<RefRW<ShadowCombatData>, DynamicBuffer<DamageBufferElement>>().WithEntityAccess())
         {
+            if (entity.Index < 0) continue; // 유효하지 않은 엔티티 무시
             if (!combatData.ValueRO.IsAlive)
             {
                 damageBuffer.Clear(); // 이미 사망한 경우 피해 무시

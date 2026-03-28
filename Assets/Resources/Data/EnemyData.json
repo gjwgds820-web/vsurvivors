@@ -1,0 +1,52 @@
+{
+    "enemies": [
+        {
+            "ID": 60000001,
+            "Type": 0,
+            "Name": "Enemy_1",
+            "Description": "This is a test enemy.",
+            "MaxHealth": 100,
+            "AttackPower": 10,
+            "AttackRange": 1,
+            "AttackCooldown": 1.0,
+            "MoveSpeed": 2.0,
+            "HitBoxShape": 3,
+            "HitboxRadius": 0.5,
+            "HitboxDuration": 0.1,
+            "IsPiercing": true,
+            "IsBoss": false
+        },
+        {
+            "ID": 60000002,
+            "Type": 0,
+            "Name": "Enemy_2",
+            "Description": "This is a test enemy.",
+            "MaxHealth": 200,
+            "AttackPower": 20,
+            "AttackRange": 2,
+            "AttackCooldown": 1.5,
+            "MoveSpeed": 1.5,
+            "HitBoxShape": 2,
+            "HitboxRadius": 0.7,
+            "HitboxDuration": 0.2,
+            "IsPiercing": true,
+            "IsBoss": false
+        },
+        {
+            "ID": 60000003,
+            "Type": 0,
+            "Name": "Enemy_3",
+            "Description": "This is a test enemy.",
+            "MaxHealth": 500,
+            "AttackPower": 50,
+            "AttackRange": 2,
+            "AttackCooldown": 2.0,
+            "MoveSpeed": 1.0,
+            "HitBoxShape": 0,
+            "HitboxRadius": 1.0,
+            "HitboxDuration": 0.5,
+            "IsPiercing": true,
+            "IsBoss": true
+        }
+    ]
+}

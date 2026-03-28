@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
     private EntityManager _entityManager;
     private EntityQuery _levelUpQuery;
     private EntityQuery _goldLootQuery;
+    private EntityQuery _elementAscensionQuery;
 
     private List<SkillData> currentShadows = new List<SkillData>();
     public List<SkillData> CurrentShadows => currentShadows;
@@ -20,6 +21,7 @@ public class GameManager : MonoBehaviour
         _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         _levelUpQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<LevelUpEventTag>());
         _goldLootQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GoldEventTag>());
+        _elementAscensionQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<ElementAscensionEventTag>());
 
         InitializeAvailableSkills();
     }
@@ -60,12 +62,25 @@ public class GameManager : MonoBehaviour
             }
             _entityManager.RemoveComponent<GoldEventTag>(_goldLootQuery);
         }
+
+        if (!_elementAscensionQuery.IsEmptyIgnoreFilter)
+        {
+            Time.timeScale = 0f;
+
+            ShowElementAscensionPopup();
+            _entityManager.RemoveComponent<ElementAscensionEventTag>(_elementAscensionQuery);
+        }
     }
 
     void ShowSkillSelectionPopup()
     {
         UIManager.Instance.ShowPopup("UI_SkillSelectionPopup");
         GenerateSkillOptions();
+    }
+
+    void ShowElementAscensionPopup()
+    {
+        UIManager.Instance.ShowPopup("UI_ElementAscensionPopup");
     }
 
     public void GenerateSkillOptions()

@@ -19,69 +19,393 @@ MonoBehaviour:
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 0801c269d2ef0134498e6d4efa216e80, type: 3}
+    LevelStats:
+    - MaxHealth: 100
+      AttackPower: 10
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 150
+      AttackPower: 15
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 200
+      AttackPower: 20
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 250
+      AttackPower: 25
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 300
+      AttackPower: 30
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 350
+      AttackPower: 35
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000002
     Name: Shadow_2
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: d68382f58daf36847952b3bb25ebcaf6, type: 3}
+    LevelStats:
+    - MaxHealth: 120
+      AttackPower: 12
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 170
+      AttackPower: 17
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 220
+      AttackPower: 22
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 270
+      AttackPower: 27
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 320
+      AttackPower: 32
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 370
+      AttackPower: 37
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000003
     Name: Shadow_3
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: e748ea83025c111469380aa94d35c4c9, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000004
     Name: Shadow_4
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 8b29666b8cab6f347a1915552ec66564, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000005
     Name: Shadow_5
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 07c7e5be782c11041b2a55ee829aaf74, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000006
     Name: Shadow_6
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 1184a1f2427089d4fa1cb9676b612ac8, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000007
     Name: Shadow_7
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: dc701aa1777224244803be257e26a8ed, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000008
     Name: Shadow_8
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 656c5e79ff2e9074b955cab662e8fbdf, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000009
     Name: Shadow_9
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 977d23f540938b3458ba4ac36f410bc0, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000010
     Name: Shadow_10
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: da64cdc25341054409bfde4799ed79f2, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000011
     Name: Shadow_11
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: ec49cddbb4f7bc54d9811f1616745b6a, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0
   - ID: 40000012
     Name: Shadow_12
     Description: This is a test shadow.
     MaxLevel: 6
     CurrentLevel: 0
     Icon: {fileID: 21300000, guid: 3e7145a82d6da114b824a58244a90918, type: 3}
+    LevelStats:
+    - MaxHealth: 140
+      AttackPower: 14
+      AttackRange: 1
+      AttackCooldown: 1
+    - MaxHealth: 190
+      AttackPower: 19
+      AttackRange: 1
+      AttackCooldown: 0.9
+    - MaxHealth: 240
+      AttackPower: 24
+      AttackRange: 1
+      AttackCooldown: 0.8
+    - MaxHealth: 290
+      AttackPower: 29
+      AttackRange: 1
+      AttackCooldown: 0.7
+    - MaxHealth: 340
+      AttackPower: 34
+      AttackRange: 1
+      AttackCooldown: 0.6
+    - MaxHealth: 390
+      AttackPower: 39
+      AttackRange: 1
+      AttackCooldown: 0.5
+    TargetPriority: 0
+    AttackType: 0

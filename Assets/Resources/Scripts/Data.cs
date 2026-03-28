@@ -49,6 +49,18 @@ public class ShadowData
     public int MaxLevel;
     public int CurrentLevel;
     public Sprite Icon;
+    public LevelStat[] LevelStats;
+    public int TargetPriority;
+    public int AttackType;
+}
+
+[System.Serializable]
+public class LevelStat
+{
+    public int MaxHealth;
+    public int AttackPower;
+    public int AttackRange;
+    public float AttackCooldown;
 }
 
 [System.Serializable]
@@ -64,5 +76,25 @@ public class UpgradeData
     public int CostAmount;
     public string EffectType;
     public float EffectAmount;
+    public Sprite Icon;
+}
+
+[System.Serializable]
+public class EnemyData
+{
+    public int ID;
+    public string Name;
+    public string Description;
+    public EnemyType Type;
+    public float MaxHealth;
+    public float AttackPower;
+    public float AttackRange;
+    public float AttackCooldown;
+    public float MoveSpeed;
+    public HitBoxShape HitBoxShape;
+    public float HitboxRadius;
+    public float HitboxDuration;
+    public bool IsPiercing;
+    public bool IsBoss;
     public Sprite Icon;
 }

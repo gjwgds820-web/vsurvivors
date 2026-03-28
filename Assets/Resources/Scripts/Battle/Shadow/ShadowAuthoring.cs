@@ -68,6 +68,11 @@ public class ShadowAuthoring : MonoBehaviour
             AddBuffer<DamageBufferElement>(entity);
             AddComponent<ShadowTag>(entity);
             AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);
+            AddComponent(entity, new ShadowInstanceData
+            {
+                ShadowID = 0,
+                CurrentLevel = 1
+            });
         }
     }
 }

@@ -58,7 +58,7 @@ public partial struct EnemyTargetingJob : IJobEntity
     [ReadOnly] [DeallocateOnJobCompletion] public NativeArray<LocalTransform> ShadowTransforms;
     [ReadOnly] public CollisionWorld CollisionWorld;
 
-    private void Execute(ref EnemyData enemyData, ref EnemyTargetData targetData, in LocalTransform transform)
+    private void Execute(ref CEnemyData enemyData, ref EnemyTargetData targetData, in LocalTransform transform)
     {
         enemyData.SearchTimer -= DeltaTime;
         if (enemyData.SearchTimer > 0) return;
@@ -143,7 +143,7 @@ public partial struct EnemyMovementSystem : ISystem
         float separationWeight = 2.0f;
 
         foreach (var (transform, velocity, physicsMass, enemyData, targetData) in 
-                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<EnemyData>, RefRO<EnemyTargetData>>())
+                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRO<EnemyTargetData>>())
         {
             physicsMass.ValueRW.InverseInertia = new float3(0, 0, 0);
             if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget))
@@ -284,19 +284,27 @@ public partial struct EnemyCombatSystem : ISystem
         var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
         foreach (var (enemyData, targetData, transform) in
-                 SystemAPI.Query<RefRW<EnemyData>, RefRO<EnemyTargetData>, RefRO<LocalTransform>>())
+                 SystemAPI.Query<RefRW<CEnemyData>, RefRO<EnemyTargetData>, RefRO<LocalTransform>>())
         {
             enemyData.ValueRW.CurrentCooldown -= deltaTime;
-
+            Entity currentTarget = targetData.ValueRO.CurrentTarget;
             if (enemyData.ValueRO.CurrentState != EnemyState.Attack) continue;
-            if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget)) continue;
+            if (currentTarget == Entity.Null || !SystemAPI.Exists(currentTarget)) continue;
 
             if (enemyData.ValueRO.CurrentCooldown <= 0)
             {
-                if (_transformLookup.TryGetComponent(targetData.ValueRO.CurrentTarget, out var targetTransform))
+                
+                if (currentTarget == Entity.Null || currentTarget.Index < 0) continue; // 유효하지 않은 타겟 무시
+                if (_transformLookup.TryGetComponent(currentTarget, out var targetTransform))
                 {
+                    if (enemyData.ValueRO.AttackPrefab == Entity.Null)
+                    {
+                        UnityEngine.Debug.LogError("Attack Prefab is not assigned in EnemyData!");
+                        continue;
+                    }
                     float3 targetPos = targetTransform.Position;
                     Entity hitbox = ecb.Instantiate(enemyData.ValueRO.AttackPrefab);
+                    ecb.AddBuffer<HitRecordElement>(hitbox);
 
                     ecb.SetComponent(hitbox, new LocalTransform
                     {
@@ -339,10 +347,15 @@ public partial struct EnemyDeathSystem : ISystem
         float time = (float)SystemAPI.Time.ElapsedTime;
 
         foreach (var (enemyData, transform, entity) in
-                 SystemAPI.Query<RefRO<EnemyData>, RefRO<LocalTransform>>().WithEntityAccess())
+                 SystemAPI.Query<RefRO<CEnemyData>, RefRO<LocalTransform>>().WithEntityAccess())
         {
             if (enemyData.ValueRO.CurrentHealth <= 0)
             {
+                if (enemyData.ValueRO.IsBoss)
+                {
+                    var eventEntity = ecb.CreateEntity();
+                    ecb.AddComponent(eventEntity, new ElementAscensionEventTag { BossLevel = 1 });
+                }
                 uint seed = (uint)(entity.Index + time * 100000f) + 1;
                 var random = Random.CreateFromIndex(seed);
 

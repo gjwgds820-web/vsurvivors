@@ -17,7 +17,11 @@ public class GameDirectorAuthoring : MonoBehaviour
                 GatePrefab = GetEntity(authoring.gatePrefab, TransformUsageFlags.Dynamic),
                 EnemyPrefab = GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic),
                 WaveTimer = 5f,
-                CurrentWave = 0
+                EnemySpawnTimer = 1f,
+                CurrentWave = 1,
+                CurrentPhase = GamePhase.NormalWave,
+                GlobalTimer = 0f,
+                BossTimer = 180f
             });
             AddComponent<SubSceneVisualModel>(entity);
         }

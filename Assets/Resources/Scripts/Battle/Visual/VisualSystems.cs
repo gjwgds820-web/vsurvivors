@@ -12,12 +12,14 @@ public partial class VisualSyncSystem : SystemBase
 {
     private EntityQuery _enemyQuery;
     private EntityQuery _gateQuery;
+    private EntityQuery _shadowQuery;
 
     protected override void OnCreate()
     {
         // 엔티티를 추적하기위한 쿼리 생성
         _enemyQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag>().WithNone<SubSceneVisualModel>().Build();
         _gateQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, GateData>().WithNone<SubSceneVisualModel>().Build();
+        _shadowQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CShadowData>().WithNone<SubSceneVisualModel>().Build();
     }
     protected override void OnUpdate()
     {
@@ -50,6 +52,21 @@ public partial class VisualSyncSystem : SystemBase
                     var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
 
                     var go = Object.Instantiate(VisualManager.Instance.GateVisualPrefab, pos, rot);
+                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+                }
+                entities.Dispose();
+            }
+            // 섀도우
+            if (!_shadowQuery.IsEmpty)
+            {
+                var entities = _shadowQuery.ToEntityArray(Allocator.Temp);
+
+                foreach (var entity in entities)
+                {
+                    var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                    var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+
+                    var go = Object.Instantiate(VisualManager.Instance.ShadowVisualPrefab, pos, rot);
                     EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
                 }
                 entities.Dispose();

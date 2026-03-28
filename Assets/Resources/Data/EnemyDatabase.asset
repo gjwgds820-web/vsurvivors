@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7d034e2ea0847946b2513badeec9eaf, type: 3}
+  m_Name: EnemyDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDatabase
+  enemies:
+  - ID: 60000001
+    Name: Enemy_1
+    Description: This is a test enemy.
+    Type: 0
+    MaxHealth: 100
+    AttackPower: 10
+    AttackRange: 1
+    AttackCooldown: 1
+    MoveSpeed: 2
+    HitBoxShape: 3
+    HitboxRadius: 0.5
+    HitboxDuration: 0.1
+    IsPiercing: 1
+    IsBoss: 0
+    Icon: {fileID: 0}
+  - ID: 60000002
+    Name: Enemy_2
+    Description: This is a test enemy.
+    Type: 0
+    MaxHealth: 200
+    AttackPower: 20
+    AttackRange: 2
+    AttackCooldown: 1.5
+    MoveSpeed: 1.5
+    HitBoxShape: 2
+    HitboxRadius: 0.7
+    HitboxDuration: 0.2
+    IsPiercing: 1
+    IsBoss: 0
+    Icon: {fileID: 0}
+  - ID: 60000003
+    Name: Enemy_3
+    Description: This is a test enemy.
+    Type: 0
+    MaxHealth: 500
+    AttackPower: 50
+    AttackRange: 2
+    AttackCooldown: 2
+    MoveSpeed: 1
+    HitBoxShape: 0
+    HitboxRadius: 1
+    HitboxDuration: 0.5
+    IsPiercing: 1
+    IsBoss: 1
+    Icon: {fileID: 0}

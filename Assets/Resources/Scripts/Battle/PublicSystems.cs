@@ -148,6 +148,7 @@ public partial struct HitBoxCollisionSystem : ISystem
             for (int i = 0; i < tempHitTargets.Length; i++)
             {
                 Entity targetEnt = tempHitTargets[i];
+                if (targetEnt.Index < 0 || !SystemAPI.Exists(targetEnt)) continue; // 유효하지 않은 엔티티 무시
                 // 타겟이 이미 피격된 적인지 확인
                 bool canHit = true;
                 int bufferIndex = -1;
@@ -176,7 +177,7 @@ public partial struct HitBoxCollisionSystem : ISystem
 
                 // 타겟이 적인지 확인 (TargetFaction이 0이면 적을 타겟, 1이면 아군을 타겟으로 가정)
                 bool isValidTarget = false;
-                if (hitbox.ValueRO.TargetFaction == 0 && SystemAPI.HasComponent<EnemyData>(targetEnt))
+                if (hitbox.ValueRO.TargetFaction == 0 && SystemAPI.HasComponent<CEnemyData>(targetEnt))
                 {
                     isValidTarget = true;
                 }

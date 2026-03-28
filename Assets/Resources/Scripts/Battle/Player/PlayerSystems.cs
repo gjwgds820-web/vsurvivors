@@ -122,6 +122,8 @@ public partial struct ShadowSpawnerSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.TryGetSingleton<ShadowDatabaseComponent>(out var shadowDB)) return;
+
         float deltaTime = SystemAPI.Time.DeltaTime;
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
@@ -134,7 +136,7 @@ public partial struct ShadowSpawnerSystem : ISystem
             for (int i = 0; i < shadowSlots.Length; i++)
             {
                 var slot = shadowSlots[i];
-                if (slot.ShadowEntity != Entity.Null)
+                if (slot.ShadowEntity != Entity.Null && slot.ShadowEntity.Index >= 0)
                 {
                     // 상태 체크
                     if (SystemAPI.HasComponent<ShadowCombatData>(slot.ShadowEntity))
@@ -184,15 +186,56 @@ public partial struct ShadowSpawnerSystem : ISystem
                     // 생성 및 부활
                     if (targetIndex != -1)
                     {
+                        int shadowID = 40000001; // 기본 그림자 ID, 필요시 확장 가능
+                        int currentLevel = 1;
+
+                        ref var shadows = ref shadowDB.DatabaseRef.Value.Shadows;
+                        int dbIndex = -1;
+                        for (int i = 0; i < shadows.Length; i++)
+                        {
+                            if (shadows[i].ID == shadowID)
+                            {
+                                dbIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (dbIndex == -1) continue; // 데이터베이스에 해당 ID가 없으면 스킵
+
+                        // 레벨 스탯 가져오기
+                        ref var shadowDef = ref shadows[dbIndex];
+                        ref var statBlob = ref shadowDef.LevelStats[currentLevel - 1];
+
                         if (needInstantiate || targetShadow == Entity.Null)
                         {
+                            if (spawnerData.ValueRO.ShadowPrefab == Entity.Null)
+                            {
+                                UnityEngine.Debug.LogError("Shadow Prefab is not assigned in ShadowSpawnData!");
+                                continue;
+                            }
                             // 신규 생성
                             targetShadow = ecb.Instantiate(spawnerData.ValueRO.ShadowPrefab);
+                            float3 spawnPos = playerTransform.ValueRO.Position + math.normalize(new float3(UnityEngine.Random.value * 1.5f, 0.5f, UnityEngine.Random.value * 1.5f)); // 플레이어 주변에 랜덤하게 스폰
 
                             // 진형 내 인덱스 및 초기 데이터 주입
-                            ecb.SetComponent(targetShadow, new LocalTransform { Position = playerTransform.ValueRO.Position, Scale = 1f, Rotation = quaternion.identity }); 
-                            ecb.SetComponent(targetShadow, new CShadowData { Index = targetIndex, CurrentState = FormationState.Idle, StateChangeTimer = 0f });
-
+                            ecb.SetComponent(targetShadow, new LocalTransform { Position = spawnPos, Scale = 1f, Rotation = quaternion.identity }); 
+                            ecb.SetComponent(targetShadow, new ShadowInstanceData { ShadowID = shadowID, CurrentLevel = currentLevel });
+                            var baseShadowData = SystemAPI.GetComponent<CShadowData>(spawnerData.ValueRO.ShadowPrefab);
+                            baseShadowData.Index = targetIndex;
+                            baseShadowData.CurrentState = FormationState.Idle;
+                            baseShadowData.StateChangeTimer = 0f;
+                            ecb.SetComponent(targetShadow, baseShadowData);
+                            // 스탯 주입
+                            var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
+                            combatData.MaxHealth = statBlob.MaxHealth;
+                            combatData.CurrentHealth = statBlob.MaxHealth;
+                            combatData.AttackPower = statBlob.AttackPower;
+                            combatData.AttackRange = statBlob.AttackRange;
+                            combatData.AttackCooldown = statBlob.AttackCooldown;
+                            combatData.TargetPriority = (TargetingType)shadowDef.TargetPriority;
+                            combatData.AttackType = (AttackType)shadowDef.AttackType;
+                            combatData.IsAlive = true;
+                            ecb.SetComponent(targetShadow, combatData);
                             if (needInstantiate)
                             {
                                 shadowSlots.Add(new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
@@ -205,14 +248,21 @@ public partial struct ShadowSpawnerSystem : ISystem
                         else
                         {
                             // 부활
+                            if (!SystemAPI.Exists(targetShadow) || targetShadow.Index < 0) continue; // 유효하지 않은 엔티티 무시
                             var combatData = SystemAPI.GetComponent<ShadowCombatData>(targetShadow);
+                            combatData.MaxHealth = statBlob.MaxHealth;
                             combatData.CurrentHealth = combatData.MaxHealth;
+                            combatData.AttackPower = statBlob.AttackPower;
+                            combatData.AttackRange = statBlob.AttackRange;
+                            combatData.AttackCooldown = statBlob.AttackCooldown;
+                            combatData.IsAlive = true;
                             combatData.CurrentTarget = Entity.Null;
                             ecb.SetComponent(targetShadow, combatData);
 
                             // 위치 초기화
                             var tr = SystemAPI.GetComponent<LocalTransform>(targetShadow);
-                            tr.Position = playerTransform.ValueRO.Position;
+                            float3 spawnPos = playerTransform.ValueRO.Position + math.normalize(new float3(UnityEngine.Random.value, 0.5f, UnityEngine.Random.value)) * 1.5f; // 플레이어 주변에 랜덤하게 스폰
+                            tr.Position = spawnPos;
                             ecb.SetComponent(targetShadow, tr);
 
                             var updatedSlot = shadowSlots[targetIndex];

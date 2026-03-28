@@ -40,61 +40,6 @@ public class DataImporter
         Debug.Log("Skill data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
-
-    [MenuItem("Tools/Import Skill Data(CSV)")]
-    public static void ImportSkillDataFromCSV()
-    {
-        string path = Application.dataPath + "/Resources/Data/SkillData.csv";
-        
-        if (!File.Exists(path))
-        {
-            Debug.LogError("SkillData.csv file not found at: " + path);
-            return;
-        }
-
-        string assetPath = "Assets/Resources/Data/SkillDatabase.asset";
-        SkillDatabase database = AssetDatabase.LoadAssetAtPath<SkillDatabase>(assetPath);
-        if (database == null)
-        {
-            database = ScriptableObject.CreateInstance<SkillDatabase>();
-            AssetDatabase.CreateAsset(database, assetPath);
-            Debug.Log("Created new SkillDatabase asset at: " + assetPath);
-        }
-
-        database.skills.Clear();
-        string[] lines = File.ReadAllLines(path);
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
-
-            string[] values = line.Split(',');
-
-            try
-            {
-                SkillData skill = new SkillData
-                {
-                    ID = int.Parse(values[0]),
-                    Type = (SkillType)Enum.Parse(typeof(SkillType), values[1]),
-                    Name = values[2],
-                    Description = values[3],
-                    MaxLevel = int.Parse(values[4]),
-                    CurrentLevel = int.Parse(values[5]),
-                    Icon = Resources.Load<Sprite>("Icons/Skills/" + values[2])
-                };
-                database.skills.Add(skill);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error parsing line {i + 1} in CSV: {e.Message}");
-            }
-        }
-
-        EditorUtility.SetDirty(database);
-        AssetDatabase.SaveAssets();
-        Debug.Log("Skill data imported successfully from CSV.");
-        AssetDatabase.Refresh();
-    }
     #endregion
 
     #region Character
@@ -136,61 +81,6 @@ public class DataImporter
         Debug.Log("Character data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
-
-    [MenuItem("Tools/Import Character Data(CSV)")]
-    public static void ImportCharacterDataFromCSV()
-    {
-        string path = Application.dataPath + "/Resources/Data/CharacterData.csv";
-        
-        if (!File.Exists(path))
-        {
-            Debug.LogError("CharacterData.csv file not found at: " + path);
-            return;
-        }
-
-        string assetPath = "Assets/Resources/Data/CharacterDatabase.asset";
-        CharacterDatabase database = AssetDatabase.LoadAssetAtPath<CharacterDatabase>(assetPath);
-        if (database == null)
-        {
-            database = ScriptableObject.CreateInstance<CharacterDatabase>();
-            AssetDatabase.CreateAsset(database, assetPath);
-            Debug.Log("Created new CharacterDatabase asset at: " + assetPath);
-        }
-
-        database.characters.Clear();
-        string[] lines = File.ReadAllLines(path);
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
-
-            string[] values = line.Split(',');
-
-            try
-            {
-                CharacterData character = new CharacterData
-                {
-                    ID = int.Parse(values[0]),
-                    Name = values[1],
-                    Description = values[2],
-                    MaxLevel = int.Parse(values[3]),
-                    CurrentLevel = int.Parse(values[4]),
-                    Icon = Resources.Load<Sprite>("Icons/Characters/" + values[1])
-                };
-                database.characters.Add(character);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error parsing line {i + 1} in CSV: {e.Message}");
-            }
-        }
-
-        EditorUtility.SetDirty(database);
-        AssetDatabase.SaveAssets();
-        Debug.Log("Character data imported successfully from CSV.");
-        AssetDatabase.Refresh();
-    }
-
     #endregion
     
     #region Relic
@@ -226,60 +116,6 @@ public class DataImporter
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
         Debug.Log("Relic data imported successfully from JSON.");
-        AssetDatabase.Refresh();
-    }
-
-    [MenuItem("Tools/Import Relic Data(CSV)")]
-    public static void ImportRelicDataFromCSV()
-    {
-        string path = Application.dataPath + "/Resources/Data/RelicData.csv";
-        
-        if (!File.Exists(path))
-        {
-            Debug.LogError("RelicData.csv file not found at: " + path);
-            return;
-        }
-
-        string assetPath = "Assets/Resources/Data/RelicDatabase.asset";
-        RelicDatabase database = AssetDatabase.LoadAssetAtPath<RelicDatabase>(assetPath);
-        if (database == null)
-        {
-            database = ScriptableObject.CreateInstance<RelicDatabase>();
-            AssetDatabase.CreateAsset(database, assetPath);
-            Debug.Log("Created new RelicDatabase asset at: " + assetPath);
-        }
-
-        database.relics.Clear();
-        string[] lines = File.ReadAllLines(path);
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
-
-            string[] values = line.Split(',');
-
-            try
-            {
-                RelicData relic = new RelicData
-                {
-                    ID = int.Parse(values[0]),
-                    Name = values[1],
-                    Description = values[2],
-                    MaxLevel = int.Parse(values[3]),
-                    CurrentLevel = int.Parse(values[4]),
-                    Icon = Resources.Load<Sprite>("Icons/Relics/" + values[1])
-                };
-                database.relics.Add(relic);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error parsing line {i + 1} in CSV: {e.Message}");
-            }
-        }
-
-        EditorUtility.SetDirty(database);
-        AssetDatabase.SaveAssets();
-        Debug.Log("Relic data imported successfully from CSV.");
         AssetDatabase.Refresh();
     }
     #endregion
@@ -318,60 +154,6 @@ public class DataImporter
         Debug.Log("Shadow data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
-
-    [MenuItem("Tools/Import Shadow Data(CSV)")]
-    public static void ImportShadowDataFromCSV()
-    {
-        string path = Application.dataPath + "/Resources/Data/ShadowData.csv";
-        
-        if (!File.Exists(path))
-        {
-            Debug.LogError("ShadowData.csv file not found at: " + path);
-            return;
-        }
-
-        string assetPath = "Assets/Resources/Data/ShadowDatabase.asset";
-        ShadowDatabase database = AssetDatabase.LoadAssetAtPath<ShadowDatabase>(assetPath);
-        if (database == null)
-        {
-            database = ScriptableObject.CreateInstance<ShadowDatabase>();
-            AssetDatabase.CreateAsset(database, assetPath);
-            Debug.Log("Created new ShadowDatabase asset at: " + assetPath);
-        }
-
-        database.shadows.Clear();
-        string[] lines = File.ReadAllLines(path);
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
-
-            string[] values = line.Split(',');
-
-            try
-            {
-                ShadowData shadow = new ShadowData
-                {
-                    ID = int.Parse(values[0]),
-                    Name = values[1],
-                    Description = values[2],
-                    MaxLevel = int.Parse(values[3]),
-                    CurrentLevel = int.Parse(values[4]),
-                    Icon = Resources.Load<Sprite>("Icons/Shadows/" + values[1])
-                };
-                database.shadows.Add(shadow);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error parsing line {i + 1} in CSV: {e.Message}");
-            }
-        }
-
-        EditorUtility.SetDirty(database);
-        AssetDatabase.SaveAssets();
-        Debug.Log("Shadow data imported successfully from CSV.");
-        AssetDatabase.Refresh();
-    }
     #endregion
 
     #region Upgrade
@@ -408,62 +190,39 @@ public class DataImporter
         Debug.Log("Upgrade data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
-
-    [MenuItem("Tools/Import Upgrade Data(CSV)")]
-    public static void ImportUpgradeDataFromCSV()
+    #endregion
+    #region Enemy
+    [MenuItem("Tools/Import Enemy Data(JSON)")]
+    public static void ImportEnemyDataFromJson()
     {
-        string path = Application.dataPath + "/Resources/Data/UpgradeData.csv";
-        
+        string path = Application.dataPath + "/Resources/Data/EnemyData.json";
         if (!File.Exists(path))
         {
-            Debug.LogError("UpgradeData.csv file not found at: " + path);
+            Debug.LogError("EnemyData.json file not found at: " + path);
             return;
         }
 
-        string assetPath = "Assets/Resources/Data/UpgradeDatabase.asset";
-        UpgradeDatabase database = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>(assetPath);
+        string jsonContent = File.ReadAllText(path);
+        string assetPath = "Assets/Resources/Data/EnemyDatabase.asset";
+
+        EnemyDatabase database = AssetDatabase.LoadAssetAtPath<EnemyDatabase>(assetPath);
+
         if (database == null)
         {
-            database = ScriptableObject.CreateInstance<UpgradeDatabase>();
+            database = ScriptableObject.CreateInstance<EnemyDatabase>();
             AssetDatabase.CreateAsset(database, assetPath);
-            Debug.Log("Created new UpgradeDatabase asset at: " + assetPath);
+            Debug.Log("Created new EnemyDatabase asset at: " + assetPath);
         }
 
-        database.upgrades.Clear();
-        string[] lines = File.ReadAllLines(path);
-        for (int i = 1; i < lines.Length; i++)
+        JsonUtility.FromJsonOverwrite(jsonContent, database);
+        foreach (EnemyData enemy in database.enemies)
         {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
-
-            string[] values = line.Split(',');
-
-            try
-            {
-                UpgradeData upgrade = new UpgradeData
-                {
-                    ID = int.Parse(values[0]),
-                    Name = values[1],
-                    Description = values[2],
-                    MaxLevel = int.Parse(values[3]),
-                    CurrentLevel = int.Parse(values[4]),
-                    CostType = values[5],
-                    CostAmount = int.Parse(values[6]),
-                    EffectType = values[7],
-                    EffectAmount = float.Parse(values[8]),
-                    Icon = Resources.Load<Sprite>("Icons/Upgrades/" + values[1])
-                };
-                database.upgrades.Add(upgrade);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error parsing line {i + 1} in CSV: {e.Message}");
-            }
+            enemy.Icon = Resources.Load<Sprite>("Icons/Enemies/" + enemy.Name);
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
-        Debug.Log("Upgrade data imported successfully from CSV.");
+        Debug.Log("Enemy data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
     #endregion
