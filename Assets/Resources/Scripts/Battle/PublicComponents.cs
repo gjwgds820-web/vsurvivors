@@ -40,3 +40,7 @@ public struct ProjectileData : IComponentData
     public float Speed;
     // public Entity Target;
 }
+
+public struct DeathTag : IComponentData { }
+
+public struct DestroyEntityTag : IComponentData { }

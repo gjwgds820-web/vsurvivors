@@ -1,10 +1,11 @@
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using Unity.Physics.GraphicsIntegration;
 using Unity.Collections;
+using System.ComponentModel;
 
 #region Movement System
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
@@ -75,41 +76,30 @@ public partial struct PlayerMovementSystem : ISystem
 }
 #endregion
 
-#region Health System
+#region Death System
 [UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(UnitHealthSystem))]
 [BurstCompile]
-public partial struct PlayerHealthSystem : ISystem
+public partial struct PlayerDeathSystem : ISystem
 {
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        float deltaTime = SystemAPI.Time.DeltaTime;
+        var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
-        foreach (var (playerData, damageBuffer) in SystemAPI.Query<RefRW<PlayerData>, DynamicBuffer<DamageBufferElement>>())
+        foreach (var (playerData, entity) in
+                 SystemAPI.Query<RefRO<PlayerData>>()
+                 .WithAll<DeathTag>()
+                 .WithEntityAccess())
         {
-            // 무적 타이머 감소
-            if (playerData.ValueRO.InvincibilityTimer > 0f)
-            {
-                playerData.ValueRW.InvincibilityTimer -= deltaTime;
-                damageBuffer.Clear(); // 무적 상태에서는 받은 피해 무시
-                continue;
-            }
+            // 사망 처리 (예: 게임 오버 이벤트 생성)
+            var gameOverEvent = ecb.CreateEntity();
+            ecb.AddComponent<PlayerDeathEventTag>(gameOverEvent);
 
-            if (damageBuffer.Length > 0)
-            {
-                float finalDamage = math.max(0f, damageBuffer[0].Damage - playerData.ValueRO.DamageReduction);
-                playerData.ValueRW.CurrentHealth -= finalDamage;
-                playerData.ValueRW.InvincibilityTimer = 0.5f; // 피해를 받은 후 0.5초간 무적
-
-                damageBuffer.Clear();
-
-                // 사망 처리
-                if (playerData.ValueRO.CurrentHealth <= 0f)
-                {
-                    playerData.ValueRW.CurrentHealth = 0f;
-                }
-            }
+            // 플레이어 엔티티는 삭제하지 않고, 필요한 경우 리스폰 시스템에서 재활용할 수 있도록 함
         }
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
     }
 }
 #endregion
@@ -206,6 +196,30 @@ public partial struct ShadowSpawnerSystem : ISystem
                         ref var shadowDef = ref shadows[dbIndex];
                         ref var statBlob = ref shadowDef.LevelStats[currentLevel - 1];
 
+                        // 스폰 위치 계산
+                        float3 playerPos = playerTransform.ValueRO.Position;
+                        float3 playerForward = math.forward(playerTransform.ValueRO.Rotation);
+                        float3 right = math.cross(math.up(), playerForward);
+                        float distance = 3f;
+                        float3 spawnPos = playerPos;
+
+                        // Idle 기준 위치 계산
+                        if (targetIndex < 8)
+                        {
+                            float angle = (targetIndex / 8f) * math.PI * 2f;
+                            spawnPos += right * math.cos(angle) * distance + playerForward * math.sin(angle) * distance + new float3(0, 1f, 0);
+                        }
+                        else
+                        {
+                            float angle = ((targetIndex - 8) / 12f) * math.PI * 2f;
+                            spawnPos += right * math.cos(angle) * distance * 2f + playerForward * math.sin(angle) * distance * 2f + new float3(0, 1f, 0);
+                        }
+
+                        // 스폰 위치 로직 끝
+
+                        // 공통적으로 사용할 LocalTransform 위치
+                        var newTr = new LocalTransform { Position = spawnPos, Scale = 1f, Rotation = quaternion.identity };
+
                         if (needInstantiate || targetShadow == Entity.Null)
                         {
                             if (spawnerData.ValueRO.ShadowPrefab == Entity.Null)
@@ -215,10 +229,13 @@ public partial struct ShadowSpawnerSystem : ISystem
                             }
                             // 신규 생성
                             targetShadow = ecb.Instantiate(spawnerData.ValueRO.ShadowPrefab);
-                            float3 spawnPos = playerTransform.ValueRO.Position + math.normalize(new float3(UnityEngine.Random.value * 1.5f, 0.5f, UnityEngine.Random.value * 1.5f)); // 플레이어 주변에 랜덤하게 스폰
-
+                            
                             // 진형 내 인덱스 및 초기 데이터 주입
-                            ecb.SetComponent(targetShadow, new LocalTransform { Position = spawnPos, Scale = 1f, Rotation = quaternion.identity }); 
+                            ecb.SetComponent(targetShadow, newTr); 
+                            ecb.SetComponent(targetShadow, new PhysicsGraphicalInterpolationBuffer
+                            {
+                                PreviousTransform = new RigidTransform(newTr.Rotation, newTr.Position)
+                            });
                             ecb.SetComponent(targetShadow, new ShadowInstanceData { ShadowID = shadowID, CurrentLevel = currentLevel });
                             var baseShadowData = SystemAPI.GetComponent<CShadowData>(spawnerData.ValueRO.ShadowPrefab);
                             baseShadowData.Index = targetIndex;
@@ -227,15 +244,22 @@ public partial struct ShadowSpawnerSystem : ISystem
                             ecb.SetComponent(targetShadow, baseShadowData);
                             // 스탯 주입
                             var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
-                            combatData.MaxHealth = statBlob.MaxHealth;
-                            combatData.CurrentHealth = statBlob.MaxHealth;
                             combatData.AttackPower = statBlob.AttackPower;
                             combatData.AttackRange = statBlob.AttackRange;
                             combatData.AttackCooldown = statBlob.AttackCooldown;
-                            combatData.TargetPriority = (TargetingType)shadowDef.TargetPriority;
                             combatData.AttackType = (AttackType)shadowDef.AttackType;
                             combatData.IsAlive = true;
                             ecb.SetComponent(targetShadow, combatData);
+                            
+                            var targetingData = SystemAPI.GetComponent<TargetingData>(spawnerData.ValueRO.ShadowPrefab);
+                            targetingData.Priority = (TargetingType)shadowDef.TargetPriority;
+                            ecb.SetComponent(targetShadow, targetingData);
+
+                            var healthData = SystemAPI.GetComponent<HealthData>(spawnerData.ValueRO.ShadowPrefab);
+                            healthData.MaxHealth = statBlob.MaxHealth;
+                            healthData.CurrentHealth = statBlob.MaxHealth;
+                            ecb.SetComponent(targetShadow, healthData);
+
                             if (needInstantiate)
                             {
                                 shadowSlots.Add(new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
@@ -249,25 +273,45 @@ public partial struct ShadowSpawnerSystem : ISystem
                         {
                             // 부활
                             if (!SystemAPI.Exists(targetShadow) || targetShadow.Index < 0) continue; // 유효하지 않은 엔티티 무시
+
+                            // 위치, 렌더링 물리, 속도 초기화
+                            ecb.SetComponent(targetShadow, newTr);
+                            ecb.SetComponent(targetShadow, new PhysicsGraphicalInterpolationBuffer
+                            {
+                                PreviousTransform = new RigidTransform(newTr.Rotation, newTr.Position)
+                            });
+                            ecb.SetComponent(targetShadow, new Unity.Physics.PhysicsVelocity { Linear = float3.zero, Angular = float3.zero });
+
+                            var bData = SystemAPI.GetComponent<CShadowData>(targetShadow);
+                            bData.Index = targetIndex;
+                            bData.CurrentState = FormationState.Idle;
+                            bData.StateChangeTimer = 0f;
+                            ecb.SetComponent(targetShadow, bData);
+
                             var combatData = SystemAPI.GetComponent<ShadowCombatData>(targetShadow);
-                            combatData.MaxHealth = statBlob.MaxHealth;
-                            combatData.CurrentHealth = combatData.MaxHealth;
                             combatData.AttackPower = statBlob.AttackPower;
                             combatData.AttackRange = statBlob.AttackRange;
                             combatData.AttackCooldown = statBlob.AttackCooldown;
                             combatData.IsAlive = true;
-                            combatData.CurrentTarget = Entity.Null;
                             ecb.SetComponent(targetShadow, combatData);
 
-                            // 위치 초기화
-                            var tr = SystemAPI.GetComponent<LocalTransform>(targetShadow);
-                            float3 spawnPos = playerTransform.ValueRO.Position + math.normalize(new float3(UnityEngine.Random.value, 0.5f, UnityEngine.Random.value)) * 1.5f; // 플레이어 주변에 랜덤하게 스폰
-                            tr.Position = spawnPos;
-                            ecb.SetComponent(targetShadow, tr);
+                            var targetingData = SystemAPI.GetComponent<TargetingData>(targetShadow);
+                            targetingData.CurrentTarget = Entity.Null;
+                            ecb.SetComponent(targetShadow, targetingData);
 
-                            var updatedSlot = shadowSlots[targetIndex];
-                            updatedSlot.IsAlive = true;
-                            shadowSlots[targetIndex] = updatedSlot;
+                            var healthData = SystemAPI.GetComponent<HealthData>(targetShadow);
+                            healthData.MaxHealth = statBlob.MaxHealth;
+                            healthData.CurrentHealth = statBlob.MaxHealth;
+                            ecb.SetComponent(targetShadow, healthData);
+
+                            // 충돌 활성화 및 찌꺼기 태그 제거
+                            if (SystemAPI.HasComponent<Unity.Physics.PhysicsCollider>(spawnerData.ValueRO.ShadowPrefab))
+                            {
+                                ecb.AddComponent(targetShadow, SystemAPI.GetComponent<Unity.Physics.PhysicsCollider>(spawnerData.ValueRO.ShadowPrefab));
+                            }
+                            ecb.RemoveComponent<DeathTag>(targetShadow);
+                            
+                            shadowSlots[targetIndex] = new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true };
                         }
 
                         // 스폰 완료에 따른 플레이어 데이터 업데이트
@@ -338,18 +382,77 @@ public partial struct ItemLootSystem : ISystem
                         ecb.AddComponent(goldEvent, new GoldEventTag { amount = (int)itemData.ValueRO.Amount });
                         break;
                     case DropItemType.Magnet:
-                        ecb.AddComponent<MagnetEventTag>(entity);
+                        var magnetEvent = ecb.CreateEntity();
+                        ecb.AddComponent<MagnetEventTag>(magnetEvent);
                         break;
                     case DropItemType.Bomb:
-                        ecb.AddComponent<BombEventTag>(entity);
+                        var bombEvent = ecb.CreateEntity();
+                        ecb.AddComponent<BombEventTag>(bombEvent);
                         break;
                 }
 
-                ecb.DestroyEntity(entity);
+                ecb.AddComponent(entity, new DestroyEntityTag());
             }
         }
 
         ecb.SetComponent(playerEntity, playerData);
+
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
+    }
+}
+#endregion
+
+#region ItemEventSystem
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(ItemLootSystem))]
+[BurstCompile]
+public partial struct ItemEventSystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        bool triggerMagnet = false;
+        bool triggerBomb = false;
+
+        foreach (var (tag, entity) in SystemAPI.Query<RefRO<MagnetEventTag>>().WithEntityAccess())
+        {
+            triggerMagnet = true;
+            ecb.DestroyEntity(entity);
+        }
+        foreach (var (tag, entity) in SystemAPI.Query<RefRO<BombEventTag>>().WithEntityAccess())
+        {
+            triggerBomb = true;
+            ecb.DestroyEntity(entity);
+        }
+
+        if (triggerMagnet)
+        {
+            foreach (var itemData in SystemAPI.Query<RefRW<DroppedItemData>>())
+            {
+                itemData.ValueRW.IsAttracted = true;
+            }
+        }
+
+        if (triggerBomb)
+        {
+            float3 playerPos = float3.zero;
+            if (SystemAPI.TryGetSingleton<PlayerData>(out var playerData))
+            {
+                playerPos = SystemAPI.GetComponent<LocalTransform>(SystemAPI.GetSingletonEntity<PlayerData>()).Position;
+            }
+
+            float bombRadiusSq = 15f * 15f;
+    
+            foreach (var (healthData, enemyData, transform) in SystemAPI.Query<RefRW<HealthData>, RefRO<CEnemyData>, RefRO<LocalTransform>>())
+            {
+                if (math.distancesq(transform.ValueRO.Position, playerPos) <= bombRadiusSq)
+                {
+                    healthData.ValueRW.CurrentHealth = 0f;
+                }
+            }
+        }
 
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
@@ -377,15 +480,30 @@ public partial struct PlayerLevelUpSystem : ISystem
         foreach (var (playerData, playerTransform, entity) in
                  SystemAPI.Query<RefRW<PlayerData>, RefRO<LocalTransform>>().WithEntityAccess())
         {
-            float requiredExp = 100f * playerData.ValueRO.Level;
+            // GameDirectorData 싱글톤에서 레벨업 필요 경험치 기준량 가져오기 (없으면 100f)
+            float expBase = 100f;
+            if (SystemAPI.TryGetSingleton<GameDirectorData>(out var directorData))
+            {
+                expBase = directorData.ExpRequirementBase;
+            }
 
-            if (playerData.ValueRO.EXP >= requiredExp)
+            float requiredExp = expBase * playerData.ValueRO.Level;
+            int levelUpsThisFrame = 0;
+
+            while (playerData.ValueRO.EXP >= requiredExp)
             {
                 playerData.ValueRW.EXP -= requiredExp;
                 playerData.ValueRW.Level++;
+                levelUpsThisFrame++;
+                
+                // 다음 레벨업 요구치 갱신
+                requiredExp = expBase * playerData.ValueRO.Level;
+            }
 
-                // 레벨업 이벤트 태그 추가
-                ecb.AddComponent<LevelUpEventTag>(entity);
+            if (levelUpsThisFrame > 0)
+            {
+                // 레벨업 이벤트 태그 추가 (버퍼 추가 구현)
+                ecb.AddComponent(entity, new LevelUpEventTag { Count = levelUpsThisFrame });
             }
         }
 

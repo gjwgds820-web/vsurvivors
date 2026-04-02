@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 775849637629255891}
   - component: {fileID: 7702309089723222107}
   - component: {fileID: 6026490649374101647}
+  - component: {fileID: 712820631259571291}
   m_Layer: 5
   m_Name: BottomPanel
   m_TagString: Untagged
@@ -153,6 +154,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &712820631259571291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 678966267259053591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fb4048a35ef0ea499a9f24fd46c875c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_OwnedSkillsPanel
 --- !u!1 &1462628013638876015
 GameObject:
   m_ObjectHideFlags: 0
@@ -724,7 +737,7 @@ GameObject:
   - component: {fileID: 122924352487221831}
   - component: {fileID: 1725577998137621674}
   m_Layer: 5
-  m_Name: ElementSlot1
+  m_Name: OwnedElement2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -799,7 +812,7 @@ GameObject:
   - component: {fileID: 4709504018577187010}
   - component: {fileID: 3522159879698835158}
   m_Layer: 5
-  m_Name: ElementSlot0
+  m_Name: OwnedElement1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

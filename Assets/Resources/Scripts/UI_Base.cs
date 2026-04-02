@@ -49,6 +49,7 @@ public abstract class UI_Base : MonoBehaviour
     protected void BindText(Type type) { Bind<TMP_Text>(type); }
     protected void BindButton(Type type) { Bind<Button>(type); }
     protected void BindToggle(Type type) { Bind<Toggle>(type); }
+    protected void BindSlider(Type type) { Bind<Slider>(type); }
 
 
     protected T Get<T>(int idx) where T : UnityEngine.Object
@@ -65,4 +66,5 @@ public abstract class UI_Base : MonoBehaviour
     public Button GetButton(int idx) { return Get<Button>(idx); }
     public Image GetImage(int idx) { return Get<Image>(idx); }
     public Toggle GetToggle(int idx) { return Get<Toggle>(idx); }
+    public Slider GetSlider(int idx) { return Get<Slider>(idx); }
 }

@@ -21,10 +21,37 @@ public class UIManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        _popupInstanceCache.Clear();
+        _activePopups.Clear();
+        
+        GameObject uiRoot = GameObject.Find("UIRoot");
+        if (uiRoot == null) uiRoot = GameObject.Find("PanelUI");
+
+        if (uiRoot != null)
+        {
+            popupParent = uiRoot.transform;
+        }
+        else
+        {
+            Debug.LogWarning("UIRoot or PanelUI not found in the loaded scene.");
         }
     }
 
@@ -47,7 +74,14 @@ public class UIManager : MonoBehaviour
             topPopup.SetActive(false);
         }
     }
-
+    public void CloseAllPopups()
+    {
+        while (_activePopups.Count > 0)
+        {
+            GameObject popup = _activePopups.Pop();
+            popup.SetActive(false);
+        }
+    }
     private GameObject GetOrCreatePopup(string popupName)
     {
         if (_popupInstanceCache.TryGetValue(popupName, out GameObject popup))

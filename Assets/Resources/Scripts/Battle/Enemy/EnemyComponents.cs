@@ -22,8 +22,6 @@ public struct CEnemyData : IComponentData
     public EnemyType Type;
     public EnemyState CurrentState;
     public Entity AttackPrefab;
-    public float MaxHealth;
-    public float CurrentHealth;
 
     public float AttackPower;
     public float AttackRange;
@@ -31,7 +29,6 @@ public struct CEnemyData : IComponentData
     public float CurrentCooldown;
 
     public float MoveSpeed;
-    public float SearchTimer;
     public HitBoxShape HitBoxShape;
     public float HitboxRadius;
     public float HitboxDuration;
@@ -39,6 +36,7 @@ public struct CEnemyData : IComponentData
     public bool IsAlive;
 
     public bool IsBoss;
+    public float BlockedTimer;
 }
 
 public struct EnemyDefBlob
@@ -67,12 +65,6 @@ public struct EnemyDatabaseComponent : IComponentData
     public BlobAssetReference<EnemyDatabaseBlob> DatabaseRef;
 }
 #endregion
-#region EnemyTargetData
-public struct EnemyTargetData : IComponentData
-{
-    public Entity CurrentTarget;
-    public bool IsTargetingShadow;
-}
-#endregion
 
 public struct EnemyTag : IComponentData { }
+public struct BossTag : IComponentData { }

@@ -17,15 +17,14 @@ public struct PlayerData : IComponentData
 {
     public int Level;
     public float EXP;
-    public float MaxHealth;
-    public float CurrentHealth;
+
     public float HealthRegenPerSecond;
-    public float DamageReduction;
+
     public float MaxShadow;
     public float CurrentShadow;
     public float ShadowRegenCooldown;
     public float ShadowRegenTimer;
-    public float InvincibilityTimer;
+
     public float MagnetismRadius;
     public float CollectRadius;
     public bool IsAlive;
@@ -44,7 +43,10 @@ public struct ShadowSlotElement : IBufferElementData
 
 public struct CameraTargetTag : IComponentData { }
 
-public struct LevelUpEventTag : IComponentData {}
+public struct LevelUpEventTag : IComponentData 
+{
+    public int Count;
+}
 
 public struct ElementAscensionEventTag : IComponentData
 {

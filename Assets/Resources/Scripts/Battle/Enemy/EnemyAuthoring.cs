@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using UnityEngine;
 using Unity.Physics.GraphicsIntegration;
 
@@ -31,26 +31,37 @@ public class EnemyAuthoring : MonoBehaviour
                 Type = authoring.type,
                 CurrentState = EnemyState.Move,
                 AttackPrefab = GetEntity(authoring.attackPrefab, TransformUsageFlags.Dynamic),
-                MaxHealth = authoring.maxHealth,
-                CurrentHealth = authoring.maxHealth,
                 AttackPower = authoring.attackPower,
                 AttackRange = authoring.attackRange,
                 AttackCooldown = authoring.attackCooldown,
                 CurrentCooldown = 0f,
                 MoveSpeed = authoring.moveSpeed,
-                SearchTimer = 0f,
                 HitBoxShape = authoring.hitBoxShape,
                 HitboxRadius = authoring.hitboxRadius,
                 HitboxDuration = authoring.hitboxDuration,
                 IsPiercing = authoring.isPiercing,
-                IsAlive = true,
-                IsBoss = authoring.isBoss
+                IsBoss = authoring.isBoss,
+                IsAlive = true
             });
 
-            AddComponent(entity, new EnemyTargetData
+            AddComponent(entity, new HealthData
+            {
+                MaxHealth = authoring.maxHealth,
+                CurrentHealth = authoring.maxHealth,
+                DamageReduction = 0f,
+                InvincibilityTimer = 0f
+            });
+
+            AddComponent(entity, new TargetingData
             {
                 CurrentTarget = Entity.Null,
-                IsTargetingShadow = false
+                Faction = TargetingFaction.Enemy,
+                Priority = TargetingType.Nearest,
+                ScanTimer = 0f,
+                ScanInterval = 0.3f,
+                MaxSearchRangeSq = authoring.isBoss ? float.MaxValue : (authoring.attackRange * 10f) * (authoring.attackRange * 10f),
+                MaxFollowRangeSq = float.MaxValue, // Enemies follow forever basically
+                UseCrowdControl = true
             });
 
             AddComponent<EnemyTag>(entity);

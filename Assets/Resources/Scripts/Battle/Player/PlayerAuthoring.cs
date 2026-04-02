@@ -35,19 +35,24 @@ public class PlayerAuthoring : MonoBehaviour
             {
                 Level = authoring.level,
                 EXP = authoring.exp,
-                MaxHealth = authoring.maxHealth,
-                CurrentHealth = authoring.maxHealth,
                 HealthRegenPerSecond = authoring.healthRegenPerSecond,
-                DamageReduction = authoring.damageReduction,
                 MaxShadow = authoring.maxShadow,
                 CurrentShadow = authoring.maxShadow,
                 ShadowRegenCooldown = authoring.shadowRegenCooldown,
                 ShadowRegenTimer = authoring.shadowRegenCooldown,
-                InvincibilityTimer = 0f,
                 MagnetismRadius = authoring.magnetismRadius,
                 CollectRadius = authoring.collectRadius,
                 IsAlive = true
             });
+
+            AddComponent(entity, new HealthData
+            {
+                MaxHealth = authoring.maxHealth,
+                CurrentHealth = authoring.maxHealth,
+                DamageReduction = authoring.damageReduction,
+                InvincibilityTimer = 0f
+            });
+
             AddComponent(entity, new ShadowSpawnData
             {
                 ShadowPrefab = GetEntity(authoring.shadowPrefab, TransformUsageFlags.Dynamic)

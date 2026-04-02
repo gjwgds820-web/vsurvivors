@@ -6,8 +6,6 @@ public class UI_SkillSelectionPopup : UI_Base
     enum GameObjects
     {
         SelectionZone,
-        ShadowSlotFrame,
-        PassiveSlotFrame,
     }
 
     private GameManager _gameManager;
@@ -18,6 +16,8 @@ public class UI_SkillSelectionPopup : UI_Base
         if (base.Init() == false)
             return false;
 
+        // Debug.Log("[UI_SkillSelectionPopup] Init Called.");
+
         BindObject(typeof(GameObjects));
 
         _gameManager = FindAnyObjectByType<GameManager>();
@@ -27,8 +27,10 @@ public class UI_SkillSelectionPopup : UI_Base
 
     private void OnEnable()
     {
+        // Debug.Log("[UI_SkillSelectionPopup] OnEnable Called.");
         Init();
         RefreshPopup();
+        // Debug.Log("[UI_SkillSelectionPopup] Refresh Completed.");
     }
 
     private void RefreshPopup()
@@ -63,28 +65,20 @@ public class UI_SkillSelectionPopup : UI_Base
 
     private void UpdateOwnedSkillsUI()
     {
-        Transform shadowGroup = GetObject((int)GameObjects.ShadowSlotFrame).transform;
-        Transform passiveGroup = GetObject((int)GameObjects.PassiveSlotFrame).transform;
-        List<SkillData> currentShadows = _gameManager.CurrentShadows;
-        List<SkillData> currentPassives = _gameManager.CurrentPassives;
-        foreach (SkillData shadow in currentShadows)
+        UI_OwnedSkillsPanel panel = GetComponentInChildren<UI_OwnedSkillsPanel>();
+        if (panel != null)
         {
-            UI_OwnedSkillSlot slot = ResourceManager.Instance.Instantiate("UI/SubItem/UI_OwnedSkillSlot", shadowGroup).GetComponent<UI_OwnedSkillSlot>();
-            slot.SetSkill(shadow);
+            panel.RefreshUI();
         }
-        foreach (SkillData passive in currentPassives)
+        else
         {
-            UI_OwnedSkillSlot slot = ResourceManager.Instance.Instantiate("UI/SubItem/UI_OwnedSkillSlot", passiveGroup).GetComponent<UI_OwnedSkillSlot>();
-            slot.SetSkill(passive);
+            Debug.LogWarning("[UI_SkillSelectionPopup] UI_OwnedSkillsPanel을 찾을 수 없습니다.");
         }
     }
 
     private void OnSkillSelected(SkillData selectedSkill)
     {
-        _gameManager.LevelUp(selectedSkill);
-
-        Time.timeScale = 1f;
-        UIManager.Instance.CloseTopPopup();
+        _gameManager.OnSkillSelectionComplete(selectedSkill);
     }
 
     private void OnSkillRerolled(UI_SkillSlot targetSlot, SkillData oldSkill)

@@ -23,7 +23,7 @@ public class UI_SkillSlot : UI_Base
 
     enum Buttons
     {
-        SkillSlot,
+        UI_SkillSlot,
         RerollButton,
     }
 
@@ -54,11 +54,28 @@ public class UI_SkillSlot : UI_Base
 
         GetText((int)Texts.SkillNameText).text = skillData.Name;
         GetText((int)Texts.SkillDescriptionText).text = skillData.Description;
-        GetImage((int)Images.SkillIconImage).sprite = skillData.Icon;
+        
+        // 아이콘이 비어있다면 리소스 폴더에서 동적으로 로드 시도
+        Sprite iconSprite = skillData.Icon;
+        if (iconSprite == null)
+        {
+            if (skillData.Type == SkillType.Shadow)
+            {
+                iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Shadows/Shadow_{skillData.ID - 40000000}");
+            }
+            else // Passive 등 다른 타입일 경우
+            {
+                // 패시브 아이콘 경로에 맞게 확장하세요
+                iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Passives/Passive_{skillData.ID}");
+            }
+        }
+        
+        GetImage((int)Images.SkillIconImage).sprite = iconSprite;
+        GetImage((int)Images.SkillIconImage).gameObject.SetActive(iconSprite != null);
 
         for (int i = 0; i < 5; i++)
         {
-            if (skillData.CurrentLevel == 5)
+            if (skillData.CurrentLevel >= 6)
                 GetImage((int)Images.Star1 + i).color = Color.red;
             else if (i < skillData.CurrentLevel)
                 GetImage((int)Images.Star1 + i).color = Color.yellow;
@@ -66,8 +83,8 @@ public class UI_SkillSlot : UI_Base
                 GetImage((int)Images.Star1 + i).color = Color.gray;
         }
 
-        GetButton((int)Buttons.SkillSlot).onClick.RemoveAllListeners();
-        GetButton((int)Buttons.SkillSlot).onClick.AddListener(() => _onSelect?.Invoke(_currentSkill));
+        GetButton((int)Buttons.UI_SkillSlot).onClick.RemoveAllListeners();
+        GetButton((int)Buttons.UI_SkillSlot).onClick.AddListener(() => _onSelect?.Invoke(_currentSkill));
         GetButton((int)Buttons.RerollButton).onClick.RemoveAllListeners();
         GetButton((int)Buttons.RerollButton).onClick.AddListener(() => _onReroll?.Invoke(this, _currentSkill));
     }

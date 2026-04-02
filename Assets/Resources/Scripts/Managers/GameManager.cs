@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
 using System.Collections.Generic;
 
@@ -9,6 +9,10 @@ public class GameManager : MonoBehaviour
     private EntityQuery _goldLootQuery;
     private EntityQuery _elementAscensionQuery;
 
+    private int _pendingLevelUps = 0;
+    private EntityQuery _playerDeathQuery;
+    private EntityQuery _gameClearQuery;
+
     private List<SkillData> currentShadows = new List<SkillData>();
     public List<SkillData> CurrentShadows => currentShadows;
     private List<SkillData> currentPassives = new List<SkillData>();
@@ -16,12 +20,17 @@ public class GameManager : MonoBehaviour
     private List<SkillData> availableSkills = new List<SkillData>();
     private const int MAX_SLOTS = 6;
 
+    // 현재 보유 중인 원소 (최대 2개)
+    public List<int> SelectedElements { get; private set; } = new List<int>();
+
     void Start()
     {
         _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         _levelUpQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<LevelUpEventTag>());
         _goldLootQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GoldEventTag>());
         _elementAscensionQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<ElementAscensionEventTag>());
+        _playerDeathQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerDeathEventTag>());
+        _gameClearQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameClearEventTag>());
 
         InitializeAvailableSkills();
     }
@@ -46,10 +55,21 @@ public class GameManager : MonoBehaviour
     {
         if (!_levelUpQuery.IsEmptyIgnoreFilter)
         {
-            Time.timeScale = 0f;
-
-            ShowSkillSelectionPopup();
+            var levelUpEvents = _levelUpQuery.ToComponentDataArray<LevelUpEventTag>(Unity.Collections.Allocator.Temp);
+            foreach (var ev in levelUpEvents)
+            {
+                _pendingLevelUps += ev.Count;
+            }
+            levelUpEvents.Dispose();
             _entityManager.RemoveComponent<LevelUpEventTag>(_levelUpQuery);
+        }
+
+        // 버퍼에 대기중인 레벨업이 있고, 팝업이 안열려있다면(시간이 흐르고 있다면) 시작
+        if (_pendingLevelUps > 0 && Time.timeScale > 0f)
+        {
+            _pendingLevelUps--;
+            Time.timeScale = 0f;
+            ShowSkillSelectionPopup();
         }
 
         if (!_goldLootQuery.IsEmptyIgnoreFilter)
@@ -60,6 +80,7 @@ public class GameManager : MonoBehaviour
                 var goldAmount = _entityManager.GetComponentData<GoldEventTag>(goldEvent).amount;
                 DataManager.Instance.currentUserData.AddGold(goldAmount);
             }
+            goldEvents.Dispose();
             _entityManager.RemoveComponent<GoldEventTag>(_goldLootQuery);
         }
 
@@ -70,12 +91,29 @@ public class GameManager : MonoBehaviour
             ShowElementAscensionPopup();
             _entityManager.RemoveComponent<ElementAscensionEventTag>(_elementAscensionQuery);
         }
+
+        if (!_playerDeathQuery.IsEmptyIgnoreFilter)
+        {
+            Time.timeScale = 0f;
+            ShowResultPopup(false);
+            _entityManager.RemoveComponent<PlayerDeathEventTag>(_playerDeathQuery);
+        }
+
+        if (!_gameClearQuery.IsEmptyIgnoreFilter)
+        {
+            Time.timeScale = 0f;
+            ShowResultPopup(true);
+            _entityManager.RemoveComponent<GameClearEventTag>(_gameClearQuery);
+        }
     }
 
     void ShowSkillSelectionPopup()
     {
-        UIManager.Instance.ShowPopup("UI_SkillSelectionPopup");
+        // Debug.Log("[GameManager] ShowSkillSelectionPopup Started.");
         GenerateSkillOptions();
+        // Debug.Log("[GameManager] Calling UIManager.Instance.ShowPopup");
+        UIManager.Instance.ShowPopup("UI_SkillSelectionPopup");
+        // Debug.Log("[GameManager] ShowSkillSelectionPopup Ended.");
     }
 
     void ShowElementAscensionPopup()
@@ -83,10 +121,27 @@ public class GameManager : MonoBehaviour
         UIManager.Instance.ShowPopup("UI_ElementAscensionPopup");
     }
 
+    void ShowResultPopup(bool isVictory)
+    {
+        UIManager.Instance.ShowPopup("UI_ResultPopup");
+        
+        // Find the instantiated UI_ResultPopup to set up its content
+        var popup = FindAnyObjectByType<UI_ResultPopup>();
+        if (popup != null)
+        {
+            popup.Setup(isVictory);
+        }
+        else
+        {
+            Debug.LogError("UI_ResultPopup not found after calling ShowPopup!");
+        }
+    }
+
     public void GenerateSkillOptions()
     {
         // 조건에 맞는 Pool 가져오기
         List<SkillData> validPool = GetValidSkillPool();
+        // Debug.Log($"[GameManager] GenerateSkillOptions: validPool.Count = {validPool.Count}");
 
         // 풀에서 중복 없이 3개 뽑기
         List<SkillData> selectedOptions = new List<SkillData>();
@@ -101,12 +156,8 @@ public class GameManager : MonoBehaviour
             validPool.RemoveAt(randomIndex);
         }
 
-        // 뽑힌 스킬이 없다면?
-        if (selectedOptions.Count == 0)
-        {
-            Debug.Log("더 이상 습득할 스킬이 없습니다!");
-            return;
-        }
+        // 뽑힌 스킬 반환
+        if (selectedOptions.Count == 0) { Debug.Log("No skills"); }
 
         DataManager.Instance.SelectedOptions = selectedOptions;
     }
@@ -124,7 +175,24 @@ public class GameManager : MonoBehaviour
                 if (isOwned)
                 {
                     int currentLevel = GetCurrentSkillLevel(skill.ID, currentShadows);
-                    if (currentLevel < skill.MaxLevel) filteredPool.Add(skill);
+                    
+                    // 기본 최대 레벨은 5로 제한
+                    int limitLevel = 5;
+                    
+                    // 만약 보유중인 원소 리스트에 이 스킬이 요구하는 원소가 있다면 MaxLevel(6)로 해방
+                    // ShadowDict에서 해당하는 원소를 찾아옵니다.
+                    bool hasMatchingElement = false;
+                    if (DataManager.Instance.ShadowDict.TryGetValue(skill.ID, out ShadowData shadowData))
+                    {
+                        hasMatchingElement = SelectedElements.Contains((int)shadowData.Element);
+                    }
+                    
+                    if (skill.MaxLevel > 5 && hasMatchingElement)
+                    {
+                        limitLevel = skill.MaxLevel;
+                    }
+
+                    if (currentLevel < limitLevel) filteredPool.Add(skill);
                 }
                 else
                 {
@@ -159,17 +227,17 @@ public class GameManager : MonoBehaviour
     {
         List<SkillData> validPool = GetValidSkillPool();
 
-        // 현재 화면에 표시중인 3개와 방금 버린 스킬은 풀에서 제외
+        // 현재 화면에 표시중인 3개 중 방금 버린 스킬을 제외
         validPool.RemoveAll(s => currentlyDisplayedOptions.Exists(disp => disp.ID == s.ID) || s.ID == oldSkill.ID);
 
-        // 남은 풀이 없다면 원래 스킬을 돌려줌
+        // 주석 복구됨
         if (validPool.Count == 0)
         {
             Debug.Log("대체할 스킬이 없습니다");
             return oldSkill;
         }
 
-        // 남은 풀에서 1개 리턴
+        // (주석 복구됨)
         int randomIndex = Random.Range(0, validPool.Count);
         return validPool[randomIndex];
     }
@@ -180,16 +248,55 @@ public class GameManager : MonoBehaviour
         if (selectedSkill.Type == SkillType.Shadow)
         {
             ownedSkill = currentShadows.Find(s => s.ID == selectedSkill.ID);
-            if (ownedSkill != null) ownedSkill.CurrentLevel++;
-            else currentShadows.Add(selectedSkill);
+            if (ownedSkill != null) 
+            {
+                ownedSkill.CurrentLevel++;
+            }
+            else 
+            {
+                selectedSkill.CurrentLevel = 1; // 1레벨로 초기화
+                currentShadows.Add(selectedSkill);
+                ownedSkill = selectedSkill;
+            }
         }
         else
         {
-            ownedSkill = currentPassives.Find(s => s.ID == selectedSkill.ID);
-            if (ownedSkill != null) ownedSkill.CurrentLevel++;
-            else currentPassives.Add(selectedSkill);
+            ownedSkill = currentPassives.Find(s => s.ID == selectedSkill.ID);   
+            if (ownedSkill != null) 
+            {
+                ownedSkill.CurrentLevel++;
+            }
+            else 
+            {
+                selectedSkill.CurrentLevel = 1; // 1레벨로 초기화
+                currentPassives.Add(selectedSkill);
+                ownedSkill = selectedSkill;
+            }
         }
 
         return ownedSkill;
     }
+
+    public void OnSkillSelectionComplete(SkillData selectedSkill)
+    {
+        LevelUp(selectedSkill);
+        UIManager.Instance.CloseTopPopup();
+
+        if (_pendingLevelUps > 0)
+        {
+            // 바로 다음 팝업을 띄우기 위해 펜딩 횟수 감소 후 재생성
+            _pendingLevelUps--;
+            ShowSkillSelectionPopup();
+        }
+        else
+        {
+            Time.timeScale = 1f;
+        }
+    }
 }
+
+
+
+
+
+

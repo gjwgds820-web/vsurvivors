@@ -8,6 +8,7 @@ public class ShadowAuthoring : MonoBehaviour
     [Header("Shadow Stats")]
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float maxHealth = 50f;
+    [SerializeField] private ElementType elementType = ElementType.Fire;
 
     [Header("Shadow Combat Stats")]
     [SerializeField] private AttackType attackType = AttackType.Melee;
@@ -36,19 +37,33 @@ public class ShadowAuthoring : MonoBehaviour
 
             AddComponent(entity, new ShadowCombatData
             {
-                CurrentTarget = Entity.Null,
-                ScanTimer = 0f,
                 AttackType = authoring.attackType,
-                TargetPriority = authoring.targetingType,
                 AttackPrefab = GetEntity(authoring.attackPrefab, TransformUsageFlags.Dynamic),
-                MaxHealth = authoring.maxHealth,
-                CurrentHealth = authoring.maxHealth,
                 AttackPower = authoring.attackDamage,
                 AttackRange = authoring.attackRange,
                 AttackCooldown = authoring.attackCooldown,
                 CurrentCooldown = 0f,
-                InvincibilityTimer = 0f,
                 IsAlive = true
+            });
+
+            AddComponent(entity, new TargetingData
+            {
+                CurrentTarget = Entity.Null,
+                Faction = TargetingFaction.Ally,
+                Priority = authoring.targetingType,
+                ScanTimer = 0f,
+                ScanInterval = 0.2f, // 스캔 주기
+                MaxSearchRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f), // 탐색 범위 (사거리+여유분)
+                MaxFollowRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f), // 추격(유지) 범위 - 사거리 넘어가면 즉각 타겟 해제하여 가까운 놈 다시 잡음!
+                UseCrowdControl = true
+            });
+
+            AddComponent(entity, new HealthData
+            {
+                MaxHealth = authoring.maxHealth,
+                CurrentHealth = authoring.maxHealth,
+                DamageReduction = 0f,
+                InvincibilityTimer = 0f
             });
 
             AddComponent(entity, new TargetPositionData
@@ -67,11 +82,15 @@ public class ShadowAuthoring : MonoBehaviour
 
             AddBuffer<DamageBufferElement>(entity);
             AddComponent<ShadowTag>(entity);
-            AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);
+            AddComponent(entity, new PhysicsGraphicalInterpolationBuffer
+            {
+                // Note: Adding a buffer requires AddBuffer, AddComponent isn't recommended but leaving existing syntax alone mostly.
+            });
             AddComponent(entity, new ShadowInstanceData
             {
                 ShadowID = 0,
-                CurrentLevel = 1
+                CurrentLevel = 1,
+                Element = authoring.elementType // Include if ShadowInstanceData has it
             });
         }
     }

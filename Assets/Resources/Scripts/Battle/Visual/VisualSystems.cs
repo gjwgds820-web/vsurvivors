@@ -7,94 +7,132 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 #region VisualSync
-[UpdateInGroup(typeof(SimulationSystemGroup))] 
+[UpdateInGroup(typeof(PresentationSystemGroup))] 
 public partial class VisualSyncSystem : SystemBase
 {
-    private EntityQuery _enemyQuery;
-    private EntityQuery _gateQuery;
-    private EntityQuery _shadowQuery;
+    private EntityQuery _enemyMissingVisualQuery;
+    private EntityQuery _bossMissingVisualQuery;
+    private EntityQuery _gateMissingVisualQuery;
+    private EntityQuery _shadowMissingVisualQuery;
+    private EntityQuery _itemMissingVisualQuery;
 
     protected override void OnCreate()
     {
-        // 엔티티를 추적하기위한 쿼리 생성
-        _enemyQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag>().WithNone<SubSceneVisualModel>().Build();
-        _gateQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, GateData>().WithNone<SubSceneVisualModel>().Build();
-        _shadowQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CShadowData>().WithNone<SubSceneVisualModel>().Build();
+        _enemyMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag>().WithNone<SubSceneVisualModel, Prefab, BossTag>().Build();
+        _bossMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag, BossTag>().WithNone<SubSceneVisualModel, Prefab>().Build();
+        _gateMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, GateData>().WithNone<SubSceneVisualModel, Prefab>().Build();
+        _shadowMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CShadowData>().WithNone<SubSceneVisualModel, Prefab>().Build();
+        _itemMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, DroppedItemData>().WithNone<SubSceneVisualModel, Prefab>().Build();
     }
+
     protected override void OnUpdate()
     {
-        // 런타임 생성 엔티티 껍데기 세팅 (초기화)
-        if (VisualManager.Instance != null)
+        if (VisualManager.Instance == null) return;
+        float deltaTime = SystemAPI.Time.DeltaTime;
+
+        if (!_enemyMissingVisualQuery.IsEmpty)
         {
-            // 에너미
-            if (!_enemyQuery.IsEmpty)
+            var entities = _enemyMissingVisualQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
             {
-                var entities = _enemyQuery.ToEntityArray(Allocator.Temp);
-
-                foreach (var entity in entities)
-                {
-                    var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
-                    var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
-
-                    var go = Object.Instantiate(VisualManager.Instance.EnemyVisualPrefab, pos, rot);
-                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
-                }
-                entities.Dispose();
+                var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                var go = Object.Instantiate(VisualManager.Instance.EnemyVisualPrefab, pos, rot);
+                EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
             }
-            // 게이트
-            if (!_gateQuery.IsEmpty)
-            {
-                var entities = _gateQuery.ToEntityArray(Allocator.Temp);
-
-                foreach (var entity in entities)
-                {
-                    var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
-                    var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
-
-                    var go = Object.Instantiate(VisualManager.Instance.GateVisualPrefab, pos, rot);
-                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
-                }
-                entities.Dispose();
-            }
-            // 섀도우
-            if (!_shadowQuery.IsEmpty)
-            {
-                var entities = _shadowQuery.ToEntityArray(Allocator.Temp);
-
-                foreach (var entity in entities)
-                {
-                    var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
-                    var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
-
-                    var go = Object.Instantiate(VisualManager.Instance.ShadowVisualPrefab, pos, rot);
-                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
-                }
-                entities.Dispose();
-            }
+            entities.Dispose();
         }
 
-        // 통합 동기화 시작 (플레이어, 에너미, 게이트 등 모두 포함)
+        if (!_bossMissingVisualQuery.IsEmpty)
+        {
+            var entities = _bossMissingVisualQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                var go = Object.Instantiate(VisualManager.Instance.BossVisualPrefab, pos, rot);
+                EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+            }
+            entities.Dispose();
+        }
 
-        // [A] 물리 보간(PhysicsGraphicalInterpolationBuffer)이 있는 엔티티 (플레이어, 이동하는 에너미 등)
-        // 떨림(Jitter) 현상 방지를 위해 이전/현재 프레임을 보간한 Transforms 사용
-        foreach (var (interpolatedTransform, visualModel) in SystemAPI.Query<RefRO<PhysicsGraphicalInterpolationBuffer>, SubSceneVisualModel>())
+        if (!_gateMissingVisualQuery.IsEmpty)
+        {
+            var entities = _gateMissingVisualQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                var go = Object.Instantiate(VisualManager.Instance.GateVisualPrefab, pos, rot);
+                EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+            }
+            entities.Dispose();
+        }
+
+        if (!_shadowMissingVisualQuery.IsEmpty)
+        {
+            var entities = _shadowMissingVisualQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                var go = Object.Instantiate(VisualManager.Instance.ShadowVisualPrefab, pos, rot);
+                EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+            }
+            entities.Dispose();
+        }
+
+        if (!_itemMissingVisualQuery.IsEmpty)
+        {
+            var entities = _itemMissingVisualQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                var itemData = EntityManager.GetComponentData<DroppedItemData>(entity);
+                GameObject prefab = null;
+                switch (itemData.Type)
+                {
+                    case DropItemType.Exp:
+                        prefab = VisualManager.Instance.ExpVisualPrefab;
+                        break;
+                    case DropItemType.Gold:
+                        prefab = VisualManager.Instance.GoldVisualPrefab;
+                        break;
+                    case DropItemType.Magnet:
+                        prefab = VisualManager.Instance.MagnetVisualPrefab;
+                        break;
+                    case DropItemType.Bomb:
+                        prefab = VisualManager.Instance.BombVisualPrefab;
+                        break;
+                }
+                if (prefab != null)
+                {
+                    var go = Object.Instantiate(prefab, pos, rot);
+                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+                }
+            }
+            entities.Dispose();
+        }
+
+        foreach (var (transform, visualModel) in SystemAPI.Query<RefRO<LocalTransform>, SubSceneVisualModel>())
         {
             if (visualModel != null && visualModel.Value != null)
             {
-                visualModel.Value.position = interpolatedTransform.ValueRO.PreviousTransform.pos;
-                visualModel.Value.rotation = interpolatedTransform.ValueRO.PreviousTransform.rot;
-            }
-        }
+                // 실제 ECS Transform 위치와 비주얼 오브젝트의 위치 간 거리 확인
+                float distanceSq = (visualModel.Value.position - (Vector3)transform.ValueRO.Position).sqrMagnitude;
 
-        // [B] 물리 보간 버퍼가 없는 정적 엔티티 (게이트 등)
-        // 단순히 LocalTransform 위치를 바로 복사
-        foreach (var (transform, visualModel) in SystemAPI.Query<RefRO<LocalTransform>, SubSceneVisualModel>()
-                     .WithNone<PhysicsGraphicalInterpolationBuffer>()) // A와 중복 실행을 막기 위해 제외
-        {
-            if (visualModel != null && visualModel.Value != null)
-            {
-                visualModel.Value.position = transform.ValueRO.Position;
-                visualModel.Value.rotation = transform.ValueRO.Rotation;
+                // 거리가 너무 멀면 (예: 부활, 텔레포트) Lerp 없이 즉각 이동하여 잔상 방지
+                if (distanceSq > 25f) 
+                {
+                    visualModel.Value.position = transform.ValueRO.Position;
+                    visualModel.Value.rotation = transform.ValueRO.Rotation;
+                }
+                else
+                {
+                    visualModel.Value.position = Vector3.Lerp(visualModel.Value.position, transform.ValueRO.Position, deltaTime * 20f);
+                    visualModel.Value.rotation = Quaternion.Slerp(visualModel.Value.rotation, transform.ValueRO.Rotation, deltaTime * 20f);
+                }
             }
         }
     }
@@ -116,9 +154,41 @@ public partial struct ItemVisualSystem : ISystem
                  SystemAPI.Query<RefRW<LocalTransform>, RefRO<DroppedItemData>>())
         {
             transform.ValueRW.Rotation = quaternion.RotateY(time * 2f);
-
             transform.ValueRW.Position.y = 0.5f + math.sin(time * 5f) * 0.1f;
         }
+    }
+}
+#endregion
+
+#region VisualCleanup
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+[UpdateBefore(typeof(CleanupDestroyedEntitySystem))]
+public partial class VisualCleanupSystem : SystemBase
+{
+    private EntityQuery _cleanupQuery;
+
+    protected override void OnCreate()
+    {
+        _cleanupQuery = SystemAPI.QueryBuilder().WithAll<SubSceneVisualModel, DestroyEntityTag>().Build();
+    }
+
+    protected override void OnUpdate()
+    {
+        if (_cleanupQuery.IsEmpty) return;
+
+        var entities = _cleanupQuery.ToEntityArray(Allocator.Temp);
+
+        foreach (var entity in entities)
+        {
+            var visualModel = EntityManager.GetComponentData<SubSceneVisualModel>(entity);
+
+            if (visualModel != null && visualModel.Value != null)
+            {
+                UnityEngine.Object.Destroy(visualModel.Value.gameObject);
+            }
+            EntityManager.RemoveComponent<SubSceneVisualModel>(entity);
+        }
+        entities.Dispose();
     }
 }
 #endregion

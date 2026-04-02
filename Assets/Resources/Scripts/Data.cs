@@ -9,13 +9,23 @@ public class SkillData
     public string Description;
     public int MaxLevel;
     public int CurrentLevel;
-    [System.NonSerialized] public Sprite Icon;
+    [Newtonsoft.Json.JsonIgnore] 
+    public Sprite Icon;
 }
 
 public enum SkillType
 {
     Shadow,
     Passive,
+}
+
+public enum ElementType
+{
+    Fire = 0,
+    Water = 1,
+    Leaf = 2,
+    Light = 3,
+    Dark = 4,
 }
 
 [System.Serializable]
@@ -48,6 +58,7 @@ public class ShadowData
     public string Description;
     public int MaxLevel;
     public int CurrentLevel;
+    public ElementType Element;
     public Sprite Icon;
     public LevelStat[] LevelStats;
     public int TargetPriority;

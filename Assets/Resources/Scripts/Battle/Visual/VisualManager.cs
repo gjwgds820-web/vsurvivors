@@ -7,7 +7,13 @@ public class VisualManager : MonoBehaviour
     [Header("Visual Prefabs")]
     public GameObject GateVisualPrefab;
     public GameObject EnemyVisualPrefab;
+    public GameObject BossVisualPrefab;
     public GameObject ShadowVisualPrefab;
+
+    public GameObject ExpVisualPrefab;
+    public GameObject GoldVisualPrefab;
+    public GameObject MagnetVisualPrefab;
+    public GameObject BombVisualPrefab;
 
     private void Awake()
     {

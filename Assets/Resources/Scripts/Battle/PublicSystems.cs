@@ -223,3 +223,22 @@ public partial struct HitBoxCollisionSystem : ISystem
     }
 }
 #endregion
+
+#region Cleanup
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+[BurstCompile]
+public partial struct CleanupDestroyedEntitySystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        foreach (var (tag, entity) in SystemAPI.Query<RefRO<DestroyEntityTag>>().WithEntityAccess())
+        {
+            ecb.DestroyEntity(entity);
+        }
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
+    }
+}
+#endregion

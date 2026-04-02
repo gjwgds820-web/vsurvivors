@@ -1,126 +1,10 @@
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
-
-#region Targeting System
-[BurstCompile]
-public partial struct EnemyTargetingSystem : ISystem
-{
-    private EntityQuery _playerQuery;
-    private EntityQuery _shadowQuery;
-
-    [BurstCompile]
-    public void OnCreate(ref SystemState state)
-    {
-        _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerInput, LocalTransform>().Build();
-        _shadowQuery = SystemAPI.QueryBuilder().WithAll<CShadowData, LocalTransform>().Build();
-    }
-
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
-    {
-        if (_playerQuery.IsEmpty) return;
-
-        if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld)) return;
-
-        Entity playerEntity = _playerQuery.GetSingletonEntity();
-        float3 playerPos = SystemAPI.GetComponent<LocalTransform>(playerEntity).Position;
-
-        var shadowEntities = _shadowQuery.ToEntityArray(Allocator.TempJob);
-        var shadowTransforms = _shadowQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
-
-        var job = new EnemyTargetingJob
-        {
-            DeltaTime = SystemAPI.Time.DeltaTime,
-            PlayerEntity = playerEntity,
-            PlayerPos = playerPos,
-            ShadowEntities = shadowEntities,
-            ShadowTransforms = shadowTransforms,
-            CollisionWorld = physicsWorld.CollisionWorld
-        };
-
-        job.ScheduleParallel();
-    }
-}
-
-[BurstCompile]
-public partial struct EnemyTargetingJob : IJobEntity
-{
-    public float DeltaTime;
-    public Entity PlayerEntity;
-    public float3 PlayerPos;
-
-    [ReadOnly] [DeallocateOnJobCompletion] public NativeArray<Entity> ShadowEntities;
-    [ReadOnly] [DeallocateOnJobCompletion] public NativeArray<LocalTransform> ShadowTransforms;
-    [ReadOnly] public CollisionWorld CollisionWorld;
-
-    private void Execute(ref CEnemyData enemyData, ref EnemyTargetData targetData, in LocalTransform transform)
-    {
-        enemyData.SearchTimer -= DeltaTime;
-        if (enemyData.SearchTimer > 0) return;
-
-        enemyData.SearchTimer = 0.3f;
-
-        float closestDistSq = float.MaxValue;
-        Entity closestShadow = Entity.Null;
-
-        // 인식 거리
-        float detectionRangeSq = (enemyData.AttackRange * 2.0f) * (enemyData.AttackRange * 2.0f);
-
-        // 타겟을 둘러쌀 수 있는 최대 허용 개체 수
-        int maxAttackersAllowed = 5;
-
-        // 섀도우 탐색
-        for (int i = 0; i < ShadowEntities.Length; i++)
-        {
-            float3 shadowPos = ShadowTransforms[i].Position;
-            float distSq = math.distancesq(transform.Position, ShadowTransforms[i].Position);
-
-            if (distSq <= detectionRangeSq && distSq < closestDistSq)
-            {
-                // 혼잡도 체크
-                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
-                int crowdCount = 0;
-
-                // 타겟 위치 기준으로 주변 접근 가능 거리 탐색
-                if (CollisionWorld.CalculateDistance(new PointDistanceInput()
-                {
-                    Position = shadowPos,
-                    MaxDistance = enemyData.AttackRange * 1.5f,
-                    Filter = CollisionFilter.Default
-                }, ref hits))
-                {
-                    crowdCount = hits.Length;
-                }
-                hits.Dispose();
-
-                // 주변 개체(적군+아군)가 제한 수치 이하일 때만 타겟으로 선정
-                if (crowdCount <= maxAttackersAllowed)
-                {
-                    closestDistSq = distSq;
-                    closestShadow = ShadowEntities[i];
-                }
-            }
-        }
-
-        // 사거리 내에 접근 가능한 그림자가 있는 경우 그림자 타겟, 그렇지 않으면 플레이어 타겟
-        if (closestShadow != Entity.Null)
-        {
-            targetData.CurrentTarget = closestShadow;
-            targetData.IsTargetingShadow = true;
-        }
-        else
-        {
-            targetData.CurrentTarget = PlayerEntity;
-            targetData.IsTargetingShadow = false;
-        }
-    }
-}
-#endregion
 
 #region Movement System
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
@@ -133,19 +17,17 @@ public partial struct EnemyMovementSystem : ISystem
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        // 주변 공간 검색을 위한 PhysicsWorld 접근
         if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld)) return;
 
         var collisionWorld = physicsWorld.CollisionWorld;
 
-        // 반발력을 계산할 반경과 가중치
         float separationRadius = 1.5f;
         float separationWeight = 2.0f;
 
-        foreach (var (transform, velocity, physicsMass, enemyData, targetData) in 
-                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRO<EnemyTargetData>>())
+        foreach (var (transform, velocity, physicsMass, enemyData, targetData) in
+                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRW<TargetingData>>())
         {
-            physicsMass.ValueRW.InverseInertia = new float3(0, 0, 0);
+            physicsMass.ValueRW.InverseInertia = float3.zero;
             if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget))
             {
                 velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
@@ -156,7 +38,7 @@ public partial struct EnemyMovementSystem : ISystem
             float3 targetPos = SystemAPI.GetComponent<LocalTransform>(targetData.ValueRO.CurrentTarget).Position;
 
             float3 toTarget = targetPos - currentPos;
-            toTarget.y = 0; // 수평 이동만 고려
+            toTarget.y = 0; 
             float distance = math.length(toTarget);
 
             if (distance > enemyData.ValueRO.AttackRange)
@@ -167,14 +49,8 @@ public partial struct EnemyMovementSystem : ISystem
 
                 // Separation 계산
                 float3 separationVec = float3.zero;
-
-                // 공간 검색 필터
                 CollisionFilter filter = CollisionFilter.Default;
-
-                // 목표 반경(Radius) 내에 있는 물리 객체 검색
                 NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
-
-                // OverlapAabb 대신 점(Point) 기반 거리 측정(CalculateDistance) 사용
                 if (collisionWorld.CalculateDistance(new PointDistanceInput 
                 { 
                     Position = currentPos, 
@@ -190,11 +66,10 @@ public partial struct EnemyMovementSystem : ISystem
                         diff.y = 0;
                         float sqrMag = math.lengthsq(diff);
 
-                        // 아주 미세한 거리 방어 (자기 자신 또는 완전히 겹친 상태 방지)
+                        // 아주 미세한 거리 방어
                         if (sqrMag > 0.001f && sqrMag < separationRadius * separationRadius)
                         {
                             float dist = math.sqrt(sqrMag);
-                            // 거리가 가까울수록 강한 밀어내기 힘 적용
                             separationVec += (diff / dist) * (1.0f - (dist / separationRadius));
                             neighborCount++;
                         }
@@ -203,49 +78,53 @@ public partial struct EnemyMovementSystem : ISystem
                     {
                         // 평균 분리 벡터
                         separationVec /= neighborCount;
-
-                        // 가고자 하는 방향과 밀어내는 방향의 내적
                         float pushBackFactor = math.dot(lookDir, separationVec);
 
-                        // 만약 꽉 막혔다면
                         if (pushBackFactor < -0.2f)
                         {
-                            // 타겟 방향의 측면 벡터
-                            float3 rightDir = math.cross(math.up(), lookDir);
+                            enemyData.ValueRW.BlockedTimer += deltaTime;
+                            if (enemyData.ValueRO.BlockedTimer > 1.0f)
+                            {
+                                targetData.ValueRW.CurrentTarget = Entity.Null;
+                                targetData.ValueRW.ScanTimer = 0f;
+                                enemyData.ValueRW.BlockedTimer = 0f;
+                                continue;
+                            }
+
+                            // 회전 처리를 위한 순수 방향
+                            float3 rightDir = math.cross(math.up(), lookDir);   
                             float dirSign = (currentPos.x * currentPos.z) % 2f > 0 ? 1f : -1f;
 
                             // 배회 벡터
-                            float3 orbitVec = rightDir * dirSign * 2.0f;
+                            float3 orbitVec = rightDir * dirSign * 2.0f;        
 
-                            // 이동 방향에 배회 벡터와 분리 벡터를 섞음
+                            // 회전 처리를 위한 순수 방향
                             moveDir = math.normalize(lookDir + separationVec * separationWeight + orbitVec);
                         }
                         else
                         {
-                            // 막힌게 아니면 타겟방향 + 분리벡터
+                            enemyData.ValueRW.BlockedTimer = 0f;
                             moveDir = math.normalize(moveDir + separationVec * separationWeight);
                         }
                     }
                     else
                     {
-                        moveDir = lookDir; // 주변에 아무도 없다면 직진
+                        moveDir = lookDir; 
                     }
                 }
                 hits.Dispose();
 
-                // 목표를 향해 이동
                 velocity.ValueRW.Linear = new float3(
                     moveDir.x * enemyData.ValueRO.MoveSpeed,
                     0f,
                     moveDir.z * enemyData.ValueRO.MoveSpeed
                 );
 
-                // 튀어오르는 것 방지
+                // 솟아오르는 것 방지
                 float3 fixedPos = transform.ValueRO.Position;
                 fixedPos.y = 0.5f;
                 transform.ValueRW.Position = fixedPos;
 
-                // 회전 (Y축 기준)
                 quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
                 transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
                 transform.ValueRW.Rotation.value.x = 0;
@@ -254,7 +133,6 @@ public partial struct EnemyMovementSystem : ISystem
             }
             else
             {
-                // 사거리 내에 들어왔을 때 공격 상태로 전환
                 enemyData.ValueRW.CurrentState = EnemyState.Attack;
                 velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
             }
@@ -284,7 +162,7 @@ public partial struct EnemyCombatSystem : ISystem
         var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
         foreach (var (enemyData, targetData, transform) in
-                 SystemAPI.Query<RefRW<CEnemyData>, RefRO<EnemyTargetData>, RefRO<LocalTransform>>())
+                 SystemAPI.Query<RefRW<CEnemyData>, RefRO<TargetingData>, RefRO<LocalTransform>>())
         {
             enemyData.ValueRW.CurrentCooldown -= deltaTime;
             Entity currentTarget = targetData.ValueRO.CurrentTarget;
@@ -294,7 +172,7 @@ public partial struct EnemyCombatSystem : ISystem
             if (enemyData.ValueRO.CurrentCooldown <= 0)
             {
                 
-                if (currentTarget == Entity.Null || currentTarget.Index < 0) continue; // 유효하지 않은 타겟 무시
+                if (currentTarget == Entity.Null || currentTarget.Index < 0) continue; // (주석 복구됨)
                 if (_transformLookup.TryGetComponent(currentTarget, out var targetTransform))
                 {
                     if (enemyData.ValueRO.AttackPrefab == Entity.Null)
@@ -335,47 +213,74 @@ public partial struct EnemyCombatSystem : ISystem
 
 #region Death & Drop System
 [UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(UnitHealthSystem))]
 [BurstCompile]
 public partial struct EnemyDeathSystem : ISystem
 {
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        if (!SystemAPI.TryGetSingleton<DropBankData>(out var dropBank)) return;
-
         var ecb = new EntityCommandBuffer(Allocator.Temp);
         float time = (float)SystemAPI.Time.ElapsedTime;
+        int killIncrement = 0;
+
+        bool hasDropBank = SystemAPI.TryGetSingleton<DropBankData>(out var dropBank);
 
         foreach (var (enemyData, transform, entity) in
-                 SystemAPI.Query<RefRO<CEnemyData>, RefRO<LocalTransform>>().WithEntityAccess())
+                 SystemAPI.Query<RefRO<CEnemyData>, RefRO<LocalTransform>>()
+                 .WithAll<DeathTag>()
+                 .WithNone<DestroyEntityTag>()
+                 .WithEntityAccess())
         {
-            if (enemyData.ValueRO.CurrentHealth <= 0)
+            if (enemyData.ValueRO.IsBoss)
             {
-                if (enemyData.ValueRO.IsBoss)
+                // 현재 조건에 따른 보스 선택
+                int currentBossWave = 1;
+                if (SystemAPI.TryGetSingleton<GameDirectorData>(out var directorData))
                 {
-                    var eventEntity = ecb.CreateEntity();
-                    ecb.AddComponent(eventEntity, new ElementAscensionEventTag { BossLevel = 1 });
+                    currentBossWave = directorData.CurrentWave;
                 }
-                uint seed = (uint)(entity.Index + time * 100000f) + 1;
-                var random = Random.CreateFromIndex(seed);
 
-                // 경험치 드랍
-                Entity expEntity = ecb.Instantiate(dropBank.ExpPrefab);
-                ecb.SetComponent(expEntity, new LocalTransform
+                var eventEntity = ecb.CreateEntity();
+                if (currentBossWave >= 3)
                 {
-                    Position = transform.ValueRO.Position,
-                    Rotation = quaternion.identity,
-                    Scale = 1f
-                });
-                ecb.SetComponent(expEntity, new DroppedItemData
+                    ecb.AddComponent(eventEntity, new GameClearEventTag { ClearanceLevel = currentBossWave });
+                }
+                else
                 {
-                    Type = DropItemType.Exp,
-                    Amount = 10f,
-                    MoveSpeed = 15f,
-                });
+                    ecb.AddComponent(eventEntity, new ElementAscensionEventTag { BossLevel = currentBossWave });
+                }
+            }
+            else
+            {
+                killIncrement++;
+            }
+
+            uint seed = (uint)(entity.Index + time * 100000f);
+            if (seed == 0) seed = 1; // 0이 되면 Unity.Mathematics.Random 생성 시 예외 발생
+            var random = Unity.Mathematics.Random.CreateFromIndex(seed);
+
+            if (hasDropBank)
+            {
+                if (dropBank.ExpPrefab != Entity.Null)
+                {
+                    Entity expEntity = ecb.Instantiate(dropBank.ExpPrefab);
+                    ecb.SetComponent(expEntity, new LocalTransform
+                    {
+                        Position = transform.ValueRO.Position,
+                        Rotation = quaternion.identity,
+                        Scale = 1f
+                    });
+                    ecb.AddComponent(expEntity, new DroppedItemData
+                    {
+                        Type = DropItemType.Exp,
+                        Amount = 10f,
+                        MoveSpeed = 15f,
+                    });
+                }
 
                 float dropChance = random.NextFloat();
-                if (dropChance <= 0.15f)
+                if (dropChance <= 0.15f && dropBank.GoldPrefab != Entity.Null)
                 {
                     Entity goldEntity = ecb.Instantiate(dropBank.GoldPrefab);
                     ecb.SetComponent(goldEntity, new LocalTransform
@@ -384,14 +289,14 @@ public partial struct EnemyDeathSystem : ISystem
                         Rotation = quaternion.identity,
                         Scale = 1f
                     });
-                    ecb.SetComponent(goldEntity, new DroppedItemData
+                    ecb.AddComponent(goldEntity, new DroppedItemData
                     {
                         Type = DropItemType.Gold,
                         Amount = random.NextInt(100, 501),
                         MoveSpeed = 15f,
                     });
                 }
-                else if (dropChance <= 0.20f)
+                else if (dropChance > 0.15f && dropChance <= 0.35f && dropBank.MagnetPrefab != Entity.Null) // 20%
                 {
                     Entity magnetEntity = ecb.Instantiate(dropBank.MagnetPrefab);
                     ecb.SetComponent(magnetEntity, new LocalTransform
@@ -400,14 +305,14 @@ public partial struct EnemyDeathSystem : ISystem
                         Rotation = quaternion.identity,
                         Scale = 1f
                     });
-                    ecb.SetComponent(magnetEntity, new DroppedItemData
+                    ecb.AddComponent(magnetEntity, new DroppedItemData
                     {
                         Type = DropItemType.Magnet,
                         Amount = 1f,
                         MoveSpeed = 15f,
                     });
                 }
-                else if (dropChance <= 0.25f)
+                else if (dropChance > 0.35f && dropChance <= 0.60f && dropBank.BombPrefab != Entity.Null) // 25%
                 {
                     Entity bombEntity = ecb.Instantiate(dropBank.BombPrefab);
                     ecb.SetComponent(bombEntity, new LocalTransform
@@ -416,15 +321,21 @@ public partial struct EnemyDeathSystem : ISystem
                         Rotation = quaternion.identity,
                         Scale = 1f
                     });
-                    ecb.SetComponent(bombEntity, new DroppedItemData
+                    ecb.AddComponent(bombEntity, new DroppedItemData
                     {
                         Type = DropItemType.Bomb,
                         Amount = 1f,
                         MoveSpeed = 15f,
                     });
                 }
-                ecb.DestroyEntity(entity);
             }
+
+            ecb.AddComponent<DestroyEntityTag>(entity); // 사망 처리 완료
+        }
+
+        if (killIncrement > 0 && SystemAPI.TryGetSingletonRW<GameDirectorData>(out var dirDataRW))
+        {
+            dirDataRW.ValueRW.KilledEnemyCount += killIncrement;
         }
 
         ecb.Playback(state.EntityManager);
@@ -432,3 +343,9 @@ public partial struct EnemyDeathSystem : ISystem
     }
 }
 #endregion
+
+
+
+
+
+
