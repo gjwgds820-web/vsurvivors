@@ -35,9 +35,19 @@ public class UI_TopUI : UI_Base
         // ECS 환경 세팅
         _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         
-        // 쿼리 생성
-        _enemyQuery = _entityManager.CreateEntityQuery(typeof(EnemyTag));
-        _shadowQuery = _entityManager.CreateEntityQuery(typeof(CShadowData));
+        // 쿼리 생성 (DeathTag가 없는 살아있는 개체만 카운트)
+        _enemyQuery = _entityManager.CreateEntityQuery(new EntityQueryDesc 
+        {
+            All = new ComponentType[] { typeof(EnemyTag) },
+            None = new ComponentType[] { typeof(DeathTag) }
+        });
+        
+        _shadowQuery = _entityManager.CreateEntityQuery(new EntityQueryDesc 
+        {
+            All = new ComponentType[] { typeof(CShadowData) },
+            None = new ComponentType[] { typeof(DeathTag) }
+        });
+        
         _gameDirectorQuery = _entityManager.CreateEntityQuery(typeof(GameDirectorData));
 
         // 버튼 이벤트 등록

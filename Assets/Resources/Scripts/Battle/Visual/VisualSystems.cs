@@ -65,6 +65,14 @@ public partial class VisualSyncSystem : SystemBase
                 var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
                 var go = Object.Instantiate(VisualManager.Instance.GateVisualPrefab, pos, rot);
                 EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+                
+                // 게이트 UI 스크립트가 있다면 초기화
+                var gateData = EntityManager.GetComponentData<GateData>(entity);
+                var gateUI = go.GetComponentInChildren<GateUI>();
+                if (gateUI != null)
+                {
+                    gateUI.Setup(gateData.RequiredShadows);
+                }
             }
             entities.Dispose();
         }
@@ -132,6 +140,19 @@ public partial class VisualSyncSystem : SystemBase
                 {
                     visualModel.Value.position = Vector3.Lerp(visualModel.Value.position, transform.ValueRO.Position, deltaTime * 20f);
                     visualModel.Value.rotation = Quaternion.Slerp(visualModel.Value.rotation, transform.ValueRO.Rotation, deltaTime * 20f);
+                }
+            }
+        }
+        
+        // 게이트 UI 갱신 시스템
+        foreach (var (gateData, visualModel) in SystemAPI.Query<RefRO<GateData>, SubSceneVisualModel>())
+        {
+            if (visualModel != null && visualModel.Value != null)
+            {
+                var gateUI = visualModel.Value.GetComponentInChildren<GateUI>();
+                if (gateUI != null)
+                {
+                    gateUI.UpdateAbsorbed(gateData.ValueRO.AbsorbedShadows);
                 }
             }
         }

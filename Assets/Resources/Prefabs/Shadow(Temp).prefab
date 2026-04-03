@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1117475476754124368}
   - component: {fileID: -8282393938061329418}
   - component: {fileID: 3781364598339891479}
+  - component: {fileID: 2087803480686922250}
   m_Layer: 0
   m_Name: Shadow(Temp)
   m_TagString: Untagged
@@ -80,6 +81,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShadowAuthoring
   moveSpeed: 3
   maxHealth: 50
+  elementType: 0
   attackType: 0
   targetingType: 0
   attackPrefab: {fileID: 3297531489679910349, guid: 0d119536e82d4714e9c8854feaef0fc1, type: 3}
@@ -116,3 +118,16 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 84
   m_CollisionDetection: 0
+--- !u!114 &2087803480686922250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6418819453176692284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb805ecf0fdc4054381a2582ae00a67b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VSurvivors.Battle.Physics.PhysicsFilterAuthoring
+  ColliderType: 2

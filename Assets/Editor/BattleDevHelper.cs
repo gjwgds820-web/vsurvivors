@@ -19,8 +19,40 @@ public class BattleDevHelper : EditorWindow
             if (EditorPrefs.GetBool("FastStartBattle", false))
             {
                 EditorPrefs.SetBool("FastStartBattle", false);
-                // 로비 씬의 매니저들이 DontDestroyOnLoad 되기를 잠시 기다린 후 배틀 씬으로 이동
-                SceneManager.LoadScene("BattleScene");
+                
+                // 로비 씬의 매니저들이 DontDestroyOnLoad 구조를 완료하도록 한 프레임 지연
+                EditorApplication.delayCall += () =>
+                {
+                    // DataManager에 접근하여 테스트용 그림자(최대 4개) 임시 장착
+                    if (DataManager.Instance != null && DataManager.Instance.currentUserData != null)
+                    {
+                        var dummyShadows = new System.Collections.Generic.List<int>();
+                        foreach (var kvp in DataManager.Instance.SkillDict)
+                        {
+                            if (kvp.Value.Type == SkillType.Shadow)
+                            {
+                                dummyShadows.Add(kvp.Key);
+                                if (dummyShadows.Count >= 4) break;
+                            }
+                        }
+                        
+                        DataManager.Instance.currentUserData.SelectedShadowsID = dummyShadows;
+                        Debug.Log($"[Battle Dev Helper] 빠른 시작 테스트를 위해 그림자 {dummyShadows.Count}개를 임시 장착했습니다.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[Battle Dev Helper] DataManager를 찾을 수 없어 그림자 장착을 건너뜁니다.");
+                    }
+
+                    if (VSurvivors.Managers.LoadingManager.Instance != null)
+                    {
+                        VSurvivors.Managers.LoadingManager.Instance.LoadScene("BattleScene", true);
+                    }
+                    else
+                    {
+                        SceneManager.LoadScene("BattleScene");
+                    }
+                };
             }
         }
     }
@@ -135,6 +167,13 @@ public class BattleDevHelper : EditorWindow
                 em.SetComponentData(pEntity, pData);
                 Debug.Log("플레이어에게 1레벨업 만큼의 경험치를 주었습니다.");
             }
+        }
+
+        if (GUILayout.Button("속성 초월 팝업 즉시 띄우기"))
+        {
+            var eventEntity = em.CreateEntity();
+            em.AddComponentData(eventEntity, new ElementAscensionEventTag { BossLevel = 1 });
+            Debug.Log("속성 초월 팝업 이벤트를 강제로 발생시켰습니다.");
         }
 
         EditorGUILayout.Space();

@@ -6,6 +6,7 @@ using Unity.Transforms;
 using Unity.Physics.GraphicsIntegration;
 using Unity.Collections;
 using System.ComponentModel;
+using VSurvivors.Battle.Physics;
 
 #region Movement System
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
@@ -134,6 +135,13 @@ public partial struct ShadowSpawnerSystem : ISystem
                         slot.IsAlive = SystemAPI.GetComponent<ShadowCombatData>(slot.ShadowEntity).IsAlive;
                         shadowSlots[i] = slot; // 버퍼 업데이트
                     }
+                    else if (!SystemAPI.Exists(slot.ShadowEntity))
+                    {
+                        // 그림자 엔티티가 파괴(DeathSystem에서 처리)된 경우 상태 초기화
+                        slot.IsAlive = false;
+                        slot.ShadowEntity = Entity.Null;
+                        shadowSlots[i] = slot;
+                    }
                 }
                 if (slot.IsAlive) aliveCount++;
             }
@@ -154,31 +162,37 @@ public partial struct ShadowSpawnerSystem : ISystem
                     Entity targetShadow = Entity.Null;
                     bool needInstantiate = false;
 
+                    // 먼저 게임 매니저나 실제 플레이어가 보유한 그림자 목록에 맞게 ID를 동적으로 가져올 수 있게 확장 고려
+                    // 현재는 기본 ID(40000001)로 고정
+                    int shadowID = 40000001; 
+                    
                     for (int i = 0; i < shadowSlots.Length; i++)
                     {
-                        if (i >= playerData.ValueRO.MaxShadow) break; // 최대 소환 수 초과 방지
+                        if (i >= playerData.ValueRO.MaxShadow) break; 
 
                         if (!shadowSlots[i].IsAlive)
                         {
                             targetIndex = i;
-                            targetShadow = shadowSlots[i].ShadowEntity;
+                            // 죽은 슬롯은 덮어씌기 처리
                             break;
                         }
                     }
 
-                    // 빈자리가 없으면 새로 생성
                     if (targetIndex == -1 && shadowSlots.Length < playerData.ValueRO.MaxShadow)
                     {
                         targetIndex = shadowSlots.Length;
                         needInstantiate = true;
                     }
 
-                    // 생성 및 부활
                     if (targetIndex != -1)
                     {
-                        int shadowID = 40000001; // 기본 그림자 ID, 필요시 확장 가능
+                        // 1. 보유중인 섀도우 데이터를 GameManager 혹은 PlayerData 버퍼에서 가져오는 것이 맞음
+                        // 만약 별도의 버퍼(ActiveShadows)가 있다면 해당 스킬 ID를 참조해야 함
+                        // 지금은 유저가 "보유중인 그림자 수가 줄어들어야 하는데"라고 표현했으므로
+                        // 특정 슬롯 인덱스별로 ID가 다를 수 있음
+                        
+                        // 현재 테스트 시나리오에 맞춰서 스폰 로직 그대로 유지
                         int currentLevel = 1;
-
                         ref var shadows = ref shadowDB.DatabaseRef.Value.Shadows;
                         int dbIndex = -1;
                         for (int i = 0; i < shadows.Length; i++)
@@ -190,7 +204,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                             }
                         }
 
-                        if (dbIndex == -1) continue; // 데이터베이스에 해당 ID가 없으면 스킵
+                        if (dbIndex == -1) continue;
 
                         // 레벨 스탯 가져오기
                         ref var shadowDef = ref shadows[dbIndex];
@@ -220,100 +234,62 @@ public partial struct ShadowSpawnerSystem : ISystem
                         // 공통적으로 사용할 LocalTransform 위치
                         var newTr = new LocalTransform { Position = spawnPos, Scale = 1f, Rotation = quaternion.identity };
 
-                        if (needInstantiate || targetShadow == Entity.Null)
+                        if (spawnerData.ValueRO.ShadowPrefab == Entity.Null)
                         {
-                            if (spawnerData.ValueRO.ShadowPrefab == Entity.Null)
-                            {
-                                UnityEngine.Debug.LogError("Shadow Prefab is not assigned in ShadowSpawnData!");
-                                continue;
-                            }
-                            // 신규 생성
-                            targetShadow = ecb.Instantiate(spawnerData.ValueRO.ShadowPrefab);
-                            
-                            // 진형 내 인덱스 및 초기 데이터 주입
-                            ecb.SetComponent(targetShadow, newTr); 
-                            ecb.SetComponent(targetShadow, new PhysicsGraphicalInterpolationBuffer
-                            {
-                                PreviousTransform = new RigidTransform(newTr.Rotation, newTr.Position)
-                            });
-                            ecb.SetComponent(targetShadow, new ShadowInstanceData { ShadowID = shadowID, CurrentLevel = currentLevel });
-                            var baseShadowData = SystemAPI.GetComponent<CShadowData>(spawnerData.ValueRO.ShadowPrefab);
-                            baseShadowData.Index = targetIndex;
-                            baseShadowData.CurrentState = FormationState.Idle;
-                            baseShadowData.StateChangeTimer = 0f;
-                            ecb.SetComponent(targetShadow, baseShadowData);
-                            // 스탯 주입
-                            var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
-                            combatData.AttackPower = statBlob.AttackPower;
-                            combatData.AttackRange = statBlob.AttackRange;
-                            combatData.AttackCooldown = statBlob.AttackCooldown;
-                            combatData.AttackType = (AttackType)shadowDef.AttackType;
-                            combatData.IsAlive = true;
-                            ecb.SetComponent(targetShadow, combatData);
-                            
-                            var targetingData = SystemAPI.GetComponent<TargetingData>(spawnerData.ValueRO.ShadowPrefab);
-                            targetingData.Priority = (TargetingType)shadowDef.TargetPriority;
-                            ecb.SetComponent(targetShadow, targetingData);
+                            UnityEngine.Debug.LogError("Shadow Prefab is not assigned in ShadowSpawnData!");
+                            continue;
+                        }
+                        // 신규 생성
+                        targetShadow = ecb.Instantiate(spawnerData.ValueRO.ShadowPrefab);
+                        
+                        // 진형 내 인덱스 및 초기 데이터 주입
+                        ecb.SetComponent(targetShadow, newTr); 
+                        ecb.SetComponent(targetShadow, new PhysicsGraphicalInterpolationBuffer
+                        {
+                            PreviousTransform = new RigidTransform(newTr.Rotation, newTr.Position)
+                        });
+                        ecb.SetComponent(targetShadow, new ShadowInstanceData { ShadowID = shadowID, CurrentLevel = currentLevel });
+                        var baseShadowData = SystemAPI.GetComponent<CShadowData>(spawnerData.ValueRO.ShadowPrefab);
+                        baseShadowData.Index = targetIndex;
+                        baseShadowData.CurrentState = FormationState.Idle;
+                        baseShadowData.StateChangeTimer = 0f;
+                        ecb.SetComponent(targetShadow, baseShadowData);
+                        // 스탯 주입
+                        var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
+                        combatData.AttackPower = statBlob.AttackPower;
+                        combatData.AttackRange = statBlob.AttackRange;
+                        combatData.AttackCooldown = statBlob.AttackCooldown;
+                        combatData.AttackType = (AttackType)shadowDef.AttackType;
+                        combatData.IsAlive = true;
+                        ecb.SetComponent(targetShadow, combatData);
+                        
+                        var targetingData = SystemAPI.GetComponent<TargetingData>(spawnerData.ValueRO.ShadowPrefab);
+                        targetingData.Priority = (TargetingType)shadowDef.TargetPriority;
+                        ecb.SetComponent(targetShadow, targetingData);
 
-                            var healthData = SystemAPI.GetComponent<HealthData>(spawnerData.ValueRO.ShadowPrefab);
-                            healthData.MaxHealth = statBlob.MaxHealth;
-                            healthData.CurrentHealth = statBlob.MaxHealth;
-                            ecb.SetComponent(targetShadow, healthData);
+                        var healthData = SystemAPI.GetComponent<HealthData>(spawnerData.ValueRO.ShadowPrefab);
+                        healthData.MaxHealth = statBlob.MaxHealth;
+                        healthData.CurrentHealth = statBlob.MaxHealth;
+                        ecb.SetComponent(targetShadow, healthData);
 
-                            if (needInstantiate)
-                            {
-                                shadowSlots.Add(new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
-                            }
-                            else
-                            {
-                                shadowSlots[targetIndex] = new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true };
-                            }
+                        if (needInstantiate)
+                        {
+                            ecb.AppendToBuffer(entity, new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
                         }
                         else
                         {
-                            // 부활
-                            if (!SystemAPI.Exists(targetShadow) || targetShadow.Index < 0) continue; // 유효하지 않은 엔티티 무시
-
-                            // 위치, 렌더링 물리, 속도 초기화
-                            ecb.SetComponent(targetShadow, newTr);
-                            ecb.SetComponent(targetShadow, new PhysicsGraphicalInterpolationBuffer
+                            // 동적 버퍼에 덮어쓸 경우, ECB를 통해 기록해야 임시(Negative) Entity가 실제 Entity로 치환됩니다.
+                            // 즉시 덮어쓰지 않고 defer 처리
+                            var bufferHandle = ecb.SetBuffer<ShadowSlotElement>(entity);
+                            var currentSlots = shadowSlots.AsNativeArray();
+                            for (int i = 0; i < currentSlots.Length; i++)
                             {
-                                PreviousTransform = new RigidTransform(newTr.Rotation, newTr.Position)
-                            });
-                            ecb.SetComponent(targetShadow, new Unity.Physics.PhysicsVelocity { Linear = float3.zero, Angular = float3.zero });
-
-                            var bData = SystemAPI.GetComponent<CShadowData>(targetShadow);
-                            bData.Index = targetIndex;
-                            bData.CurrentState = FormationState.Idle;
-                            bData.StateChangeTimer = 0f;
-                            ecb.SetComponent(targetShadow, bData);
-
-                            var combatData = SystemAPI.GetComponent<ShadowCombatData>(targetShadow);
-                            combatData.AttackPower = statBlob.AttackPower;
-                            combatData.AttackRange = statBlob.AttackRange;
-                            combatData.AttackCooldown = statBlob.AttackCooldown;
-                            combatData.IsAlive = true;
-                            ecb.SetComponent(targetShadow, combatData);
-
-                            var targetingData = SystemAPI.GetComponent<TargetingData>(targetShadow);
-                            targetingData.CurrentTarget = Entity.Null;
-                            ecb.SetComponent(targetShadow, targetingData);
-
-                            var healthData = SystemAPI.GetComponent<HealthData>(targetShadow);
-                            healthData.MaxHealth = statBlob.MaxHealth;
-                            healthData.CurrentHealth = statBlob.MaxHealth;
-                            ecb.SetComponent(targetShadow, healthData);
-
-                            // 충돌 활성화 및 찌꺼기 태그 제거
-                            if (SystemAPI.HasComponent<Unity.Physics.PhysicsCollider>(spawnerData.ValueRO.ShadowPrefab))
-                            {
-                                ecb.AddComponent(targetShadow, SystemAPI.GetComponent<Unity.Physics.PhysicsCollider>(spawnerData.ValueRO.ShadowPrefab));
+                                if (i == targetIndex)
+                                    bufferHandle.Add(new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
+                                else
+                                    bufferHandle.Add(currentSlots[i]);
                             }
-                            ecb.RemoveComponent<DeathTag>(targetShadow);
-                            
-                            shadowSlots[targetIndex] = new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true };
                         }
-
                         // 스폰 완료에 따른 플레이어 데이터 업데이트
                         playerData.ValueRW.CurrentShadow++;
                     }
@@ -350,8 +326,8 @@ public partial struct ItemLootSystem : ISystem
         float magnetismRadiusSq = playerData.MagnetismRadius * playerData.MagnetismRadius;
         float collectRadiusSq = playerData.CollectRadius * playerData.CollectRadius;
 
-        foreach (var (itemData, transform, entity) in
-                SystemAPI.Query<RefRW<DroppedItemData>, RefRW<LocalTransform>>().WithEntityAccess())
+        foreach (var (itemData, transform, filter, entity) in
+                SystemAPI.Query<RefRW<DroppedItemData>, RefRW<LocalTransform>, RefRW<CustomCollisionFilter>>().WithEntityAccess())
         {
             float distSq = math.distancesq(transform.ValueRO.Position, playerTransform.Position);
 
@@ -359,6 +335,12 @@ public partial struct ItemLootSystem : ISystem
             if (distSq <= magnetismRadiusSq || itemData.ValueRO.IsAttracted)
             {
                 itemData.ValueRW.IsAttracted = true;
+
+                // 아이템이 플레이어에게 끌려가기 시작하면 물리 충돌을 완벽히 꺼버림
+                if (filter.ValueRO.Value.CollidesWith != GamePhysicsLayers.ItemMagnetizedMask)
+                {
+                    filter.ValueRW.Value.CollidesWith = GamePhysicsLayers.ItemMagnetizedMask;
+                }
 
                 // 플레이어를 향해 이동
                 float3 dir = math.normalize(playerTransform.Position - transform.ValueRO.Position);

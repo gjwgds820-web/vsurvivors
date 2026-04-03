@@ -177,27 +177,28 @@ public partial struct ShadowMovementSystem : ISystem
                 // 주석 복구됨
                 physicsVelocity.ValueRW.Linear = new float3(
                     moveDir.x * finalSpeed,
-                    0f, // 수직 이동 차단
+                    physicsVelocity.ValueRO.Linear.y, // 기존 Y 중력 유지 (하단에서 강제 고정)
                     moveDir.z * finalSpeed
                 );
-
-                // 솟아오르는 것 방지
-                float3 fixedPos = transform.ValueRO.Position;
-                fixedPos.y = 1f;
-                transform.ValueRW.Position = fixedPos;
 
                 // 회전 처리를 위한 순수 방향
                 quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
                 transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
-                transform.ValueRW.Rotation.value.x = 0;
-                transform.ValueRW.Rotation.value.z = 0;
-                transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
             }
             else
             {
                 // 타겟에 도착했을 때도 회전을 유지하게 설정
-                physicsVelocity.ValueRW.Linear = new float3(0, 0f, 0);
+                physicsVelocity.ValueRW.Linear = new float3(0, physicsVelocity.ValueRO.Linear.y, 0);
             }
+
+            // [수정] 상태와 무관하게 모든 그림자가 절대 땅 속으로 들어가거나 솟아오르지 않게 강제 고정
+            float3 fixedPos = transform.ValueRO.Position;
+            fixedPos.y = 1f; // 그림자 기본 Y 높이
+            transform.ValueRW.Position = fixedPos;
+
+            transform.ValueRW.Rotation.value.x = 0;
+            transform.ValueRW.Rotation.value.z = 0;
+            transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
         }
     }
 }
@@ -309,14 +310,19 @@ public partial struct ShadowDeathSystem : ISystem
                 ecb.RemoveComponent<Unity.Physics.PhysicsCollider>(entity); // 충돌 끄기
             }
 
-            if (transform.ValueRO.Position.y > -10f)
+            // 충돌체가 없어져서 PhysicsVelocity가 작동하지 않을 수 있으므로 수동으로도 y를 내립니다.
+            float3 pos = transform.ValueRO.Position;
+            pos.y -= 10f * SystemAPI.Time.DeltaTime;
+            transform.ValueRW.Position = pos;
+
+            if (pos.y > -10f)
             {
                 velocity.ValueRW.Linear = new float3(0, -10f, 0); // 아래로 빠르게 떨어뜨려 시각적으로 사라지게 함
             }
             else
             {
                 velocity.ValueRW.Linear = new float3(0, 0, 0);
-                ecb.RemoveComponent<DeathTag>(entity); // 사망 처리 완료
+                ecb.AddComponent<DestroyEntityTag>(entity); // 완전 사망 처리 (CleanupSystem에서 Visual 처리 후 Entity 자동 파괴됨)
             }
         }
         ecb.Playback(state.EntityManager);

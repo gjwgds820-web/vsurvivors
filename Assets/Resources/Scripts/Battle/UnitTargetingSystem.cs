@@ -23,6 +23,7 @@ public partial struct UnitTargetingSystem : ISystem
         _damagableQuery = SystemAPI.QueryBuilder()
             .WithAll<HealthData>()
             .WithAll<LocalTransform>()
+            .WithNone<DeathTag>()
             .Build();
 
         state.RequireForUpdate(_targetingQuery);

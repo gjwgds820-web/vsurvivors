@@ -313,7 +313,15 @@ public partial struct GameDirectorSystem : ISystem
                 ecb.RemoveComponent<Parent>(gateEntity);
             }
             ecb.SetComponent(gateEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
-            ecb.AddComponent(gateEntity, new GateData { AbsorbedShadows = 0, IsActive = true });
+            // 스폰될 때 흡수해야할 필요 그림자 수 세팅 (예: 3개)
+            ecb.AddComponent(gateEntity, new GateData { 
+                RequiredShadows = 3,
+                AbsorbedShadows = 0, 
+                InteractionRadius = 5.0f,
+                AbsorbtionTimer = 0f,
+                IsActive = true,
+                State = 0
+            });
         }
     }
 }

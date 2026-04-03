@@ -82,7 +82,14 @@ public class UI_MainSection : UI_Base
         {
             userData.CurrentEnergy -= _battleEnergyCost;
             // DataManager.Instance.SaveGame();
-            SceneManager.LoadScene("BattleScene");
+            if (VSurvivors.Managers.LoadingManager.Instance != null)
+            {
+                VSurvivors.Managers.LoadingManager.Instance.LoadScene("BattleScene", true);
+            }
+            else
+            {
+                SceneManager.LoadScene("BattleScene");
+            }
         }
         else
         {

@@ -71,11 +71,13 @@ public class UI_OwnedSkillsPanel : UI_Base
             if (i == 0)
             {
                 elem1.sprite = sprite;
+                elem1.color = Color.white;
                 elem1.gameObject.SetActive(true);
             }
             else if (i == 1)
             {
                 elem2.sprite = sprite;
+                elem2.color = Color.white;
                 elem2.gameObject.SetActive(true);
             }
         }

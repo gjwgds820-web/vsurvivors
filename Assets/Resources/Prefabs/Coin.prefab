@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 5766977135191326083}
   - component: {fileID: 6656450348262724793}
   - component: {fileID: -6985014054389957538}
-  - component: {fileID: -7260343681748821098}
+  - component: {fileID: -3145880894003305049}
+  - component: {fileID: -4393114930062112984}
   m_Layer: 0
   m_Name: Coin
   m_TagString: Untagged
@@ -93,7 +94,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-7260343681748821098
+--- !u!114 &-3145880894003305049
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -102,6 +103,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 2513683365356168914}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba5b99cff12ff3d44ab426dcec671f32, type: 3}
+  m_Script: {fileID: 11500000, guid: cb805ecf0fdc4054381a2582ae00a67b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemGoldAuthoring
+  m_EditorClassIdentifier: Assembly-CSharp::VSurvivors.Battle.Physics.PhysicsFilterAuthoring
+  ColliderType: 5
+--- !u!114 &-4393114930062112984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2513683365356168914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db4cfef5196af7d4788745cb5a7ce51a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemAuthoring
+  ItemType: 1
+  Amount: 10
+  MoveSpeed: 1

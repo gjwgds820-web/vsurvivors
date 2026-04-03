@@ -116,26 +116,27 @@ public partial struct EnemyMovementSystem : ISystem
 
                 velocity.ValueRW.Linear = new float3(
                     moveDir.x * enemyData.ValueRO.MoveSpeed,
-                    0f,
+                    velocity.ValueRO.Linear.y, // 기존 Y 축 중력을 존중 (이후 고정)
                     moveDir.z * enemyData.ValueRO.MoveSpeed
                 );
 
-                // 솟아오르는 것 방지
-                float3 fixedPos = transform.ValueRO.Position;
-                fixedPos.y = 0.5f;
-                transform.ValueRW.Position = fixedPos;
-
                 quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
                 transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
-                transform.ValueRW.Rotation.value.x = 0;
-                transform.ValueRW.Rotation.value.z = 0;
-                transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
             }
             else
             {
                 enemyData.ValueRW.CurrentState = EnemyState.Attack;
                 velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
             }
+
+            // [수정] 솟아오르는 것 및 땅으로 꺼지는 현상 방지 (상태와 무관하게 항상 Y, X, Z 회전 축 고정)
+            float3 fixedPos = transform.ValueRO.Position;
+            fixedPos.y = 0.5f;
+            transform.ValueRW.Position = fixedPos;
+
+            transform.ValueRW.Rotation.value.x = 0;
+            transform.ValueRW.Rotation.value.z = 0;
+            transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
         }
     }
 }

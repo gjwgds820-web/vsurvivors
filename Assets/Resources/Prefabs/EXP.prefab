@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 4254542037036926736}
   - component: {fileID: 8643109390049923803}
   - component: {fileID: -560746168636323585}
-  - component: {fileID: 2362863863914386942}
+  - component: {fileID: 1374207727611141856}
+  - component: {fileID: 3777403974277829243}
   m_Layer: 0
   m_Name: EXP
   m_TagString: Untagged
@@ -91,7 +92,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &2362863863914386942
+--- !u!114 &1374207727611141856
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,6 +101,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 8702333290169580024}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4e577219bd34fd41a88574b786d874d, type: 3}
+  m_Script: {fileID: 11500000, guid: cb805ecf0fdc4054381a2582ae00a67b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemEXPAuthoring
+  m_EditorClassIdentifier: Assembly-CSharp::VSurvivors.Battle.Physics.PhysicsFilterAuthoring
+  ColliderType: 5
+--- !u!114 &3777403974277829243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8702333290169580024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db4cfef5196af7d4788745cb5a7ce51a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemAuthoring
+  ItemType: 0
+  Amount: 10
+  MoveSpeed: 1

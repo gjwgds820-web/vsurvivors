@@ -33,6 +33,31 @@ public class GameManager : MonoBehaviour
         _gameClearQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameClearEventTag>());
 
         InitializeAvailableSkills();
+
+        // 씬 내의 다른 Manager/System들까지 Start()가 끝날 시간을 보장하기 위해 한 프레임 대기 후 로딩을 종료할 수 있도록 Coroutine 사용
+        StartCoroutine(FinishLoadingCoroutine());
+    }
+
+    private System.Collections.IEnumerator FinishLoadingCoroutine()
+    {
+        // 1. 최소 1프레임은 명시적으로 양보
+        yield return null;
+
+        // 2. ECS 세상에 PlayerData(플레이어 엔티티)가 로드될 때까지 대기
+        EntityQuery playerQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerData>());
+        
+        while (playerQuery.CalculateEntityCount() == 0)
+        {
+            yield return null;
+        }
+        
+        // 3. 플레이어가 스폰되고 시스템들이 첫 업데이트를 돌 수 있도록 약간의 유예(1~2 프레임 분량)
+        yield return new WaitForSeconds(0.1f);
+        
+        if (VSurvivors.Managers.LoadingManager.Instance != null)
+        {
+            VSurvivors.Managers.LoadingManager.Instance.FinishLoading();
+        }
     }
 
     private void InitializeAvailableSkills()

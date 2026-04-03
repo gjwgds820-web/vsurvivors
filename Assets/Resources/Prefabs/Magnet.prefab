@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 2081931728191515512}
   - component: {fileID: 5253709710013070571}
   - component: {fileID: 1347949006784306180}
-  - component: {fileID: -1802882292853847485}
+  - component: {fileID: 8293035255676959675}
+  - component: {fileID: 3073831865449347691}
   m_Layer: 0
   m_Name: Magnet
   m_TagString: Untagged
@@ -91,7 +92,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-1802882292853847485
+--- !u!114 &8293035255676959675
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,6 +101,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 1806105971249961020}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 542b8af70f91b554cac0a4a2c5e0ce9a, type: 3}
+  m_Script: {fileID: 11500000, guid: cb805ecf0fdc4054381a2582ae00a67b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemMagnetAuthoring
+  m_EditorClassIdentifier: Assembly-CSharp::VSurvivors.Battle.Physics.PhysicsFilterAuthoring
+  ColliderType: 5
+--- !u!114 &3073831865449347691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1806105971249961020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db4cfef5196af7d4788745cb5a7ce51a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemAuthoring
+  ItemType: 2
+  Amount: 0
+  MoveSpeed: 1

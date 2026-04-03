@@ -96,12 +96,17 @@ public class UI_ElementAscensionPopup : UI_Base
         _element2ID = Random.Range(0, 5);
 
         // --- 슬롯 애니메이션 설정 ---
-        // 슬롯 높이 1칸의 픽셀값 (실제 에디터 상의 간격에 맞게 조정하세요)
-        float iconHeight = 250f; 
+        // 버티컬 레이아웃의 자식 요소 하나의 높이(250) + 간격(Spacing 40) = 290
+        float iconHeight = 290f; 
 
-        // 슬롯이 몇 칸이나 돌아갈지 결정 (슬롯2가 조금 더 돌게)
-        int spinCount1 = Random.Range(15, 20);
-        int spinCount2 = Random.Range(20, 25);
+        // 슬롯이 몇 칸이나 돌아갈지 결정
+        // 릴의 이미지들이 위쪽으로 0, 1, 2, 3, 4 순서로 배치되어 반복된다고 가정했을 때,
+        // 애니메이션이 무작위 바퀴수(5의 배수)를 돌고 정확히 해당 원소 ID의 위치에서 멈추도록 강제합니다.
+        int baseSpins1 = Random.Range(3, 5) * 5; // 15 or 20칸 (3~4바퀴)
+        int baseSpins2 = Random.Range(4, 6) * 5; // 20 or 25칸 (4~5바퀴)
+
+        int spinCount1 = baseSpins1 + _element1ID;
+        int spinCount2 = baseSpins2 + _element2ID;
 
         // 아래쪽으로 띠가 내려가는 효과라면 목표 Y값은 보통 양수입니다. (반대라면 마이너스 처리)
         float targetY1 = spinCount1 * iconHeight;
@@ -111,10 +116,11 @@ public class UI_ElementAscensionPopup : UI_Base
 
         // 슬롯 1번 돌리기
         // Ease.OutBack: 목표지점을 살짝 지나친 후 뒤로 튕기는(브레이크 걸리는) 연출
-        slot1Reel.DOAnchorPosY(targetY1, duration).SetEase(Ease.OutBack);
+        // 팝업이 뜰 때 Time.timeScale = 0 상태일 수 있으므로 SetUpdate(true)를 추가해 타임스케일을 무시하도록 설정합니다.
+        slot1Reel.DOAnchorPosY(targetY1, duration).SetEase(Ease.OutBack).SetUpdate(true);
 
         // 슬롯 2번 돌리기 & 끝난 후(OnComplete) 결과 반영
-        slot2Reel.DOAnchorPosY(targetY2, duration + 0.3f).SetEase(Ease.OutBack).OnComplete(() =>
+        slot2Reel.DOAnchorPosY(targetY2, duration + 0.3f).SetEase(Ease.OutBack).SetUpdate(true).OnComplete(() =>
         {
             // 애니메이션이 끝나면 원래 만들어두신 UpdateElementPanel 함수 실행!
             UpdateElementPanel(0, _element1ID);
@@ -147,12 +153,54 @@ public class UI_ElementAscensionPopup : UI_Base
             }
 
             GameObject iconObj = Instantiate(_shadowIconPrefab, container.transform);
-            iconObj.GetComponent<Image>().sprite = ResourceManager.Instance.LoadSprite($"Icons/Shadows/Shadow_{shadowID-40000000}");
+            
+            // 프리팹이 UI에 비해 너무 크다면 localScale을 조절하여 크기를 맞춰줍니다. (필요 시 0.6f 값을 변경)
+            iconObj.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+            
+            UI_OwnedSkillSlot slotUI = iconObj.GetComponent<UI_OwnedSkillSlot>();
+            
+            if (_gameManager == null) _gameManager = FindAnyObjectByType<GameManager>();
 
-            bool isOwned = _gameManager.CurrentShadows.Exists(s => s.ID == shadowID);
-            if (!isOwned)
+            SkillData ownedShadow = null;
+            if (_gameManager != null && _gameManager.CurrentShadows != null)
             {
-                iconObj.GetComponent<Image>().color = new Color(0.3f, 0.3f, 0.3f, 1f);
+                ownedShadow = _gameManager.CurrentShadows.Find(s => s.ID == shadowID);
+            }
+
+            if (slotUI != null && ownedShadow != null)
+            {
+                // 보유 시: 기존 스킬 슬롯 UI 로직(레벨별 별 모양 포함) 그대로 사용
+                slotUI.SetSkill(ownedShadow);
+                // 추가적으로 아이콘 딤(Dim) 해제
+                Transform skillIconTransform = iconObj.transform.Find("SkillIconImage");
+                if (skillIconTransform != null) skillIconTransform.GetComponent<Image>().color = Color.white;
+            }
+            else
+            {
+                // 미보유 시: 별 아이콘이나 빈 슬롯 이미지 끄고, 아이콘만 어둡게 세팅
+                Transform emptyObj = iconObj.transform.Find("EmptyObject");
+                if (emptyObj != null) emptyObj.gameObject.SetActive(false);
+
+                // 별만 모여있는 부모를 끄던가, UI_OwnedSkillSlot 방식에 맞춰 별 이미지를 모두 끔
+                for (int i = 1; i <= 5; i++)
+                {
+                    Transform starObj = iconObj.transform.Find($"Star{i}");
+                    if (starObj != null) starObj.gameObject.SetActive(false);
+                }
+                
+                // 불필요한 Stars 부모 찾기 (있다면)
+                Transform starsObj = iconObj.transform.Find("Stars");
+                if (starsObj != null) starsObj.gameObject.SetActive(false);
+
+                Transform skillIconTransform = iconObj.transform.Find("SkillIconImage");
+                Image imgComponent = skillIconTransform != null ? skillIconTransform.GetComponent<Image>() : iconObj.GetComponentInChildren<Image>();
+                
+                if (imgComponent != null)
+                {
+                    imgComponent.sprite = ResourceManager.Instance.LoadSprite($"Icons/Shadows/Shadow_{shadowID-40000000}");
+                    imgComponent.gameObject.SetActive(true);
+                    imgComponent.color = new Color(0.3f, 0.3f, 0.3f, 1f); // 미보유 어둡게 처리
+                }
             }
         }
     }
