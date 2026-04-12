@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using Unity.Physics.GraphicsIntegration;
@@ -17,16 +17,13 @@ public class ShadowAuthoring : MonoBehaviour
     [SerializeField] private float attackDamage = 10f;
     [SerializeField] private float attackRange = 2f;
     [SerializeField] private float attackCooldown = 1f;
-    [SerializeField] private float attackRadius = 1f;
-    [SerializeField] private float attackDuration = 0.5f;
-    [SerializeField] private bool isPiercing = true;
 
     class Baker : Baker<ShadowAuthoring>
     {
         public override void Bake(ShadowAuthoring authoring)
         {
             var entity = GetEntity(TransformUsageFlags.Dynamic);
-            
+
             AddComponent(entity, new CShadowData
             {
                 Index = 0,
@@ -53,8 +50,8 @@ public class ShadowAuthoring : MonoBehaviour
                 Priority = authoring.targetingType,
                 ScanTimer = 0f,
                 ScanInterval = 0.2f, // 스캔 주기
-                MaxSearchRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f), // 탐색 범위 (사거리+여유분)
-                MaxFollowRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f), // 추격(유지) 범위 - 사거리 넘어가면 즉각 타겟 해제하여 가까운 놈 다시 잡음!
+                MaxSearchRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f),
+                MaxFollowRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f),
                 UseCrowdControl = true
             });
 
@@ -71,21 +68,10 @@ public class ShadowAuthoring : MonoBehaviour
                 Value = float3.zero
             });
 
-            AddComponent(entity, new HitBoxData
-            {
-                Damage = authoring.attackDamage,
-                Radius = authoring.attackRadius,
-                Duration = authoring.attackDuration,
-                TargetFaction = 0, 
-                IsPiercing = authoring.isPiercing
-            });
-
             AddBuffer<DamageBufferElement>(entity);
             AddComponent<ShadowTag>(entity);
-            AddComponent(entity, new PhysicsGraphicalInterpolationBuffer
-            {
-                // Note: Adding a buffer requires AddBuffer, AddComponent isn't recommended but leaving existing syntax alone mostly.
-            });
+            AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);
+
             AddComponent(entity, new ShadowInstanceData
             {
                 ShadowID = 0,

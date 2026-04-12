@@ -221,7 +221,7 @@ public partial struct ShadowCombatSystem : ISystem
         _transformLookup.Update(ref state);
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
         foreach (var (combatData, targetingData, transform, entity) in SystemAPI.Query<RefRW<ShadowCombatData>, RefRO<TargetingData>, RefRO<LocalTransform>>().WithEntityAccess())
         {
@@ -268,18 +268,28 @@ public partial struct ShadowCombatSystem : ISystem
                     }
                     ecb.AddComponent(hitbox, new HitBoxData
                     {
+                        Shape = HitBoxShape.Circle,
                         Damage = combatData.ValueRO.AttackPower,
                         Radius = 3f,
                         Duration = 0.5f,
                         TargetFaction = 0,
                         IsPiercing = true
                     });
-                    
+
+                    // [디버그] 주석 처리됨 (BurstCompile 복구 및 최적화)
+                    // UnityEngine.Debug.Log($"[Shadow Attack] Spawned Hitbox! Damage: {combatData.ValueRO.AttackPower}, Radius: 3f, TargetFaction: 0");
+
+                    // 2. 공격 애니메이터 트리거 작동
+                    if (SystemAPI.HasComponent<VisualAnimationState>(entity))
+                    {
+                        SystemAPI.GetComponentRW<VisualAnimationState>(entity).ValueRW.TriggerAttack = true;
+                    }
+
                     combatData.ValueRW.CurrentCooldown = combatData.ValueRO.AttackCooldown;
                 }
             }
-        }
-        
+        } // end foreach
+
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
     }
@@ -295,7 +305,7 @@ public partial struct ShadowDeathSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
         foreach (var (combatData, transform, velocity, entity) in
                  SystemAPI.Query<RefRW<ShadowCombatData>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>>()
@@ -325,11 +335,16 @@ public partial struct ShadowDeathSystem : ISystem
                 ecb.AddComponent<DestroyEntityTag>(entity); // 완전 사망 처리 (CleanupSystem에서 Visual 처리 후 Entity 자동 파괴됨)
             }
         }
+
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
     }
 }
 #endregion
+
+
+
+
 
 
 

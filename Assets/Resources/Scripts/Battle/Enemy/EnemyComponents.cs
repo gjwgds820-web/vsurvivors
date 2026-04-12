@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -15,6 +15,7 @@ public enum EnemyState
     Attack,
 }
 #endregion
+
 #region EnemyData
 public struct CEnemyData : IComponentData
 {
@@ -28,12 +29,14 @@ public struct CEnemyData : IComponentData
     public float AttackCooldown;
     public float CurrentCooldown;
 
+    // 공격 애니메이션 딜레이 처리
+    public bool IsAttacking;
+    public float AttackDelayTimer;
+    public float3 PendingTargetPosition;
+
     public float MoveSpeed;
-    public HitBoxShape HitBoxShape;
-    public float HitboxRadius;
-    public float HitboxDuration;
-    public bool IsPiercing;
     public bool IsAlive;
+    public float DeathTimer; // 사망 후 삭제 딜레이
 
     public bool IsBoss;
     public float BlockedTimer;
@@ -48,10 +51,6 @@ public struct EnemyDefBlob
     public float AttackRange;
     public float AttackCooldown;
     public float MoveSpeed;
-    public HitBoxShape HitBoxShape;
-    public float HitboxRadius;
-    public float HitboxDuration;
-    public bool IsPiercing;
     public bool IsBoss;
 }
 

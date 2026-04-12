@@ -120,7 +120,24 @@ public class GameManager : MonoBehaviour
         if (!_playerDeathQuery.IsEmptyIgnoreFilter)
         {
             Time.timeScale = 0f;
-            ShowResultPopup(false);
+
+            var playerEntity = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerData>()).GetSingletonEntity();
+            var playerData = _entityManager.GetComponentData<PlayerData>(playerEntity);
+
+            if (playerData.DeathCount == 0)
+            {
+                playerData.DeathCount++;
+                _entityManager.SetComponentData(playerEntity, playerData);
+
+                // 첫 사망 시 부활 팝업 띄우기
+                UIManager.Instance.ShowPopup("UI_RevivePopup");
+            }
+            else
+            {
+                // 두 번째 사망 시 결과창
+                ShowResultPopup(false);
+            }
+
             _entityManager.RemoveComponent<PlayerDeathEventTag>(_playerDeathQuery);
         }
 
@@ -146,7 +163,7 @@ public class GameManager : MonoBehaviour
         UIManager.Instance.ShowPopup("UI_ElementAscensionPopup");
     }
 
-    void ShowResultPopup(bool isVictory)
+    public void ShowResultPopup(bool isVictory)
     {
         UIManager.Instance.ShowPopup("UI_ResultPopup");
         

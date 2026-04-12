@@ -91,9 +91,13 @@ public class UI_ElementAscensionPopup : UI_Base
         slot1Reel.anchoredPosition = new Vector2(slot1Reel.anchoredPosition.x, 0);
         slot2Reel.anchoredPosition = new Vector2(slot2Reel.anchoredPosition.x, 0);
 
-        // 결과로 선택될 원소 ID (클래스 변수에 저장하여 OnClickElement에서 접근 가능하게)
-        _element1ID = Random.Range(0, 5); 
+        // 결과로 선택될 원소 ID
+        _element1ID = Random.Range(0, 5);
         _element2ID = Random.Range(0, 5);
+        while (_element2ID == _element1ID)
+        {
+            _element2ID = Random.Range(0, 5);
+        }
 
         // --- 슬롯 애니메이션 설정 ---
         // 버티컬 레이아웃의 자식 요소 하나의 높이(250) + 간격(Spacing 40) = 290

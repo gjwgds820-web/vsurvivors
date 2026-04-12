@@ -15,6 +15,7 @@ public class PlayerAuthoring : MonoBehaviour
     [SerializeField] private float damageReduction = 0f;
     [SerializeField] private float maxShadow = 5f;
     [SerializeField] private float shadowRegenCooldown = 15f;
+    [SerializeField] private float summonAnimationDelay = 0.25f;
     [SerializeField] private float magnetismRadius = 3f;
     [SerializeField] private float collectRadius = 0.5f;
     [SerializeField] private GameObject shadowPrefab;
@@ -40,9 +41,11 @@ public class PlayerAuthoring : MonoBehaviour
                 CurrentShadow = authoring.maxShadow,
                 ShadowRegenCooldown = authoring.shadowRegenCooldown,
                 ShadowRegenTimer = authoring.shadowRegenCooldown,
+                SummonAnimationDelay = authoring.summonAnimationDelay,
                 MagnetismRadius = authoring.magnetismRadius,
                 CollectRadius = authoring.collectRadius,
-                IsAlive = true
+                IsAlive = true,
+                InitialShadowsSpawned = false
             });
 
             AddComponent(entity, new HealthData
@@ -60,7 +63,6 @@ public class PlayerAuthoring : MonoBehaviour
             AddBuffer<ShadowSlotElement>(entity);
             AddBuffer<DamageBufferElement>(entity);
             AddComponent<CameraTargetTag>(entity);
-            AddComponent<SubSceneVisualModel>(entity);
             AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);
         }
     }

@@ -1,4 +1,4 @@
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -27,7 +27,7 @@ public partial struct GateInteractionSystem : ISystem
         var shadowSlots = SystemAPI.GetBuffer<ShadowSlotElement>(playerEntity);
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
         
         uint fixedSeed = (uint)((SystemAPI.Time.ElapsedTime + 1f) * 1000f);
         var random = Unity.Mathematics.Random.CreateFromIndex(fixedSeed);

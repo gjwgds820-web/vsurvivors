@@ -24,10 +24,15 @@ public struct PlayerData : IComponentData
     public float CurrentShadow;
     public float ShadowRegenCooldown;
     public float ShadowRegenTimer;
+    public float SummonAnimationDelay;
 
     public float MagnetismRadius;
     public float CollectRadius;
     public bool IsAlive;
+    public bool InitialShadowsSpawned;
+
+    public int DeathCount;
+    public float DeathTimer;
 }
 
 public struct ShadowSpawnData : IComponentData
@@ -54,3 +59,4 @@ public struct ElementAscensionEventTag : IComponentData
 }
 
 public struct PlayerDeathEventTag : IComponentData {}
+public struct DeathProcessedTag : IComponentData {}

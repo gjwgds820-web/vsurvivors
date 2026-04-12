@@ -24,14 +24,14 @@ public class UI_EquipmentFrame : UI_Base
         int charID = userData.SelectedCharacterID;
         CharacterData charData = DataManager.Instance.CharacterDict[charID];
 
-        GameObject charPrefab = ResourceManager.Instance.LoadPrefab($"Prefabs/{charData.Name}");
+        GameObject charPrefab = ResourceManager.Instance.LoadPrefab($"Prefabs/VisualPrefabs/{charData.Name}(Lobby)");
         if (charPrefab != null)
         {
             foreach (Transform spawnPoint in _characterSpawnPoints)
             {
                 _currentCharacter = Instantiate(charPrefab, spawnPoint);
                 _currentCharacter.name = charData.Name;
-                _currentCharacter.transform.localPosition = Vector3.zero;
+                _currentCharacter.transform.localPosition = new Vector3(0, 0, 60f);
                 _currentCharacter.transform.localRotation = Quaternion.Euler(0, 180f, 0);
                 _currentCharacter.transform.localScale = Vector3.one * 300f;
             }

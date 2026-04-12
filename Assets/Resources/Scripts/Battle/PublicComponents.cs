@@ -32,15 +32,30 @@ public struct HitBoxData : IComponentData
     public float Duration;
     public int TargetFaction;
     public bool IsPiercing;
+    public int MaxPierceCount; // 0이면 무한 관통 (IsPiercing = true일 때)
+    public int CurrentPierceCount;
     public float TickRate;
 }
 
 public struct ProjectileData : IComponentData
 {
+    public float3 Direction;
     public float Speed;
-    // public Entity Target;
+    public float MaxDistance;
+    public float TravelledDistance;
 }
 
 public struct DeathTag : IComponentData { }
+
+public struct EffectVisualInfo : IComponentData
+{
+    public int PrefabID;
+}
+
+public struct SpinningProjectileData : IComponentData
+{
+    public float SpinSpeed;
+    public float3 SpinAxis;
+}
 
 public struct DestroyEntityTag : IComponentData { }

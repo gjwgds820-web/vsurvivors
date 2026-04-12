@@ -176,6 +176,40 @@ public class BattleDevHelper : EditorWindow
             Debug.Log("속성 초월 팝업 이벤트를 강제로 발생시켰습니다.");
         }
 
+        GUILayout.Space(20);
+        GUILayout.Label("Player Action Testing", EditorStyles.boldLabel);
+
+        if (GUILayout.Button("플레이어 피격 애니메이션 테스트 (10 데미지)"))
+        {
+            var playerQuery = em.CreateEntityQuery(typeof(PlayerData));
+            if (playerQuery.HasSingleton<PlayerData>())
+            {
+                var pEntity = playerQuery.GetSingletonEntity();
+                if (em.HasBuffer<DamageBufferElement>(pEntity))
+                {
+                    var damageBuffer = em.GetBuffer<DamageBufferElement>(pEntity);
+                    damageBuffer.Add(new DamageBufferElement { Damage = 10f });
+                    Debug.Log("플레이어에게 10 데미지를 가했습니다. (피격 애니메이션 테스트)");
+                }
+            }
+        }
+
+        if (GUILayout.Button("플레이어 사망 애니메이션 테스트 (체력 0)"))
+        {
+            var playerQuery = em.CreateEntityQuery(typeof(PlayerData));
+            if (playerQuery.HasSingleton<PlayerData>())
+            {
+                var pEntity = playerQuery.GetSingletonEntity();
+                if (em.HasComponent<HealthData>(pEntity))
+                {
+                    var healthData = em.GetComponentData<HealthData>(pEntity);
+                    healthData.CurrentHealth = 0f;
+                    em.SetComponentData(pEntity, healthData);
+                    Debug.Log("플레이어 체력을 0으로 설정했습니다. (사망 애니메이션 테스트)");
+                }
+            }
+        }
+
         EditorGUILayout.Space();
         EditorGUILayout.HelpBox("동적 변경사항이 즉시 반영됩니다. \nGameDirectorAuthoring의 기본값을 변경하려면 인스펙터에서 수정하세요.", MessageType.None);
     }

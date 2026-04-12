@@ -97,3 +97,14 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# VS Code / GitHub Copilot Agents & Instructions
+*.agent.md
+*.instructions.md
+*.prompt.md
+.github/agents/
+.github/instructions/
+.github/prompts/
+
+# Large Fonts
+Assets/BMJUA_ttf SDF.asset

@@ -86,7 +86,7 @@ public partial struct PlayerDeathSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
 
         foreach (var (playerData, entity) in
                  SystemAPI.Query<RefRO<PlayerData>>()
@@ -147,6 +147,13 @@ public partial struct ShadowSpawnerSystem : ISystem
             }
             playerData.ValueRW.CurrentShadow = aliveCount;
 
+            if (!playerData.ValueRO.InitialShadowsSpawned)
+            {
+                playerData.ValueRW.InitialShadowsSpawned = true;
+                int initialSpawnCount = math.min(3, (int)playerData.ValueRO.MaxShadow);
+                playerData.ValueRW.ShadowRegenTimer = -playerData.ValueRO.ShadowRegenCooldown * (initialSpawnCount - 1);
+            }
+
             // 살아있는 그림자가 최대치보다 적을때 타이머 감소
             if (playerData.ValueRO.CurrentShadow < playerData.ValueRO.MaxShadow)
             {
@@ -154,8 +161,8 @@ public partial struct ShadowSpawnerSystem : ISystem
 
                 if (playerData.ValueRO.ShadowRegenTimer <= 0f)
                 {
-                    // 타이머 초기화
-                    playerData.ValueRW.ShadowRegenTimer = playerData.ValueRO.ShadowRegenCooldown;
+                    // 타이머 연장 (연속 스폰 지원)
+                    playerData.ValueRW.ShadowRegenTimer += playerData.ValueRO.ShadowRegenCooldown;
 
                     // 빈자리 찾기
                     int targetIndex = -1;
@@ -494,3 +501,4 @@ public partial struct PlayerLevelUpSystem : ISystem
     }
 }
 #endregion
+

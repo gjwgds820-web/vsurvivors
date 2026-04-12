@@ -28,7 +28,7 @@ public partial struct GameDirectorSystem : ISystem
         float deltaTime = SystemAPI.Time.DeltaTime;
 
         // 주석 복구됨
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
         // 보스 진입시 모든 잡몹 클리어 이벤트 처리
         foreach (var (clearTag, entity) in SystemAPI.Query<RefRO<ClearNormalEnemiesEventTag>>().WithEntityAccess())
@@ -122,7 +122,7 @@ public partial struct GameDirectorSystem : ISystem
                     // 주석 복구됨
                     var enemyEntity = ecb.Instantiate(data.ValueRO.EnemyPrefab);
                     float2 randomOffset = _random.NextFloat2Direction() * _random.NextFloat(0.5f, 2f);
-                    float3 spawnPos = gateTransform.ValueRO.Position + new float3(randomOffset.x, -0.5f, randomOffset.y);
+                    float3 spawnPos = gateTransform.ValueRO.Position + new float3(randomOffset.x, 0.5f, randomOffset.y); // 높이를 0.5f로 스폰
 
                     ecb.SetComponent(enemyEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
                     if (SystemAPI.HasComponent<PhysicsGraphicalInterpolationBuffer>(data.ValueRO.EnemyPrefab))
@@ -144,10 +144,6 @@ public partial struct GameDirectorSystem : ISystem
                         AttackCooldown = enemyDef.AttackCooldown,
                         CurrentCooldown = 0f,
                         MoveSpeed = enemyDef.MoveSpeed,
-                        HitBoxShape = enemyDef.HitBoxShape,
-                        HitboxRadius = enemyDef.HitboxRadius,
-                        HitboxDuration = enemyDef.HitboxDuration,
-                        IsPiercing = enemyDef.IsPiercing,
                         IsBoss = enemyDef.IsBoss,
                         IsAlive = true
                     };
@@ -207,7 +203,7 @@ public partial struct GameDirectorSystem : ISystem
                 // (주석 복구됨)
                                   float2 randomOffset = _random.NextFloat2Direction() * 20f;
                   spawnPos += new float3(randomOffset.x, 0, randomOffset.y);
-                  spawnPos.y = 1.0f; // 보스가 바닥에 끼여 하늘로 솟구치지 않도록 높이 보정
+                  spawnPos.y = 0.5f; // 비주얼은 모두 y=0이 되므로 논리판정용 y좌표 0.5f로 통일
 
                 ecb.SetComponent(bossEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
                 if (SystemAPI.HasComponent<PhysicsGraphicalInterpolationBuffer>(data.ValueRO.BossPrefab))
@@ -231,10 +227,6 @@ public partial struct GameDirectorSystem : ISystem
                     AttackCooldown = bossDef.AttackCooldown,
                     CurrentCooldown = 0f,
                     MoveSpeed = bossDef.MoveSpeed,
-                    HitBoxShape = bossDef.HitBoxShape,
-                    HitboxRadius = bossDef.HitboxRadius,
-                    HitboxDuration = bossDef.HitboxDuration,
-                    IsPiercing = bossDef.IsPiercing,
                     IsBoss = true,
                     IsAlive = true
                 };
@@ -260,8 +252,32 @@ public partial struct GameDirectorSystem : ISystem
         // (IsEventPaused 상태 기반 처리 완료 신호를 바탕으로) 복귀 로직은 여기서 추가
         // 팝업 종료 후 NormalWave 복귀
 
-        // 보스 제한 타이머
-        if (data.ValueRO.BossTimer > 0f)
+        // 보스가 처리되었고 (완전히 파괴되었고) 추가 스폰 예정이 없으면 NormalWave로 복귀
+        bool hasBossEntity = false;
+        bool isBossAlive = false;
+        foreach (var enemyData in SystemAPI.Query<RefRO<CEnemyData>>())
+        {
+            if (enemyData.ValueRO.IsBoss)
+            {
+                hasBossEntity = true;
+                if (enemyData.ValueRO.IsAlive)
+                {
+                    isBossAlive = true;
+                }
+                break;
+            }
+        }
+        
+        bool hasSpawnEventPending = !SystemAPI.QueryBuilder().WithAll<SpawnBossEventTag>().Build().IsEmpty;
+
+        if (!hasBossEntity && !hasSpawnEventPending)
+        {
+            data.ValueRW.CurrentPhase = GamePhase.NormalWave;
+            // 일반 몬스터 스폰 타이머 초기 보정 로직 (필요시 추가)
+        }
+
+        // 보스 제한 타이머 (살아있을 때만 감소)
+        if (data.ValueRO.BossTimer > 0f && isBossAlive)
         {
             data.ValueRW.BossTimer -= deltaTime;
 
@@ -271,25 +287,6 @@ public partial struct GameDirectorSystem : ISystem
                 var playerDeathEvent = ecb.CreateEntity();
                 ecb.AddComponent<PlayerDeathEventTag>(playerDeathEvent);
             }
-        }
-
-        // 보스가 처리되었고 추가 스폰 예정이 없으면 NormalWave로 복귀
-        bool hasBossesAlive = false;
-        foreach (var enemyData in SystemAPI.Query<RefRO<CEnemyData>>())
-        {
-            if (enemyData.ValueRO.IsBoss && enemyData.ValueRO.IsAlive)
-            {
-                hasBossesAlive = true;
-                break;
-            }
-        }
-        
-        bool hasSpawnEventPending = !SystemAPI.QueryBuilder().WithAll<SpawnBossEventTag>().Build().IsEmpty;
-
-        if (!hasBossesAlive && !hasSpawnEventPending)
-        {
-            data.ValueRW.CurrentPhase = GamePhase.NormalWave;
-            // 일반 몬스터 스폰 타이머 초기 보정 로직 (필요시 추가)
         }
     }
 
@@ -325,6 +322,10 @@ public partial struct GameDirectorSystem : ISystem
         }
     }
 }
+
+
+
+
 
 
 

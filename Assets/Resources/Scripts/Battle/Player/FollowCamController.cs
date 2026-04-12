@@ -13,18 +13,28 @@ public class FollowCamController : MonoBehaviour
 
     private void Start()
     {
-        if (_targetTransform == null)
-        {
-            _targetTransform = GameObject.FindWithTag("Player")?.transform;
-        }
+        FindPlayerTarget();
     }
 
     private void LateUpdate()
     {
-        // 타겟이 없으면 에러 방지
-        if (_targetTransform == null) return;
+        // 타겟이 없으면 매 프레임 찾기 시도 (동적 생성 대응)
+        if (_targetTransform == null)
+        {
+            FindPlayerTarget();
+            if (_targetTransform == null) return;
+        }
 
         // 타겟 위치 이동
         transform.position = _targetTransform.position + offset;
+    }
+
+    private void FindPlayerTarget()
+    {
+        var playerObj = GameObject.FindWithTag("Player");
+        if (playerObj != null)
+        {
+            _targetTransform = playerObj.transform;
+        }
     }
 }

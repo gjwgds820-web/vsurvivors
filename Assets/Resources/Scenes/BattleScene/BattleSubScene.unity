@@ -153,6 +153,9 @@ MonoBehaviour:
   gatePrefab: {fileID: 7224476738474360212, guid: 877fd2de9d91c9948bdf79d451ce5cad, type: 3}
   enemyPrefab: {fileID: 5253158836266767488, guid: eb144f665d4a3d743932e0d20d17dd1f, type: 3}
   bossPrefab: {fileID: 204384775450305714, guid: db0455fe713bcea4992b3da39768067d, type: 3}
+  enemySpawnInterval: 5
+  bossSpawnInterval: 300
+  expRequirementBase: 100
 --- !u!4 &531639702
 Transform:
   m_ObjectHideFlags: 0
@@ -238,6 +241,7 @@ MonoBehaviour:
   damageReduction: 0
   maxShadow: 20
   shadowRegenCooldown: 3
+  summonAnimationDelay: 0.5
   magnetismRadius: 3
   collectRadius: 0.5
   shadowPrefab: {fileID: 6418819453176692284, guid: 5ec344bc19af45d47b88726bdce3b4c1, type: 3}

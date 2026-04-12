@@ -28,6 +28,18 @@ public partial struct EnemyMovementSystem : ISystem
                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRW<TargetingData>>())
         {
             physicsMass.ValueRW.InverseInertia = float3.zero;
+
+            // [수정] 솟아오르는 것 및 땅으로 꺼지는 현상 방지 (상태와 무관하게 항상 Y, X, Z 회전 축 고정)
+            float3 fixedPos = transform.ValueRO.Position;
+            fixedPos.y = 0f;
+            transform.ValueRW.Position = fixedPos;
+
+            transform.ValueRW.Rotation.value.x = 0;
+            transform.ValueRW.Rotation.value.z = 0;
+            transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
+
+            if (enemyData.ValueRO.IsAttacking) continue; // 보스 패턴 등 공격 중이면 일반 추적 정지
+
             if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget))
             {
                 velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
@@ -41,7 +53,8 @@ public partial struct EnemyMovementSystem : ISystem
             toTarget.y = 0; 
             float distance = math.length(toTarget);
 
-            if (distance > enemyData.ValueRO.AttackRange)
+            // 보스는 항상 유저를 추적하며, 자신의 공격 쿨타임과 사거리는 BossCombatSystem에서 자체적으로 계산합니다.
+            if (enemyData.ValueRO.IsBoss || distance > enemyData.ValueRO.AttackRange)
             {
                 enemyData.ValueRW.CurrentState = EnemyState.Move;
                 float3 moveDir = toTarget / distance;
@@ -128,15 +141,6 @@ public partial struct EnemyMovementSystem : ISystem
                 enemyData.ValueRW.CurrentState = EnemyState.Attack;
                 velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
             }
-
-            // [수정] 솟아오르는 것 및 땅으로 꺼지는 현상 방지 (상태와 무관하게 항상 Y, X, Z 회전 축 고정)
-            float3 fixedPos = transform.ValueRO.Position;
-            fixedPos.y = 0.5f;
-            transform.ValueRW.Position = fixedPos;
-
-            transform.ValueRW.Rotation.value.x = 0;
-            transform.ValueRW.Rotation.value.z = 0;
-            transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
         }
     }
 }
@@ -147,17 +151,20 @@ public partial struct EnemyMovementSystem : ISystem
 public partial struct EnemyCombatSystem : ISystem
 {
     private ComponentLookup<LocalTransform> _transformLookup;
+    private ComponentLookup<HitBoxData> _hitBoxLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+        _hitBoxLookup = state.GetComponentLookup<HitBoxData>(true);
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         _transformLookup.Update(ref state);
+        _hitBoxLookup.Update(ref state);
         float deltaTime = SystemAPI.Time.DeltaTime;
 
         var ecb = new EntityCommandBuffer(Allocator.TempJob);
@@ -165,6 +172,8 @@ public partial struct EnemyCombatSystem : ISystem
         foreach (var (enemyData, targetData, transform) in
                  SystemAPI.Query<RefRW<CEnemyData>, RefRO<TargetingData>, RefRO<LocalTransform>>())
         {
+            if (enemyData.ValueRO.IsBoss) continue; // 보스는 전용 Combat 로직(BossSystems) 사용
+
             enemyData.ValueRW.CurrentCooldown -= deltaTime;
             Entity currentTarget = targetData.ValueRO.CurrentTarget;
             if (enemyData.ValueRO.CurrentState != EnemyState.Attack) continue;
@@ -183,23 +192,19 @@ public partial struct EnemyCombatSystem : ISystem
                     }
                     float3 targetPos = targetTransform.Position;
                     Entity hitbox = ecb.Instantiate(enemyData.ValueRO.AttackPrefab);
-                    ecb.AddBuffer<HitRecordElement>(hitbox);
+
+                    if (_hitBoxLookup.TryGetComponent(enemyData.ValueRO.AttackPrefab, out var prefabHitBox))
+                    {
+                        prefabHitBox.Damage = enemyData.ValueRO.AttackPower;
+                        prefabHitBox.TargetFaction = 1;
+                        ecb.SetComponent(hitbox, prefabHitBox);
+                    }
 
                     ecb.SetComponent(hitbox, new LocalTransform
                     {
                         Position = transform.ValueRO.Position,
                         Scale = 1f,
                         Rotation = quaternion.LookRotationSafe(targetPos - transform.ValueRO.Position, math.up())
-                    });
-
-                    ecb.AddComponent(hitbox, new HitBoxData
-                    {
-                        Damage = enemyData.ValueRO.AttackPower,
-                        Radius = enemyData.ValueRO.HitboxRadius,
-                        Duration = enemyData.ValueRO.HitboxDuration,
-                        TargetFaction = 1, // Assuming 1 is for player/shadow
-                        IsPiercing = enemyData.ValueRO.IsPiercing,
-                        Shape = HitBoxShape.Circle
                     });
 
                     enemyData.ValueRW.CurrentCooldown = enemyData.ValueRO.AttackCooldown;

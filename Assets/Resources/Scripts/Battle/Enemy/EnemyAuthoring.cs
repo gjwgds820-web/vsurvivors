@@ -12,19 +12,14 @@ public class EnemyAuthoring : MonoBehaviour
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float moveSpeed = 3f;
-    [SerializeField] private HitBoxShape hitBoxShape = HitBoxShape.Circle;
-    [SerializeField] private float hitboxRadius = 0.5f;
-    [SerializeField] private float hitboxDuration = 0.5f;
-    [SerializeField] private bool isPiercing = false;
     [SerializeField] private bool isBoss = false;
-
 
     public class EnemyBaker : Baker<EnemyAuthoring>
     {
         public override void Bake(EnemyAuthoring authoring)
         {
             var entity = GetEntity(TransformUsageFlags.Dynamic);
-            
+
             AddComponent(entity, new CEnemyData
             {
                 ID = 0, // ID는 나중에 데이터베이스에서 할당
@@ -36,10 +31,6 @@ public class EnemyAuthoring : MonoBehaviour
                 AttackCooldown = authoring.attackCooldown,
                 CurrentCooldown = 0f,
                 MoveSpeed = authoring.moveSpeed,
-                HitBoxShape = authoring.hitBoxShape,
-                HitboxRadius = authoring.hitboxRadius,
-                HitboxDuration = authoring.hitboxDuration,
-                IsPiercing = authoring.isPiercing,
                 IsBoss = authoring.isBoss,
                 IsAlive = true
             });
@@ -66,7 +57,7 @@ public class EnemyAuthoring : MonoBehaviour
 
             AddComponent<EnemyTag>(entity);
             AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);
-            AddComponent<DamageBufferElement>(entity);
+            AddBuffer<DamageBufferElement>(entity);
         }
     }
 }

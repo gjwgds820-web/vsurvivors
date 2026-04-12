@@ -11,7 +11,9 @@ public partial class HealthBarSyncSystem : SystemBase
         {
             if (visualModel.Value != null)
             {
-                var healthBar = visualModel.Value.GetComponentInChildren<HealthBarVisual>();
+                // 최적화 경고: 매 프레임 GetComponentInChildren는 무거울 수 있습니다.
+                var healthBar = visualModel.Value.GetComponentInChildren<HealthBarVisual>(true);
+
                 if (healthBar != null)
                 {
                     healthBar.UpdateHealth(healthData.ValueRO.CurrentHealth, healthData.ValueRO.MaxHealth);

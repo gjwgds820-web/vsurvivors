@@ -23,27 +23,27 @@ MonoBehaviour:
     LevelStats:
     - MaxHealth: 100
       AttackPower: 10
-      AttackRange: 1
+      AttackRange: 3
       AttackCooldown: 1
     - MaxHealth: 150
       AttackPower: 15
-      AttackRange: 1
+      AttackRange: 3
       AttackCooldown: 0.9
     - MaxHealth: 200
       AttackPower: 20
-      AttackRange: 1
+      AttackRange: 3
       AttackCooldown: 0.8
     - MaxHealth: 250
       AttackPower: 25
-      AttackRange: 1
+      AttackRange: 3
       AttackCooldown: 0.7
     - MaxHealth: 300
       AttackPower: 30
-      AttackRange: 1
+      AttackRange: 3
       AttackCooldown: 0.6
     - MaxHealth: 350
       AttackPower: 35
-      AttackRange: 1
+      AttackRange: 3
       AttackCooldown: 0.5
     TargetPriority: 0
     AttackType: 0

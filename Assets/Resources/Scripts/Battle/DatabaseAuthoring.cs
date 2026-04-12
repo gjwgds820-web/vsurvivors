@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,12 +16,12 @@ public class DatabaseAuthoring : MonoBehaviour
 
             if (authoring._enemyDatabase != null && authoring._enemyDatabase.enemies.Count > 0)
             {
-                // Blob 배열 생성 준비
+                // Blob 諛곗뿴 ?앹꽦 以鍮?
                 var builder = new BlobBuilder(Allocator.Temp);
                 ref var root = ref builder.ConstructRoot<EnemyDatabaseBlob>();
                 var arrayBuilder = builder.Allocate(ref root.Enemies, authoring._enemyDatabase.enemies.Count);
 
-                // 데이터 복사
+                // ?곗씠??蹂듭궗
                 for (int i = 0; i < authoring._enemyDatabase.enemies.Count; i++)
                 {
                     var data = authoring._enemyDatabase.enemies[i];
@@ -34,15 +34,11 @@ public class DatabaseAuthoring : MonoBehaviour
                         AttackRange = data.AttackRange,
                         AttackCooldown = data.AttackCooldown,
                         MoveSpeed = data.MoveSpeed,
-                        HitBoxShape = data.HitBoxShape,
-                        HitboxRadius = data.HitboxRadius,
-                        HitboxDuration = data.HitboxDuration,
-                        IsPiercing = data.IsPiercing,
                         IsBoss = data.IsBoss
                     };
                 }
 
-                // 빌드한 Blob데이터를 참조로 만들고 컴포넌트로 추가
+                // 鍮뚮뱶??Blob?곗씠?곕? 李몄“濡?留뚮뱾怨?而댄룷?뚰듃濡?異붽?
                 var blobRef = builder.CreateBlobAssetReference<EnemyDatabaseBlob>(Allocator.Persistent);
                 AddBlobAsset(ref blobRef, out var hash);
 
