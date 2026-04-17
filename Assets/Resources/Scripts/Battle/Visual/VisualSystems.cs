@@ -12,7 +12,7 @@ public partial class VisualSyncSystem : SystemBase
 {
     private EntityQuery _enemyMissingVisualQuery;
     private EntityQuery _bossMissingVisualQuery;
-    private EntityQuery _gateMissingVisualQuery;
+    private EntityQuery _portalMissingVisualQuery;
     private EntityQuery _shadowMissingVisualQuery;
     private EntityQuery _itemMissingVisualQuery;
     private EntityQuery _playerMissingVisualQuery;
@@ -22,7 +22,7 @@ public partial class VisualSyncSystem : SystemBase
     {
         _enemyMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag>().WithNone<SubSceneVisualModel, Prefab, BossTag>().Build();
         _bossMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag, BossTag>().WithNone<SubSceneVisualModel, Prefab>().Build();
-        _gateMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, GateData>().WithNone<SubSceneVisualModel, Prefab>().Build();
+        _portalMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CPortalData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _shadowMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CShadowData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _itemMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, DroppedItemData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _playerMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, PlayerData>().WithNone<SubSceneVisualModel, Prefab>().Build();
@@ -156,22 +156,22 @@ public partial class VisualSyncSystem : SystemBase
             entities.Dispose();
         }
 
-        if (!_gateMissingVisualQuery.IsEmpty)
+        if (!_portalMissingVisualQuery.IsEmpty)
         {
-            var entities = _gateMissingVisualQuery.ToEntityArray(Allocator.TempJob);
+            var entities = _portalMissingVisualQuery.ToEntityArray(Allocator.TempJob);
             foreach (var entity in entities)
             {
                 var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
                 var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
-                var go = Object.Instantiate(VisualManager.Instance.GateVisualPrefab, pos, rot);
+                var go = Object.Instantiate(VisualManager.Instance.PortalVisualPrefab, pos, rot);
                 EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
                 
                 // 게이트 UI 스크립트가 있다면 초기화
-                var gateData = EntityManager.GetComponentData<GateData>(entity);
-                var gateUI = go.GetComponentInChildren<GateUI>();
-                if (gateUI != null)
+                var CPortalData = EntityManager.GetComponentData<CPortalData>(entity);
+                var portalUI = go.GetComponentInChildren<PortalUI>();
+                if (portalUI != null)
                 {
-                    gateUI.Setup(gateData.RequiredShadows);
+                    portalUI.Setup(CPortalData.RequiredShadows);
                 }
             }
             entities.Dispose();
@@ -184,7 +184,14 @@ public partial class VisualSyncSystem : SystemBase
             {
                 var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
                 var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
-                var go = Object.Instantiate(VisualManager.Instance.ShadowVisualPrefab, pos, rot);
+                var shadowData = EntityManager.GetComponentData<CShadowData>(entity);
+
+                // ID 기반 로드 (실패시 기본 Fallback)
+                var pPath = $"Prefabs/VisualPrefabs/{(shadowData.Index)}Visual";
+                var prefab = Resources.Load<GameObject>(pPath);
+                if (prefab == null) prefab = VisualManager.Instance.ShadowVisualPrefab;
+
+                var go = Object.Instantiate(prefab, pos, rot);
                 EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
 
                 var animators = go.GetComponentsInChildren<Animator>(true);
@@ -311,14 +318,14 @@ public partial class VisualSyncSystem : SystemBase
         }
         
         // 게이트 UI 갱신 시스템
-        foreach (var (gateData, visualModel) in SystemAPI.Query<RefRO<GateData>, SubSceneVisualModel>())
+        foreach (var (CPortalData, visualModel) in SystemAPI.Query<RefRO<CPortalData>, SubSceneVisualModel>())
         {
             if (visualModel != null && visualModel.Value != null)
             {
-                var gateUI = visualModel.Value.GetComponentInChildren<GateUI>();
-                if (gateUI != null)
+                var portalUI = visualModel.Value.GetComponentInChildren<PortalUI>();
+                if (portalUI != null)
                 {
-                    gateUI.UpdateAbsorbed(gateData.ValueRO.AbsorbedShadows);
+                    portalUI.UpdateAbsorbed(CPortalData.ValueRO.AbsorbedShadows);
                 }
             }
         }
@@ -514,4 +521,6 @@ public static class AnimatorParameterExtensions
         if (animator.SafeHasParameter(name)) animator.SetInteger(name, value);
     }
 }
+
+
 

@@ -2306,7 +2306,7 @@ GameObject:
   - component: {fileID: 1763204010}
   - component: {fileID: 1763204011}
   m_Layer: 5
-  m_Name: GateIndicatorManager
+  m_Name: PortalIndicatorManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2340,12 +2340,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1763204009}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 364c7144aa6876c498eaf13e5909e0db, type: 3}
+  m_Script: {fileID: 11500000, guid: f32fbb70f3669ed408913b39835d51ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_GateIndicatorManager
   indicatorPrefab: {fileID: 4150024675674698943, guid: a8baa84270e62e841a8c20a286aeb01c, type: 3}
   parentCanvas: {fileID: 1693973521}
-  padding: 50
+  padding: 100
 --- !u!1 &1788877419
 GameObject:
   m_ObjectHideFlags: 0
@@ -2652,7 +2652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cff341dbb59ab2498dc939937e748e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisualManager
-  GateVisualPrefab: {fileID: 4780656851694749650, guid: 15a8ee98a81364348a647e5e241bc9ad, type: 3}
+  PortalVisualPrefab: {fileID: 4780656851694749650, guid: 15a8ee98a81364348a647e5e241bc9ad, type: 3}
   EnemyVisualPrefab: {fileID: 110476, guid: f54aa042fbad4f549993cb628b4938c5, type: 3}
   BossVisualPrefab: {fileID: 204384775450305714, guid: 1387eaaf415895142a41e54bc33cf3a4, type: 3}
   ShadowVisualPrefab: {fileID: 8603064644883837947, guid: 4bb11818d42a8b0419e5e54d411d1a56, type: 3}

@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -56,7 +56,10 @@ public struct ShadowLevelStatBlob
 public struct ShadowDefBlob
 {
     public int ID;
-    public BlobArray<ShadowLevelStatBlob> LevelStats;
+    public float MaxHealth;
+    public float AttackPower;
+    public float AttackRange;
+    public float AttackCooldown;
     public int TargetPriority;
     public int AttackType;
 }

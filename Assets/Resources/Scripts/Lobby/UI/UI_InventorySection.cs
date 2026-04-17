@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -83,7 +83,7 @@ public class UI_InventorySection : UI_Base
     {
         RefreshInventory();
         GetObject((int)GameObjects.EquipmentFrame).GetComponent<UI_EquipmentFrame>().RefreshView();
-        GetObject((int)GameObjects.FormationFrame).GetComponent<UI_FormationFrame>().RefreshView(_currentFormationIndex); // 기본적으로 1편성 보여줌
+        GetObject((int)GameObjects.FormationFrame).GetComponent<UI_FormationFrame>().RefreshView(_currentFormationIndex); // 湲곕낯?곸쑝濡?1?몄꽦 蹂댁뿬以?
     }
 
     private void RefreshInventory()
@@ -111,7 +111,7 @@ public class UI_InventorySection : UI_Base
         ClearSlots(_shadowContent);
         List<int> currentFormation = userData.FormationData.ContainsKey(_currentFormationIndex)
                                  ? userData.FormationData[_currentFormationIndex]
-                                 : new List<int>(10); // 최대 10개의 그림자 슬롯
+                                 : new List<int>(10); // 理쒕? 10媛쒖쓽 洹몃┝???щ’
         foreach (int shadowID in DataManager.Instance.ShadowDict.Keys)
         {
             Sprite icon = DataManager.Instance.ShadowDict[shadowID].Icon;
@@ -169,7 +169,7 @@ public class UI_InventorySection : UI_Base
         {
             if (!userData.FormationData.ContainsKey(_currentFormationIndex) || userData.FormationData[_currentFormationIndex] == null)
             {
-                userData.FormationData[_currentFormationIndex] = new List<int>(10); // 최대 10개의 그림자 슬롯
+                userData.FormationData[_currentFormationIndex] = new List<int>(10); // 理쒕? 10媛쒖쓽 洹몃┝???щ’
             }
             List<int> formation = userData.FormationData[_currentFormationIndex];
 
@@ -250,7 +250,7 @@ public class UI_InventorySection : UI_Base
 
     private void OnFormationButtonClicked(int index)
     {
-        _currentFormationIndex = index - 1; // 0-based index로 변환
+        _currentFormationIndex = index - 1; // 0-based index濡?蹂??
         GetObject((int)GameObjects.FormationFrame).GetComponent<UI_FormationFrame>().RefreshView(_currentFormationIndex);
         GetButton((int)Buttons.FormationButton1).image.color = index == 1 ? Color.yellow : Color.white;
         GetButton((int)Buttons.FormationButton2).image.color = index == 2 ? Color.yellow : Color.white;
@@ -263,3 +263,4 @@ public class UI_InventorySection : UI_Base
         RefreshAll();
     }
 }
+

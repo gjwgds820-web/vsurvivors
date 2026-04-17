@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Entities.UniversalDelegates;
 using Unity.Mathematics;
 
@@ -32,7 +32,7 @@ public struct HitBoxData : IComponentData
     public float Duration;
     public int TargetFaction;
     public bool IsPiercing;
-    public int MaxPierceCount; // 0이면 무한 관통 (IsPiercing = true일 때)
+    public int MaxPierceCount; // 0?대㈃ 臾댄븳 愿??(IsPiercing = true????
     public int CurrentPierceCount;
     public float TickRate;
 }
@@ -59,3 +59,4 @@ public struct SpinningProjectileData : IComponentData
 }
 
 public struct DestroyEntityTag : IComponentData { }
+

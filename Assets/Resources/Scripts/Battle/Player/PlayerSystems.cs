@@ -171,7 +171,7 @@ public partial struct ShadowSpawnerSystem : ISystem
 
                     // 먼저 게임 매니저나 실제 플레이어가 보유한 그림자 목록에 맞게 ID를 동적으로 가져올 수 있게 확장 고려
                     // 현재는 기본 ID(40000001)로 고정
-                    int shadowID = 40000001; 
+                    int shadowID = 401000; 
                     
                     for (int i = 0; i < shadowSlots.Length; i++)
                     {
@@ -211,11 +211,11 @@ public partial struct ShadowSpawnerSystem : ISystem
                             }
                         }
 
-                        if (dbIndex == -1) continue;
+                        if (dbIndex == -1 && shadows.Length > 0) { dbIndex = 0; shadowID = shadows[0].ID; } else if (dbIndex == -1) continue;
 
-                        // 레벨 스탯 가져오기
+                        // 레벨 스탯 가져오기 (단일 스탯 구조로 변경됨)
                         ref var shadowDef = ref shadows[dbIndex];
-                        ref var statBlob = ref shadowDef.LevelStats[currentLevel - 1];
+                        
 
                         // 스폰 위치 계산
                         float3 playerPos = playerTransform.ValueRO.Position;
@@ -263,9 +263,9 @@ public partial struct ShadowSpawnerSystem : ISystem
                         ecb.SetComponent(targetShadow, baseShadowData);
                         // 스탯 주입
                         var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
-                        combatData.AttackPower = statBlob.AttackPower;
-                        combatData.AttackRange = statBlob.AttackRange;
-                        combatData.AttackCooldown = statBlob.AttackCooldown;
+                        combatData.AttackPower = shadowDef.AttackPower;
+                        combatData.AttackRange = shadowDef.AttackRange;
+                        combatData.AttackCooldown = shadowDef.AttackCooldown;
                         combatData.AttackType = (AttackType)shadowDef.AttackType;
                         combatData.IsAlive = true;
                         ecb.SetComponent(targetShadow, combatData);
@@ -275,8 +275,8 @@ public partial struct ShadowSpawnerSystem : ISystem
                         ecb.SetComponent(targetShadow, targetingData);
 
                         var healthData = SystemAPI.GetComponent<HealthData>(spawnerData.ValueRO.ShadowPrefab);
-                        healthData.MaxHealth = statBlob.MaxHealth;
-                        healthData.CurrentHealth = statBlob.MaxHealth;
+                        healthData.MaxHealth = shadowDef.MaxHealth;
+                        healthData.CurrentHealth = shadowDef.MaxHealth;
                         ecb.SetComponent(targetShadow, healthData);
 
                         if (needInstantiate)
@@ -455,6 +455,17 @@ public partial struct ItemEventSystem : ISystem
 public partial struct PlayerLevelUpSystem : ISystem
 {
     [BurstCompile]
+    public static float GetRequiredExpForNextLevel(int currentLevel)
+    {
+        if (currentLevel < 1) return 13f;
+        
+        // 50레벨 이상일 경우 500, 그 외엔 13 + 8 * (currentLevel - 1)
+        if (currentLevel >= 50) return 500f;
+        
+        return 13f + 8f * (currentLevel - 1);
+    }
+
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -469,24 +480,22 @@ public partial struct PlayerLevelUpSystem : ISystem
         foreach (var (playerData, playerTransform, entity) in
                  SystemAPI.Query<RefRW<PlayerData>, RefRO<LocalTransform>>().WithEntityAccess())
         {
-            // GameDirectorData 싱글톤에서 레벨업 필요 경험치 기준량 가져오기 (없으면 100f)
-            float expBase = 100f;
-            if (SystemAPI.TryGetSingleton<GameDirectorData>(out var directorData))
-            {
-                expBase = directorData.ExpRequirementBase;
-            }
-
-            float requiredExp = expBase * playerData.ValueRO.Level;
             int levelUpsThisFrame = 0;
 
-            while (playerData.ValueRO.EXP >= requiredExp)
+            while (true)
             {
-                playerData.ValueRW.EXP -= requiredExp;
-                playerData.ValueRW.Level++;
-                levelUpsThisFrame++;
-                
-                // 다음 레벨업 요구치 갱신
-                requiredExp = expBase * playerData.ValueRO.Level;
+                float requiredExp = GetRequiredExpForNextLevel(playerData.ValueRO.Level);
+
+                if (playerData.ValueRO.EXP >= requiredExp)
+                {
+                    playerData.ValueRW.EXP -= requiredExp;
+                    playerData.ValueRW.Level++;
+                    levelUpsThisFrame++;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             if (levelUpsThisFrame > 0)

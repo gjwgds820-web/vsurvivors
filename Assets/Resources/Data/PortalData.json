@@ -1,0 +1,40 @@
+{
+  "portals": [
+    {
+      "ID": 42010101,
+      "Help": "삭제 불가능한 일반 포탈",
+      "SummonAmount": 1,
+      "Type": "normal",
+      "DelPortal": 0,
+      "Monster1": 310100001,
+      "Monster2": 0,
+      "Monster3": 0,
+      "Monster4": 0,
+      "Monster5": 0
+    },
+    {
+      "ID": 42010002,
+      "Help": "삭제 가능한 일반 포탈",
+      "SummonAmount": 2,
+      "Type": "normal",
+      "DelPortal": 5,
+      "Monster1": 310100001,
+      "Monster2": 0,
+      "Monster3": 0,
+      "Monster4": 0,
+      "Monster5": 0
+    },
+    {
+      "ID": 42020103,
+      "Help": "내부에 보스 처치 시 삭제",
+      "SummonAmount": 3,
+      "Type": "boss",
+      "DelPortal": 0,
+      "Monster1": 330100001,
+      "Monster2": 0,
+      "Monster3": 0,
+      "Monster4": 0,
+      "Monster5": 0
+    }
+  ]
+}

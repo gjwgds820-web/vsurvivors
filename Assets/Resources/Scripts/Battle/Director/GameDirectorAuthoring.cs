@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class GameDirectorAuthoring : MonoBehaviour
 {
-    [SerializeField] private GameObject gatePrefab;
+    [SerializeField] private GameObject portalPrefab;
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private GameObject bossPrefab;
 
@@ -20,7 +20,7 @@ public class GameDirectorAuthoring : MonoBehaviour
             
             AddComponent(entity, new GameDirectorData
             {
-                GatePrefab = GetEntity(authoring.gatePrefab, TransformUsageFlags.Dynamic),
+                PortalPrefab = GetEntity(authoring.portalPrefab, TransformUsageFlags.Dynamic),
                 EnemyPrefab = GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic),
                 BossPrefab = GetEntity(authoring.bossPrefab, TransformUsageFlags.Dynamic),
                 WaveTimer = 5f,
@@ -37,3 +37,4 @@ public class GameDirectorAuthoring : MonoBehaviour
         }
     }
 }
+

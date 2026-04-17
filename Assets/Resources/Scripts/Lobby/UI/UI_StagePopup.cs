@@ -26,7 +26,7 @@ public class UI_StagePopup : UI_Base, IBeginDragHandler, IEndDragHandler, IDragH
         StageImage
     }
 
-    private int _currentStageIndex;
+    private int _currentStageID;
     private List<int> _availableStages;
     private CameraController _cameraController;
     private Vector2 _dragStartPos;
@@ -48,7 +48,7 @@ public class UI_StagePopup : UI_Base, IBeginDragHandler, IEndDragHandler, IDragH
         GetButton((int)Buttons.PreviousStageButton).onClick.AddListener(OnPrevButtonClicked);
 
         _availableStages = DataManager.Instance.currentUserData.UnlockedStages;
-        _currentStageIndex = DataManager.Instance.currentUserData.CurrentStage;
+        _currentStageID = DataManager.Instance.currentUserData.CurrentStage;
         UpdateStageInfo();
 
         return true;
@@ -56,10 +56,21 @@ public class UI_StagePopup : UI_Base, IBeginDragHandler, IEndDragHandler, IDragH
 
     private void UpdateStageInfo()
     {
-        GetText((int)Texts.StageIndexText).text = $"Stage {_currentStageIndex}";
-        GetText((int)Texts.StageNameText).text = $"Stage Name {_currentStageIndex}";
-        GetImage((int)Images.StageImage).sprite = ResourceManager.Instance.LoadSprite($"UI/Stages/Thumbnails/Stage_{_currentStageIndex}");
-        if (_currentStageIndex == 1)
+        if (DataManager.Instance.StageDict.TryGetValue(_currentStageID, out var stageData))
+        {
+            GetText((int)Texts.StageIndexText).text = $"Stage {stageData.Name}";
+            GetText((int)Texts.StageNameText).text = $"{stageData.Name}";
+        }
+        else
+        {
+            GetText((int)Texts.StageIndexText).text = $"Stage {_currentStageID}";
+            GetText((int)Texts.StageNameText).text = $"Stage Name {_currentStageID}";
+        }
+
+        GetImage((int)Images.StageImage).sprite = ResourceManager.Instance.LoadSprite($"UI/Stages/Thumbnails/{_currentStageID}");
+        
+        int currentIndex = _availableStages.IndexOf(_currentStageID);
+        if (currentIndex <= 0)
         {
             GetButton((int)Buttons.PreviousStageButton).gameObject.SetActive(false);
         }
@@ -67,12 +78,20 @@ public class UI_StagePopup : UI_Base, IBeginDragHandler, IEndDragHandler, IDragH
         {
             GetButton((int)Buttons.PreviousStageButton).gameObject.SetActive(true);
         }
+        if (currentIndex >= _availableStages.Count - 1)
+        {
+            GetButton((int)Buttons.NextStageButton).gameObject.SetActive(false);
+        }
+        else
+        {
+            GetButton((int)Buttons.NextStageButton).gameObject.SetActive(true);
+        }
     }
 
     private void OnSelectButtonClicked()
     {
         _cameraController.BlockInput(false);
-        DataManager.Instance.currentUserData.CurrentStage = _currentStageIndex;
+        DataManager.Instance.currentUserData.CurrentStage = _currentStageID;
         UpdateStageInfo();
         OnStageChanged?.Invoke();
         UIManager.Instance.CloseTopPopup();
@@ -87,20 +106,20 @@ public class UI_StagePopup : UI_Base, IBeginDragHandler, IEndDragHandler, IDragH
 
     private void OnNextButtonClicked()
     {
-        int currentIndex = _availableStages.IndexOf(_currentStageIndex);
+        int currentIndex = _availableStages.IndexOf(_currentStageID);
         if (currentIndex < _availableStages.Count - 1)
         {
-            _currentStageIndex = _availableStages[currentIndex + 1];
+            _currentStageID = _availableStages[currentIndex + 1];
             UpdateStageInfo();
         }
     }
 
     private void OnPrevButtonClicked()
     {
-        int currentIndex = _availableStages.IndexOf(_currentStageIndex);
+        int currentIndex = _availableStages.IndexOf(_currentStageID);
         if (currentIndex > 0)
         {
-            _currentStageIndex = _availableStages[currentIndex - 1];
+            _currentStageID = _availableStages[currentIndex - 1];
             UpdateStageInfo();
         }
     }

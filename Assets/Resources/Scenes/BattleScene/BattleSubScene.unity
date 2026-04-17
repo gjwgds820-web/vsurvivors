@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2586ee84cf2efd6468a9e5e708e95608, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDirectorAuthoring
-  gatePrefab: {fileID: 7224476738474360212, guid: 877fd2de9d91c9948bdf79d451ce5cad, type: 3}
+  portalPrefab: {fileID: 7224476738474360212, guid: 877fd2de9d91c9948bdf79d451ce5cad, type: 3}
   enemyPrefab: {fileID: 5253158836266767488, guid: eb144f665d4a3d743932e0d20d17dd1f, type: 3}
   bossPrefab: {fileID: 204384775450305714, guid: db0455fe713bcea4992b3da39768067d, type: 3}
   enemySpawnInterval: 5

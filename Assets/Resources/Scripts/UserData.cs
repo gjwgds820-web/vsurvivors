@@ -15,8 +15,8 @@ public class UserData
     private long _lastEnergyUpdateTime = 0;
     private bool _isPassBought = false;
     private int _currentPassLevel = 1;
-    private int _currentStage = 1;
-    private int _selectedCharacterID = 10000001; // 기본 캐릭터 ID
+    private int _currentStage = 41010001;
+    private int _selectedCharacterID = 11010101; // 기본 캐릭터 ID
 
     private List<int> _unlockedStages = new List<int>();
     private List<int> _unlockedCharactersID = new List<int>(); // 기본 캐릭터는 처음부터 잠금 해제

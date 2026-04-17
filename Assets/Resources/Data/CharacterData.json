@@ -1,22 +1,22 @@
 {
     "characters": [
         {
-            "ID": 10000001,
-            "Name": "Mage",
+            "ID": 11010101,
+            "Name": "하급 소환사",
             "Description": "This is a test character.",
             "MaxLevel": 50,
             "CurrentLevel": 1
         },
         {
-            "ID": 10000002,
-            "Name": "Warrior",
+            "ID": 11010102,
+            "Name": "전사",
             "Description": "This is a test character.",
             "MaxLevel": 50,
             "CurrentLevel": 1
         },
         {
-            "ID": 10000003,
-            "Name": "Rogue",
+            "ID": 11010103,
+            "Name": "도적",
             "Description": "This is a test character.",
             "MaxLevel": 50,
             "CurrentLevel": 1

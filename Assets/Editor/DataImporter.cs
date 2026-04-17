@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System;
@@ -72,7 +72,7 @@ public class DataImporter
             character.Icon = Resources.Load<Sprite>("Icons/Characters/" + character.Name);
             if (character.Icon == null)
             {
-                Debug.LogWarning($"[캐릭터 아이콘 로드 실패] ID: {character.ID} / 찾으려는 경로: Resources/Icons/Characters/{character.Name}");
+                Debug.LogWarning($"[罹먮┃???꾩씠肄?濡쒕뱶 ?ㅽ뙣] ID: {character.ID} / 李얠쑝?ㅻ뒗 寃쎈줈: Resources/Icons/Characters/{character.Name}");
             }
         }
 
@@ -146,7 +146,7 @@ public class DataImporter
         JsonUtility.FromJsonOverwrite(jsonContent, database);
         foreach (ShadowData shadow in database.shadows)
         {
-            shadow.Icon = Resources.Load<Sprite>("Icons/Shadows/" + shadow.Name);
+            shadow.Icon = Resources.Load<Sprite>("Icons/Shadows/" + shadow.ID);
         }
 
         EditorUtility.SetDirty(database);
@@ -226,4 +226,65 @@ public class DataImporter
         AssetDatabase.Refresh();
     }
     #endregion
+
+    #region Stage
+    [MenuItem("Tools/Import Stage Data(JSON)")]
+    public static void ImportStageDataFromJson()
+    {
+        string path = Application.dataPath + "/Resources/Data/StageData.json";
+
+        if (!File.Exists(path))
+        {
+            Debug.LogError("StageData.json file not found at: " + path);
+            return;
+        }
+
+        string jsonContent = File.ReadAllText(path);
+        string assetPath = "Assets/Resources/Data/StageDatabase.asset";
+
+        StageDatabase database = AssetDatabase.LoadAssetAtPath<StageDatabase>(assetPath);
+
+        if (database == null)
+        {
+            database = ScriptableObject.CreateInstance<StageDatabase>();
+            AssetDatabase.CreateAsset(database, assetPath);
+            Debug.Log("Created new StageDatabase asset at: " + assetPath);        }
+        JsonUtility.FromJsonOverwrite(jsonContent, database);
+        EditorUtility.SetDirty(database);
+        AssetDatabase.SaveAssets();
+        Debug.Log("Stage data imported successfully from JSON.");
+        AssetDatabase.Refresh();
+    }
+    #endregion
+
+    #region Portal
+    [MenuItem("Tools/Import Portal Data(JSON)")]
+    public static void ImportPortalDataFromJson()
+    {
+        string path = Application.dataPath + "/Resources/Data/PortalData.json";
+        if (!File.Exists(path))
+        {
+            Debug.LogError("PortalData.json file not found at: " + path);
+            return;
+        }
+        string jsonContent = File.ReadAllText(path);
+        string assetPath = "Assets/Resources/Data/PortalDatabase.asset";
+        PortalDatabase database = AssetDatabase.LoadAssetAtPath<PortalDatabase>(assetPath);
+        if (database == null)
+        {
+            database = ScriptableObject.CreateInstance<PortalDatabase>();
+            AssetDatabase.CreateAsset(database, assetPath);
+            Debug.Log("Created new PortalDatabase asset at: " + assetPath);
+        }
+        JsonUtility.FromJsonOverwrite(jsonContent, database);
+        EditorUtility.SetDirty(database);
+        AssetDatabase.SaveAssets();
+        Debug.Log("Portal data imported successfully from JSON.");
+        AssetDatabase.Refresh();
+    }
+    #endregion
 }
+
+
+
+

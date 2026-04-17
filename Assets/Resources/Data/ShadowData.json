@@ -1,580 +1,91 @@
-{
-    "shadows":  [
-                    {
-                        "ID":  40000001,
-                        "Name":  "Shadow_1",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  100,
-                                               "AttackPower":  10,
-                                               "AttackRange":  3,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  150,
-                                               "AttackPower":  15,
-                                               "AttackRange":  3,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  200,
-                                               "AttackPower":  20,
-                                               "AttackRange":  3,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  250,
-                                               "AttackPower":  25,
-                                               "AttackRange":  3,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  300,
-                                               "AttackPower":  30,
-                                               "AttackRange":  3,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  350,
-                                               "AttackPower":  35,
-                                               "AttackRange":  3,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  3
-                    },
-                    {
-                        "ID":  40000002,
-                        "Name":  "Shadow_2",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  120,
-                                               "AttackPower":  12,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  170,
-                                               "AttackPower":  17,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  220,
-                                               "AttackPower":  22,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  270,
-                                               "AttackPower":  27,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  320,
-                                               "AttackPower":  32,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  370,
-                                               "AttackPower":  37,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000003,
-                        "Name":  "Shadow_3",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000004,
-                        "Name":  "Shadow_4",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000005,
-                        "Name":  "Shadow_5",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000006,
-                        "Name":  "Shadow_6",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000007,
-                        "Name":  "Shadow_7",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000008,
-                        "Name":  "Shadow_8",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  1
-                    },
-                    {
-                        "ID":  40000009,
-                        "Name":  "Shadow_9",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  1
-                    },
-                    {
-                        "ID":  40000010,
-                        "Name":  "Shadow_10",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  4
-                    },
-                    {
-                        "ID":  40000011,
-                        "Name":  "Shadow_11",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  0
-                    },
-                    {
-                        "ID":  40000012,
-                        "Name":  "Shadow_12",
-                        "Description":  "This is a test shadow.",
-                        "MaxLevel":  6,
-                        "CurrentLevel":  0,
-                        "LevelStats":  [
-                                           {
-                                               "MaxHealth":  140,
-                                               "AttackPower":  14,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  1.0
-                                           },
-                                           {
-                                               "MaxHealth":  190,
-                                               "AttackPower":  19,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.9
-                                           },
-                                           {
-                                               "MaxHealth":  240,
-                                               "AttackPower":  24,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.8
-                                           },
-                                           {
-                                               "MaxHealth":  290,
-                                               "AttackPower":  29,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.7
-                                           },
-                                           {
-                                               "MaxHealth":  340,
-                                               "AttackPower":  34,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.6
-                                           },
-                                           {
-                                               "MaxHealth":  390,
-                                               "AttackPower":  39,
-                                               "AttackRange":  1,
-                                               "AttackCooldown":  0.5
-                                           }
-                                       ],
-                        "TargetPriority":  0,
-                        "AttackType":  0,
-                        "Element":  1
-                    }
-                ]
+﻿{
+    "shadows": [
+        {
+            "ID": 21010101, "Name": "기본", "Description": "모든 게임에 필수로 고정되는 기본 그림자", "MaxLevel": 6, "CurrentLevel": 1, "Element": 0, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 1.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 0
+        },
+        {
+            "ID": 21010102, "Name": "기본", "Description": "모든 게임에 필수로 고정되는 기본 그림자", "MaxLevel": 6, "CurrentLevel": 1, "Element": 0, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 15.0, "AttackPower": 2.0, "AttackCooldown": 2.0, "AttackRange": 2.0, "MaxPierce": 2, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 0
+        },
+        {
+            "ID": 21010103, "Name": "기본", "Description": "모든 게임에 필수로 고정되는 기본 그림자", "MaxLevel": 6, "CurrentLevel": 1, "Element": 0, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 3.0, "AttackCooldown": 3.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 3.0, "SkillID": 0
+        },
+        {
+            "ID": 21010104, "Name": "기본", "Description": "모든 게임에 필수로 고정되는 기본 그림자", "MaxLevel": 6, "CurrentLevel": 1, "Element": 0, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 25.0, "AttackPower": 4.0, "AttackCooldown": 4.0, "AttackRange": 4.0, "MaxPierce": 4, "Defence": 0.0, "MoveSpeed": 4.0, "SkillID": 0
+        },
+        {
+            "ID": 21010105, "Name": "기본", "Description": "모든 게임에 필수로 고정되는 기본 그림자", "MaxLevel": 6, "CurrentLevel": 1, "Element": 0, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 30.0, "AttackPower": 5.0, "AttackCooldown": 5.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 5.0, "SkillID": 0
+        },
+        {
+            "ID": 21020201, "Name": "전사", "Description": "근전 기본 전사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 1, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 5.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 0
+        },
+        {
+            "ID": 21020202, "Name": "전사", "Description": "근전 기본 전사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 1, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 5.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 0
+        },
+        {
+            "ID": 21020203, "Name": "전사", "Description": "근전 기본 전사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 1, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 5.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 0
+        },
+        {
+            "ID": 21020204, "Name": "전사", "Description": "근전 기본 전사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 1, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 5.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 0
+        },
+        {
+            "ID": 21020205, "Name": "전사", "Description": "근전 기본 전사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 1, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 5.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 0
+        },
+        {
+            "ID": 21020206, "Name": "전사", "Description": "근전 기본 전사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 1, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 20.0, "AttackPower": 5.0, "AttackCooldown": 1.0, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 1.0, "SkillID": 21020206
+        },
+        {
+            "ID": 22030301, "Name": "궁수", "Description": "원거리 기본 궁수", "MaxLevel": 6, "CurrentLevel": 1, "Element": 2, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 4.0, "AttackCooldown": 2.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 1.5, "SkillID": 0
+        },
+        {
+            "ID": 22030302, "Name": "궁수", "Description": "원거리 기본 궁수", "MaxLevel": 6, "CurrentLevel": 1, "Element": 2, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 4.0, "AttackCooldown": 2.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 1.5, "SkillID": 0
+        },
+        {
+            "ID": 22030303, "Name": "궁수", "Description": "원거리 기본 궁수", "MaxLevel": 6, "CurrentLevel": 1, "Element": 2, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 4.0, "AttackCooldown": 2.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 1.5, "SkillID": 0
+        },
+        {
+            "ID": 22030304, "Name": "궁수", "Description": "원거리 기본 궁수", "MaxLevel": 6, "CurrentLevel": 1, "Element": 2, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 4.0, "AttackCooldown": 2.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 1.5, "SkillID": 0
+        },
+        {
+            "ID": 22030305, "Name": "궁수", "Description": "원거리 기본 궁수", "MaxLevel": 6, "CurrentLevel": 1, "Element": 2, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 4.0, "AttackCooldown": 2.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 1.5, "SkillID": 0
+        },
+        {
+            "ID": 22030306, "Name": "궁수", "Description": "원거리 기본 궁수", "MaxLevel": 6, "CurrentLevel": 1, "Element": 2, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 4.0, "AttackCooldown": 2.0, "AttackRange": 3.0, "MaxPierce": 3, "Defence": 0.0, "MoveSpeed": 1.5, "SkillID": 22030306
+        },
+        {
+            "ID": 22040401, "Name": "마법사", "Description": "원거리 기본 마법사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 4, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 5.0, "AttackCooldown": 3.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 0.8, "SkillID": 0
+        },
+        {
+            "ID": 22040402, "Name": "마법사", "Description": "원거리 기본 마법사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 4, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 5.0, "AttackCooldown": 3.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 0.8, "SkillID": 0
+        },
+        {
+            "ID": 22040403, "Name": "마법사", "Description": "원거리 기본 마법사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 4, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 5.0, "AttackCooldown": 3.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 0.8, "SkillID": 0
+        },
+        {
+            "ID": 22040404, "Name": "마법사", "Description": "원거리 기본 마법사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 4, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 5.0, "AttackCooldown": 3.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 0.8, "SkillID": 0
+        },
+        {
+            "ID": 22040405, "Name": "마법사", "Description": "원거리 기본 마법사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 4, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 5.0, "AttackCooldown": 3.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 0.8, "SkillID": 0
+        },
+        {
+            "ID": 22040406, "Name": "마법사", "Description": "원거리 기본 마법사", "MaxLevel": 6, "CurrentLevel": 1, "Element": 4, "TargetPriority": 0, "AttackType": 2, "MaxHealth": 15.0, "AttackPower": 5.0, "AttackCooldown": 3.0, "AttackRange": 5.0, "MaxPierce": 5, "Defence": 0.0, "MoveSpeed": 0.8, "SkillID": 22040406
+        },
+        {
+            "ID": 21060601, "Name": "도적", "Description": "근접 기본 도적", "MaxLevel": 6, "CurrentLevel": 1, "Element": 5, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 3.0, "AttackCooldown": 0.8, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 0
+        },
+        {
+            "ID": 21060602, "Name": "도적", "Description": "근접 기본 도적", "MaxLevel": 6, "CurrentLevel": 1, "Element": 5, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 3.0, "AttackCooldown": 0.8, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 0
+        },
+        {
+            "ID": 21060603, "Name": "도적", "Description": "근접 기본 도적", "MaxLevel": 6, "CurrentLevel": 1, "Element": 5, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 3.0, "AttackCooldown": 0.8, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 0
+        },
+        {
+            "ID": 21060604, "Name": "도적", "Description": "근접 기본 도적", "MaxLevel": 6, "CurrentLevel": 1, "Element": 5, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 3.0, "AttackCooldown": 0.8, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 0
+        },
+        {
+            "ID": 21060605, "Name": "도적", "Description": "근접 기본 도적", "MaxLevel": 6, "CurrentLevel": 1, "Element": 5, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 3.0, "AttackCooldown": 0.8, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 0
+        },
+        {
+            "ID": 21060606, "Name": "도적", "Description": "근접 기본 도적", "MaxLevel": 6, "CurrentLevel": 1, "Element": 5, "TargetPriority": 0, "AttackType": 1, "MaxHealth": 10.0, "AttackPower": 3.0, "AttackCooldown": 0.8, "AttackRange": 1.0, "MaxPierce": 1, "Defence": 0.0, "MoveSpeed": 2.0, "SkillID": 21060606
+        }
+    ]
 }

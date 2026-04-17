@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.IO;
 using System;
 using Newtonsoft.Json;
@@ -16,6 +16,8 @@ public class DataManager : MonoBehaviour
     public Dictionary<int, RelicData> RelicDict { get; private set; } = new Dictionary<int, RelicData>();
     public Dictionary<int, ShadowData> ShadowDict { get; private set; } = new Dictionary<int, ShadowData>();
     public Dictionary<int, UpgradeData> UpgradeDict { get; private set; } = new Dictionary<int, UpgradeData>();
+    public Dictionary<int, StageData> StageDict { get; private set; } = new Dictionary<int, StageData>();
+    public Dictionary<int, PortalData> PortalDict { get; private set; } = new Dictionary<int, PortalData>();
 
     public List<SkillData> SelectedOptions = new List<SkillData>();
 
@@ -76,12 +78,12 @@ public class DataManager : MonoBehaviour
 
     private void InitializeUserData()
     {
-        currentUserData.UnlockedStages = new List<int> { 1, 2, 3 };
-        currentUserData.UnlockedCharactersID = new List<int> { 10000001, 10000002 };
+        currentUserData.UnlockedStages = new List<int> { 41010001, 41010002, 41010003 };
+        currentUserData.UnlockedCharactersID = new List<int> { 11010101, 11010102 };
         currentUserData.CurrentEnergy = currentUserData.MaxEnergy;
         currentUserData.LastEnergyUpdateTime = DateTime.Now.Ticks;
-        currentUserData.CurrentStage = 1;
-        currentUserData.SelectedCharacterID = 10000001;
+        currentUserData.CurrentStage = 41010001;
+        currentUserData.SelectedCharacterID = 11010101;
         currentUserData.Gold = 10000;
         currentUserData.Diamond = 500;
         foreach (var shadow in ShadowDict.Values)
@@ -96,9 +98,9 @@ public class DataManager : MonoBehaviour
         {
             currentUserData.Inventory[character.ID] = 0;
         }
-        currentUserData.AddItem(new List<int> {10000001, 10000002}, 1); // 기본 캐릭터 지급
+        currentUserData.AddItem(new List<int> {11010101, 11010102}, 1); // 기본 캐릭터 지급
         currentUserData.AddItem(new List<int> { 30000001, 30000002, 30000003 }, new List<int> { 1, 1, 1 }); // 기본 유물 지급
-        currentUserData.AddItem(new List<int> { 40000001, 40000002, 40000003, 40000004, 40000005, 40000006, 40000007, 40000008 }, 1); // 기본 그림자 지급
+        currentUserData.AddItem(new List<int> { 21050101, 21020201, 21020301, 21020401, 21020501, 21020601, 21020701, 21030801 }, 1); // 기본 그림자 지급
     }
 
     public List<int> GetFormation(int formationIndex)
@@ -122,7 +124,9 @@ public class DataManager : MonoBehaviour
         LoadRelicData();
         LoadShadowData();
         LoadUpgradeData();
-        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeDict.Count} Upgrades");
+        LoadStageData();
+        LoadPortalData();
+        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeDict.Count} Upgrades, {StageDict.Count} Stages, {PortalDict.Count} Portals");
     }
 
     private void LoadSkillData()
@@ -238,5 +242,30 @@ public class DataManager : MonoBehaviour
         return passiveSkills;
     }
 
+    private void LoadStageData()
+    {
+        StageDatabase stageDB = Resources.Load<StageDatabase>("Data/StageDatabase");
+        if (stageDB != null)
+        {
+            foreach (StageData stage in stageDB.stages)
+            {
+                if (!StageDict.ContainsKey(stage.ID)) StageDict.Add(stage.ID, stage);
+            }
+        }
+    }
+
+    private void LoadPortalData()
+    {
+        PortalDatabase portalDB = Resources.Load<PortalDatabase>("Data/PortalDatabase");
+        if (portalDB != null)
+        {
+            foreach (PortalData portal in portalDB.portals)
+            {
+                if (!PortalDict.ContainsKey(portal.ID)) PortalDict.Add(portal.ID, portal);
+            }
+        }
+    }
     #endregion
 }
+
+

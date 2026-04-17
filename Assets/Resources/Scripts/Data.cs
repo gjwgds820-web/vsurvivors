@@ -21,11 +21,12 @@ public enum SkillType
 
 public enum ElementType
 {
-    Fire = 0,
-    Water = 1,
-    Leaf = 2,
-    Light = 3,
-    Dark = 4,
+    None = 0,
+    Fire = 1,
+    Water = 2,
+    Leaf = 3,
+    Light = 4,
+    Dark = 5,
 }
 
 [System.Serializable]
@@ -60,9 +61,16 @@ public class ShadowData
     public int CurrentLevel;
     public ElementType Element;
     public Sprite Icon;
-    public LevelStat[] LevelStats;
     public int TargetPriority;
     public int AttackType;
+    public float MaxHealth;
+    public float AttackPower;
+    public float AttackCooldown;
+    public float AttackRange;
+    public int MaxPierce;
+    public float Defence;
+    public float MoveSpeed;
+    public int SkillID;
 }
 
 [System.Serializable]
@@ -108,4 +116,41 @@ public class EnemyData
     public bool IsPiercing;
     public bool IsBoss;
     public Sprite Icon;
+}
+[System.Serializable]
+public class StageData
+{
+    public int ID;
+    public string Name;
+    public string Help;
+    public float Timer;
+    public float Elite1;
+    public float Elite2;
+    public float Boss;
+    public int SumChance;
+    public int Portal1;
+    public int Chance1;
+    public int Portal2;
+    public int Chance2;
+    public int Portal3;
+    public int Chance3;
+    public int Portal4;
+    public int Chance4;
+    public int Portal5;
+    public int Chance5;
+}
+
+[System.Serializable]
+public class PortalData
+{
+    public int ID;
+    public string Help;
+    public int SummonAmount;
+    public string Type;
+    public int DelPortal;
+    public int Monster1;
+    public int Monster2;
+    public int Monster3;
+    public int Monster4;
+    public int Monster5;
 }

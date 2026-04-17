@@ -89,7 +89,7 @@ public partial struct GameDirectorSystem : ISystem
         if (data.ValueRO.WaveTimer <= 0f)
         {
             data.ValueRW.WaveTimer = 60f; // 주석 복구됨
-            SpawnGate(ref state, data.ValueRO, ref ecb);
+            SpawnPortal(ref state, data.ValueRO, ref ecb);
         }
 
         if (!SystemAPI.TryGetSingleton<EnemyDatabaseComponent>(out var enemyDB)) return;
@@ -114,7 +114,7 @@ public partial struct GameDirectorSystem : ISystem
 
                 var baseEnemyData = SystemAPI.GetComponent<CEnemyData>(data.ValueRO.EnemyPrefab);
                 // 현재 생성된 몹의 위치 확인
-                foreach (var (gateTransform, gateData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<GateData>>())
+                foreach (var (portalTransform, CPortalData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<CPortalData>>())
                 {
                     // 최�? 마릿?��? ?��? ?�도�?방어코드 추�?
                     if (currentEnemyCount >= 200) break;
@@ -122,7 +122,7 @@ public partial struct GameDirectorSystem : ISystem
                     // 주석 복구됨
                     var enemyEntity = ecb.Instantiate(data.ValueRO.EnemyPrefab);
                     float2 randomOffset = _random.NextFloat2Direction() * _random.NextFloat(0.5f, 2f);
-                    float3 spawnPos = gateTransform.ValueRO.Position + new float3(randomOffset.x, 0.5f, randomOffset.y); // 높이를 0.5f로 스폰
+                    float3 spawnPos = portalTransform.ValueRO.Position + new float3(randomOffset.x, 0.5f, randomOffset.y); // 높이를 0.5f로 스폰
 
                     ecb.SetComponent(enemyEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
                     if (SystemAPI.HasComponent<PhysicsGraphicalInterpolationBuffer>(data.ValueRO.EnemyPrefab))
@@ -290,30 +290,58 @@ public partial struct GameDirectorSystem : ISystem
         }
     }
 
-    private void SpawnGate(ref SystemState state, GameDirectorData directorData, ref EntityCommandBuffer ecb)
+    private void SpawnPortal(ref SystemState state, GameDirectorData directorData, ref EntityCommandBuffer ecb)
     {
-        if (directorData.GatePrefab == Entity.Null) return;
+        if (directorData.PortalPrefab == Entity.Null) return;
+        if (!SystemAPI.HasSingleton<CurrentStageConfig>()) return;
+        
+        var stageConfig = SystemAPI.GetSingleton<CurrentStageConfig>();
+        var portalBuffer = SystemAPI.GetSingletonBuffer<PortalConfigElement>();
 
         var playerEntity = SystemAPI.GetSingletonEntity<PlayerInput>();
         float3 playerPos = SystemAPI.GetComponent<LocalTransform>(playerEntity).Position;
 
-        int gatesToSpawn = math.min(3, directorData.CurrentWave); // 주석 복구됨
+        int portalsToSpawn = math.min(3, directorData.CurrentWave);
         float offScreenRadius = 30f;
-        for (int i = 0; i < gatesToSpawn; i++)
+        for (int i = 0; i < portalsToSpawn; i++)
         {
             float angle = _random.NextFloat(0, math.PI * 2);
             float3 spawnPos = playerPos + new float3(math.cos(angle) * offScreenRadius, 1, math.sin(angle) * offScreenRadius);
 
-            var gateEntity = ecb.Instantiate(directorData.GatePrefab);
-            if (SystemAPI.HasComponent<Parent>(directorData.GatePrefab))
+            var portalEntity = ecb.Instantiate(directorData.PortalPrefab);
+            if (SystemAPI.HasComponent<Parent>(directorData.PortalPrefab))
             {
-                ecb.RemoveComponent<Parent>(gateEntity);
+                ecb.RemoveComponent<Parent>(portalEntity);
             }
-            ecb.SetComponent(gateEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
-            // 스폰될 때 흡수해야할 필요 그림자 수 세팅 (예: 3개)
-            ecb.AddComponent(gateEntity, new GateData { 
-                RequiredShadows = 3,
-                AbsorbedShadows = 0, 
+            ecb.SetComponent(portalEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
+
+            // Random portal pickup
+            int totalChance = stageConfig.Chance1 + stageConfig.Chance2 + stageConfig.Chance3;
+            int chosenId = stageConfig.Portal1;
+            if (totalChance > 0)
+            {
+                int r = _random.NextInt(totalChance);
+                if (r < stageConfig.Chance1) chosenId = stageConfig.Portal1;
+                else if (r < stageConfig.Chance1 + stageConfig.Chance2) chosenId = stageConfig.Portal2;
+                else chosenId = stageConfig.Portal3;
+            }
+            
+            PortalConfigElement chosenConfig = new PortalConfigElement { DelPortal = 3, SummonAmount = 1, Monster1 = 310100001 };
+            for (int p = 0; p < portalBuffer.Length; p++)
+            {
+                if (portalBuffer[p].ID == chosenId)
+                {
+                    chosenConfig = portalBuffer[p];
+                    break;
+                }
+            }
+
+            ecb.AddComponent(portalEntity, new CPortalData {
+                PortalID = chosenConfig.ID,
+                RequiredShadows = chosenConfig.DelPortal,
+                SummonAmount = chosenConfig.SummonAmount,
+                Monster1 = chosenConfig.Monster1,
+                AbsorbedShadows = 0,
                 InteractionRadius = 5.0f,
                 AbsorbtionTimer = 0f,
                 IsActive = true,
@@ -322,6 +350,11 @@ public partial struct GameDirectorSystem : ISystem
         }
     }
 }
+
+
+
+
+
 
 
 

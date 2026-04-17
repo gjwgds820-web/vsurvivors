@@ -62,19 +62,11 @@ public class DatabaseAuthoring : MonoBehaviour
                     arrayBuilder[i].ID = data.ID;
                     arrayBuilder[i].AttackType = data.AttackType;
                     arrayBuilder[i].TargetPriority = data.TargetPriority;
-
-                    var levelStatsBuilder = builder.Allocate(ref arrayBuilder[i].LevelStats, data.LevelStats.Length);
-                    for (int j = 0; j < data.LevelStats.Length; j++)
-                    {
-                        var stat = data.LevelStats[j];
-                        levelStatsBuilder[j] = new ShadowLevelStatBlob
-                        {
-                            MaxHealth = stat.MaxHealth,
-                            AttackPower = stat.AttackPower,
-                            AttackRange = stat.AttackRange,
-                            AttackCooldown = stat.AttackCooldown
-                        };
-                    }
+                    
+                    arrayBuilder[i].MaxHealth = data.MaxHealth;
+                    arrayBuilder[i].AttackPower = data.AttackPower;
+                    arrayBuilder[i].AttackRange = data.AttackRange;
+                    arrayBuilder[i].AttackCooldown = data.AttackCooldown;
                 }
 
                 var blobRef = builder.CreateBlobAssetReference<ShadowDatabaseBlob>(Allocator.Persistent);

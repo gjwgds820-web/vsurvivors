@@ -59,8 +59,16 @@ public class UI_MainSection : UI_Base
         UserData userData = DataManager.Instance.currentUserData;
         GetText((int)Texts.PassNameText).text = userData.IsPassBought ? "Battle Pass" : "Buy Pass";
         GetText((int)Texts.PassLevelText).text = $"Level {userData.CurrentPassLevel}";
-        GetText((int)Texts.StageIndexText).text = $"Stage {userData.CurrentStage}";
-        GetText((int)Texts.StageNameText).text = $"Stage Name {userData.CurrentStage}";
+        if (DataManager.Instance.StageDict.TryGetValue(userData.CurrentStage, out var stageData))
+        {
+            GetText((int)Texts.StageIndexText).text = $"Stage {stageData.Name}";
+            GetText((int)Texts.StageNameText).text = $"{stageData.Name}";
+        }
+        else
+        {
+            GetText((int)Texts.StageIndexText).text = $"Stage {userData.CurrentStage}";
+            GetText((int)Texts.StageNameText).text = $"Stage Name {userData.CurrentStage}";
+        }
         GetText((int)Texts.CostText).text = _battleEnergyCost.ToString();
     }
 

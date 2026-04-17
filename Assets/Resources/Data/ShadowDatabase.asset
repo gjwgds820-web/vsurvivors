@@ -13,411 +13,501 @@ MonoBehaviour:
   m_Name: ShadowDatabase
   m_EditorClassIdentifier: Assembly-CSharp::ShadowDatabase
   shadows:
-  - ID: 40000001
-    Name: Shadow_1
-    Description: This is a test shadow.
+  - ID: 21010101
+    Name: "\uAE30\uBCF8"
+    Description: "\uBAA8\uB4E0 \uAC8C\uC784\uC5D0 \uD544\uC218\uB85C \uACE0\uC815\uB418\uB294
+      \uAE30\uBCF8 \uADF8\uB9BC\uC790"
     MaxLevel: 6
-    CurrentLevel: 0
-    Element: 3
-    Icon: {fileID: 21300000, guid: 0801c269d2ef0134498e6d4efa216e80, type: 3}
-    LevelStats:
-    - MaxHealth: 100
-      AttackPower: 10
-      AttackRange: 3
-      AttackCooldown: 1
-    - MaxHealth: 150
-      AttackPower: 15
-      AttackRange: 3
-      AttackCooldown: 0.9
-    - MaxHealth: 200
-      AttackPower: 20
-      AttackRange: 3
-      AttackCooldown: 0.8
-    - MaxHealth: 250
-      AttackPower: 25
-      AttackRange: 3
-      AttackCooldown: 0.7
-    - MaxHealth: 300
-      AttackPower: 30
-      AttackRange: 3
-      AttackCooldown: 0.6
-    - MaxHealth: 350
-      AttackPower: 35
-      AttackRange: 3
-      AttackCooldown: 0.5
-    TargetPriority: 0
-    AttackType: 0
-  - ID: 40000002
-    Name: Shadow_2
-    Description: This is a test shadow.
-    MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 0
-    Icon: {fileID: 21300000, guid: d68382f58daf36847952b3bb25ebcaf6, type: 3}
-    LevelStats:
-    - MaxHealth: 120
-      AttackPower: 12
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 170
-      AttackPower: 17
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 220
-      AttackPower: 22
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 270
-      AttackPower: 27
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 320
-      AttackPower: 32
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 370
-      AttackPower: 37
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: ac392798067356a49be1bf2c09416ae5, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000003
-    Name: Shadow_3
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 1
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 0
+  - ID: 21010102
+    Name: "\uAE30\uBCF8"
+    Description: "\uBAA8\uB4E0 \uAC8C\uC784\uC5D0 \uD544\uC218\uB85C \uACE0\uC815\uB418\uB294
+      \uAE30\uBCF8 \uADF8\uB9BC\uC790"
     MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 0
-    Icon: {fileID: 21300000, guid: e748ea83025c111469380aa94d35c4c9, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: a43a27d3b3210d045a28361950c92791, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000004
-    Name: Shadow_4
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 15
+    AttackPower: 2
+    AttackCooldown: 2
+    AttackRange: 2
+    MaxPierce: 2
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 0
+  - ID: 21010103
+    Name: "\uAE30\uBCF8"
+    Description: "\uBAA8\uB4E0 \uAC8C\uC784\uC5D0 \uD544\uC218\uB85C \uACE0\uC815\uB418\uB294
+      \uAE30\uBCF8 \uADF8\uB9BC\uC790"
     MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 0
-    Icon: {fileID: 21300000, guid: 8b29666b8cab6f347a1915552ec66564, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: 02a37d042b5b87c44b8a1af129c75c90, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000005
-    Name: Shadow_5
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 3
+    AttackCooldown: 3
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 3
+    SkillID: 0
+  - ID: 21010104
+    Name: "\uAE30\uBCF8"
+    Description: "\uBAA8\uB4E0 \uAC8C\uC784\uC5D0 \uD544\uC218\uB85C \uACE0\uC815\uB418\uB294
+      \uAE30\uBCF8 \uADF8\uB9BC\uC790"
     MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 0
-    Icon: {fileID: 21300000, guid: 07c7e5be782c11041b2a55ee829aaf74, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: fbb159caa24215e43b6a4973050a7ccc, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000006
-    Name: Shadow_6
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 25
+    AttackPower: 4
+    AttackCooldown: 4
+    AttackRange: 4
+    MaxPierce: 4
+    Defence: 0
+    MoveSpeed: 4
+    SkillID: 0
+  - ID: 21010105
+    Name: "\uAE30\uBCF8"
+    Description: "\uBAA8\uB4E0 \uAC8C\uC784\uC5D0 \uD544\uC218\uB85C \uACE0\uC815\uB418\uB294
+      \uAE30\uBCF8 \uADF8\uB9BC\uC790"
     MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 0
-    Icon: {fileID: 21300000, guid: 1184a1f2427089d4fa1cb9676b612ac8, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: a33b7cb6789ed604aa5cbb6ec4770df5, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000007
-    Name: Shadow_7
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 30
+    AttackPower: 5
+    AttackCooldown: 5
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 5
+    SkillID: 0
+  - ID: 21020201
+    Name: "\uC804\uC0AC"
+    Description: "\uADFC\uC804 \uAE30\uBCF8 \uC804\uC0AC"
     MaxLevel: 6
-    CurrentLevel: 0
-    Element: 0
-    Icon: {fileID: 21300000, guid: dc701aa1777224244803be257e26a8ed, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
-    TargetPriority: 0
-    AttackType: 0
-  - ID: 40000008
-    Name: Shadow_8
-    Description: This is a test shadow.
-    MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 1
-    Icon: {fileID: 21300000, guid: 656c5e79ff2e9074b955cab662e8fbdf, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: 7b0a0aa5d77e3cb429a899f966b4b40c, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000009
-    Name: Shadow_9
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 5
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 0
+  - ID: 21020202
+    Name: "\uC804\uC0AC"
+    Description: "\uADFC\uC804 \uAE30\uBCF8 \uC804\uC0AC"
     MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
     Element: 1
-    Icon: {fileID: 21300000, guid: 977d23f540938b3458ba4ac36f410bc0, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: c43f7eeb6eff2f148ad56524eff0f288, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000010
-    Name: Shadow_10
-    Description: This is a test shadow.
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 5
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 0
+  - ID: 21020203
+    Name: "\uC804\uC0AC"
+    Description: "\uADFC\uC804 \uAE30\uBCF8 \uC804\uC0AC"
     MaxLevel: 6
-    CurrentLevel: 0
+    CurrentLevel: 1
+    Element: 1
+    Icon: {fileID: 21300000, guid: bc9514ff7d0ce034598f25bf12b772b3, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 5
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 0
+  - ID: 21020204
+    Name: "\uC804\uC0AC"
+    Description: "\uADFC\uC804 \uAE30\uBCF8 \uC804\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 1
+    Icon: {fileID: 21300000, guid: 77160931f7e32084682ad99cec715c7f, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 5
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 0
+  - ID: 21020205
+    Name: "\uC804\uC0AC"
+    Description: "\uADFC\uC804 \uAE30\uBCF8 \uC804\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 1
+    Icon: {fileID: 21300000, guid: b64adc7127e3a4d4fb05c0ac868ba853, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 5
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 0
+  - ID: 21020206
+    Name: "\uC804\uC0AC"
+    Description: "\uADFC\uC804 \uAE30\uBCF8 \uC804\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 1
+    Icon: {fileID: 21300000, guid: 882a73c9b01efce43bc65e78ac3fb3d7, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 20
+    AttackPower: 5
+    AttackCooldown: 1
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 1
+    SkillID: 21020206
+  - ID: 22030301
+    Name: "\uAD81\uC218"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uAD81\uC218"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 2
+    Icon: {fileID: 21300000, guid: 9330f33f96ca27f4e82b8c87b2a319f3, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 4
+    AttackCooldown: 2
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 1.5
+    SkillID: 0
+  - ID: 22030302
+    Name: "\uAD81\uC218"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uAD81\uC218"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 2
+    Icon: {fileID: 21300000, guid: 8d0ddcd0c6413ba49a0abd2ca7229fe7, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 4
+    AttackCooldown: 2
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 1.5
+    SkillID: 0
+  - ID: 22030303
+    Name: "\uAD81\uC218"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uAD81\uC218"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 2
+    Icon: {fileID: 21300000, guid: a27e05b0bf92db848810fd28591a07d2, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 4
+    AttackCooldown: 2
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 1.5
+    SkillID: 0
+  - ID: 22030304
+    Name: "\uAD81\uC218"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uAD81\uC218"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 2
+    Icon: {fileID: 21300000, guid: b93adb2e86fadea419b3adf29c6233be, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 4
+    AttackCooldown: 2
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 1.5
+    SkillID: 0
+  - ID: 22030305
+    Name: "\uAD81\uC218"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uAD81\uC218"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 2
+    Icon: {fileID: 21300000, guid: a279940019dd7064086be67ca8515371, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 4
+    AttackCooldown: 2
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 1.5
+    SkillID: 0
+  - ID: 22030306
+    Name: "\uAD81\uC218"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uAD81\uC218"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 2
+    Icon: {fileID: 21300000, guid: af88754f7a95edb48947b133fe60f391, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 4
+    AttackCooldown: 2
+    AttackRange: 3
+    MaxPierce: 3
+    Defence: 0
+    MoveSpeed: 1.5
+    SkillID: 22030306
+  - ID: 22040401
+    Name: "\uB9C8\uBC95\uC0AC"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uB9C8\uBC95\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
     Element: 4
-    Icon: {fileID: 21300000, guid: da64cdc25341054409bfde4799ed79f2, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    Icon: {fileID: 21300000, guid: 40cecb84e1a79734ca729aa5c121c4f9, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000011
-    Name: Shadow_11
-    Description: This is a test shadow.
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 5
+    AttackCooldown: 3
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 0.8
+    SkillID: 0
+  - ID: 22040402
+    Name: "\uB9C8\uBC95\uC0AC"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uB9C8\uBC95\uC0AC"
     MaxLevel: 6
-    CurrentLevel: 0
-    Element: 0
-    Icon: {fileID: 21300000, guid: ec49cddbb4f7bc54d9811f1616745b6a, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    CurrentLevel: 1
+    Element: 4
+    Icon: {fileID: 21300000, guid: 250d4a931088a6d44974675ca3222e25, type: 3}
     TargetPriority: 0
-    AttackType: 0
-  - ID: 40000012
-    Name: Shadow_12
-    Description: This is a test shadow.
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 5
+    AttackCooldown: 3
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 0.8
+    SkillID: 0
+  - ID: 22040403
+    Name: "\uB9C8\uBC95\uC0AC"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uB9C8\uBC95\uC0AC"
     MaxLevel: 6
-    CurrentLevel: 0
-    Element: 1
-    Icon: {fileID: 21300000, guid: 3e7145a82d6da114b824a58244a90918, type: 3}
-    LevelStats:
-    - MaxHealth: 140
-      AttackPower: 14
-      AttackRange: 1
-      AttackCooldown: 1
-    - MaxHealth: 190
-      AttackPower: 19
-      AttackRange: 1
-      AttackCooldown: 0.9
-    - MaxHealth: 240
-      AttackPower: 24
-      AttackRange: 1
-      AttackCooldown: 0.8
-    - MaxHealth: 290
-      AttackPower: 29
-      AttackRange: 1
-      AttackCooldown: 0.7
-    - MaxHealth: 340
-      AttackPower: 34
-      AttackRange: 1
-      AttackCooldown: 0.6
-    - MaxHealth: 390
-      AttackPower: 39
-      AttackRange: 1
-      AttackCooldown: 0.5
+    CurrentLevel: 1
+    Element: 4
+    Icon: {fileID: 21300000, guid: a18db786aa235a847afcbf3103b3048b, type: 3}
     TargetPriority: 0
-    AttackType: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 5
+    AttackCooldown: 3
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 0.8
+    SkillID: 0
+  - ID: 22040404
+    Name: "\uB9C8\uBC95\uC0AC"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uB9C8\uBC95\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 4
+    Icon: {fileID: 21300000, guid: 6254b88da6def464285cec03ed555214, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 5
+    AttackCooldown: 3
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 0.8
+    SkillID: 0
+  - ID: 22040405
+    Name: "\uB9C8\uBC95\uC0AC"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uB9C8\uBC95\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 4
+    Icon: {fileID: 21300000, guid: 3a570c5d24eb3b649b184688e3db867c, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 5
+    AttackCooldown: 3
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 0.8
+    SkillID: 0
+  - ID: 22040406
+    Name: "\uB9C8\uBC95\uC0AC"
+    Description: "\uC6D0\uAC70\uB9AC \uAE30\uBCF8 \uB9C8\uBC95\uC0AC"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 4
+    Icon: {fileID: 21300000, guid: 93fa90c0b304bc3449e9dce3ac7402af, type: 3}
+    TargetPriority: 0
+    AttackType: 2
+    MaxHealth: 15
+    AttackPower: 5
+    AttackCooldown: 3
+    AttackRange: 5
+    MaxPierce: 5
+    Defence: 0
+    MoveSpeed: 0.8
+    SkillID: 22040406
+  - ID: 21060601
+    Name: "\uB3C4\uC801"
+    Description: "\uADFC\uC811 \uAE30\uBCF8 \uB3C4\uC801"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 5
+    Icon: {fileID: 21300000, guid: 3e5876fd8926c234a9bf949e58a236f1, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 3
+    AttackCooldown: 0.8
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 0
+  - ID: 21060602
+    Name: "\uB3C4\uC801"
+    Description: "\uADFC\uC811 \uAE30\uBCF8 \uB3C4\uC801"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 5
+    Icon: {fileID: 21300000, guid: 255d92ac667bbf64281c90dfc7825891, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 3
+    AttackCooldown: 0.8
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 0
+  - ID: 21060603
+    Name: "\uB3C4\uC801"
+    Description: "\uADFC\uC811 \uAE30\uBCF8 \uB3C4\uC801"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 5
+    Icon: {fileID: 21300000, guid: de82a755f68f19041a9d1b40b0ac386c, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 3
+    AttackCooldown: 0.8
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 0
+  - ID: 21060604
+    Name: "\uB3C4\uC801"
+    Description: "\uADFC\uC811 \uAE30\uBCF8 \uB3C4\uC801"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 5
+    Icon: {fileID: 21300000, guid: 648631373e56a7345a71ad53e983a891, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 3
+    AttackCooldown: 0.8
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 0
+  - ID: 21060605
+    Name: "\uB3C4\uC801"
+    Description: "\uADFC\uC811 \uAE30\uBCF8 \uB3C4\uC801"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 5
+    Icon: {fileID: 21300000, guid: 9102aa77f2c18584b9e0250d0e58f11e, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 3
+    AttackCooldown: 0.8
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 0
+  - ID: 21060606
+    Name: "\uB3C4\uC801"
+    Description: "\uADFC\uC811 \uAE30\uBCF8 \uB3C4\uC801"
+    MaxLevel: 6
+    CurrentLevel: 1
+    Element: 5
+    Icon: {fileID: 21300000, guid: 3ff9ca04e161d854cb54ef93b6ebc74e, type: 3}
+    TargetPriority: 0
+    AttackType: 1
+    MaxHealth: 10
+    AttackPower: 3
+    AttackCooldown: 0.8
+    AttackRange: 1
+    MaxPierce: 1
+    Defence: 0
+    MoveSpeed: 2
+    SkillID: 21060606

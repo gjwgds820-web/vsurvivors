@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Entities.UniversalDelegates;
 using Unity.Mathematics;
 
@@ -30,3 +30,4 @@ public struct GoldEventTag : IComponentData { public int amount;}
 public struct MagnetEventTag : IComponentData {}
 
 public struct BombEventTag : IComponentData {}
+

@@ -5,7 +5,7 @@ public class VisualManager : MonoBehaviour
     public static VisualManager Instance;
 
     [Header("Visual Prefabs")]
-    public GameObject GateVisualPrefab;
+    public GameObject PortalVisualPrefab;
     public GameObject EnemyVisualPrefab;
     public GameObject BossVisualPrefab;
     public GameObject ShadowVisualPrefab;
@@ -62,3 +62,4 @@ public class VisualManager : MonoBehaviour
         }
     }
 }
+

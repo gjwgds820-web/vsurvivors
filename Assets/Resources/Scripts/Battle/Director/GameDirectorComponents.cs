@@ -11,7 +11,7 @@ public enum GamePhase
 
 public struct GameDirectorData : IComponentData
 {
-    public Entity GatePrefab;
+    public Entity PortalPrefab;
     public Entity EnemyPrefab;
     public Entity BossPrefab;
     
@@ -42,3 +42,4 @@ public struct GameClearEventTag : IComponentData
 {
     public int ClearanceLevel;
 }
+
