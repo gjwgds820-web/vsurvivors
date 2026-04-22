@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d1b927bf022238347933b6d177f929f6
+timeCreated: 1540125635
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Material/Head.mat
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4d4866f6d30d0ca4899fb563a306c52b
+timeCreated: 1543233686
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/Standard/Dog.prefab
+  uploadId: 754875

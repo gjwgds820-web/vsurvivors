@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0f8722c1e6b44a889c99c7f3022a693f
+timeCreated: 1526613214
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animators/SingleTwoHandSword.controller
+  uploadId: 754875

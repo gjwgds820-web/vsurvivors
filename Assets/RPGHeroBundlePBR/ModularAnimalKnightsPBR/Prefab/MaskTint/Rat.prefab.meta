@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 28550a30e2de71642889a1257250665e
+timeCreated: 1544534208
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/MaskTint/Rat.prefab
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 69feba55806f40838a066ee89b5c49ff
+timeCreated: 1576812523
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/SwordAndShieldShowcase.unity
+  uploadId: 754875

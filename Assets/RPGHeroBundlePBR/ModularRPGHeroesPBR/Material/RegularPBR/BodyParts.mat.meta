@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 67fcbd0d1bd5487d9c7ebc528e0fa75a
+timeCreated: 1526482449
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Material/RegularPBR/BodyParts.mat
+  uploadId: 754875

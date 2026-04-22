@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d84299a96ab03504882ece333b282751
+timeCreated: 1543233575
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/Standard/Lizard.prefab
+  uploadId: 754875

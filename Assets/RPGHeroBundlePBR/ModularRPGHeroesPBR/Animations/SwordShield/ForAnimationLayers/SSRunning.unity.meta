@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: eee017fad401471a802856b771b799d7
+timeCreated: 1552030672
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animations/SwordShield/ForAnimationLayers/SSRunning.unity
+  uploadId: 754875

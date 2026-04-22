@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 10a62d644cacdd448bde69f73290c81e
+timeCreated: 1543233866
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/Standard/Badger.prefab
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: caadb2adfaf77be40b75019f46e046d8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/ModularParts/LightingData.asset
+  uploadId: 754875

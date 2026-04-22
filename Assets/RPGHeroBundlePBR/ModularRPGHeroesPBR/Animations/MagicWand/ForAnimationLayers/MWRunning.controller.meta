@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 3c4fb4107c21412790c4621e86c45307
+timeCreated: 1552019136
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animations/MagicWand/ForAnimationLayers/MWRunning.controller
+  uploadId: 754875

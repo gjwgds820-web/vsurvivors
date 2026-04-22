@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 7b29e16cd6fe21340b7ca52e26be82ef
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  preprocessorOverride: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/RPGTinyHeroWavePBR/Shader/PBRMaskTint.shader
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1e4f6bd405eeaad469f441da8b7a310b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/BowShowcase/LightingData.asset
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3c80453b982640aba6f84718d243bd6a
+timeCreated: 1526482330
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Material/RegularPBR/HeadParts.mat
+  uploadId: 754875

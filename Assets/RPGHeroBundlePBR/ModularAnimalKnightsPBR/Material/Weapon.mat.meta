@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: acaf1ef41487e394cbcdafb6848f249a
+timeCreated: 1540973277
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Material/Weapon.mat
+  uploadId: 754875

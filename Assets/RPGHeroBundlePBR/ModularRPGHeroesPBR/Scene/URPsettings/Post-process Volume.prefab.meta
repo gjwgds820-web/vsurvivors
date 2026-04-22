@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ff6401c91b4344d3b9510606d20512a6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/URPsettings/Post-process
+    Volume.prefab
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f5a6c6f1fbdd8fd46924d0f4500f64f9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/RPGTinyHeroWavePBR/Animator/BowsCTRL.controller
+  uploadId: 754875

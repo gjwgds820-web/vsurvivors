@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fc5634c0388e9c34f8173df0b66a1ea4
+timeCreated: 1543233635
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/Standard/Lion.prefab
+  uploadId: 754875

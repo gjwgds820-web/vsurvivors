@@ -1,0 +1,3 @@
+If you want to convert the project to HDRP, just double click HDRP package.
+
+If you want to convert the project to Built-In, just double click Builtin package.

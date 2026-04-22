@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 3a77a0fdfc1f2044fa5c25ca9b343fe3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/RPGTinyHeroWavePBR/Scene/Extra Scenes/All bodies
+    cloaks/LightingData.asset
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 183df93d6a900a34d937e691fe72da71
+timeCreated: 1543209043
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Animator/AnimalKnightWithWeapon.controller
+  uploadId: 754875

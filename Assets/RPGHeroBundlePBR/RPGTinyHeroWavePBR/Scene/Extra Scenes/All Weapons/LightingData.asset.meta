@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1e5773b7bbaf82d45a5761c6dd383c9d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/RPGTinyHeroWavePBR/Scene/Extra Scenes/All Weapons/LightingData.asset
+  uploadId: 754875

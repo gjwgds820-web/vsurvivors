@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: bad56e60527240f4b54be32649963f15
+timeCreated: 1576629867
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Material/Skybox_Mat.mat
+  uploadId: 754875

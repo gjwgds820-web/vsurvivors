@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3c304f0848404e8bbe8068ba7c8f567b
+timeCreated: 1526482334
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Material/RegularPBR/Costumes.mat
+  uploadId: 754875

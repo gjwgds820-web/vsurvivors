@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bd158ecebdab8ac4bb1e1a361ea9b151
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/HDRP_BuiltIn/ConvertingToHDRPorBuiltIn.txt
+  uploadId: 754875

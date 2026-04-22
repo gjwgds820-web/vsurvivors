@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 75c81049564d4baa98a0f516d106186a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/MaskTintShowcaseSettings.lighting
+  uploadId: 754875

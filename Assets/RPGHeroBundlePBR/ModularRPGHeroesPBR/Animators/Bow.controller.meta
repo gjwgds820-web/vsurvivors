@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d10236eaff0c442e868754e5c3787f6c
+timeCreated: 1526613214
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animators/Bow.controller
+  uploadId: 754875

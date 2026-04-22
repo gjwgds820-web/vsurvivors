@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 861ed91eb6804439b52503239d192081
+timeCreated: 1552030490
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animations/SingleTwoHandSword/ForAnimationLayers/THSRunning.unity
+  uploadId: 754875

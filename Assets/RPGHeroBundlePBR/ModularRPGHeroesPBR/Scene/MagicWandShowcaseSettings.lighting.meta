@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 98a4d7b5257e46aaa59bcf81dea3319d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/MagicWandShowcaseSettings.lighting
+  uploadId: 754875

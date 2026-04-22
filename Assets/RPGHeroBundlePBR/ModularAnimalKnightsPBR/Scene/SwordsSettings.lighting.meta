@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e69a09579bffcc74880b4e2ca266ae6d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Scene/SwordsSettings.lighting
+  uploadId: 754875

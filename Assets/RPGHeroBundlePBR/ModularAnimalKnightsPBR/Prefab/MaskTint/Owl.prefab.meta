@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e65b915c8dc5a074b89f8bdae11a1b13
+timeCreated: 1544534172
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/MaskTint/Owl.prefab
+  uploadId: 754875

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7799bd2cc24949c0a5cce51b56e78145
+timeCreated: 1552019056
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animations/DoubleSwords/ForAnimationLayers/DSRunning.unity
+  uploadId: 754875

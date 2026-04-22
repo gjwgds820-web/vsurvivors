@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b5bceb77277d99b40a248a11d4262bdc
+timeCreated: 1544534001
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/MaskTint/Badger.prefab
+  uploadId: 754875

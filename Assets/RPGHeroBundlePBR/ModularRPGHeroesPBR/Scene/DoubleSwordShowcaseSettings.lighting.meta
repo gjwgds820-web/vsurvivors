@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c1c5d1303ef54399bcde12a14aa9837d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/DoubleSwordShowcaseSettings.lighting
+  uploadId: 754875

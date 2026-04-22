@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9e2875446096df24eb0715eb2f3d334a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/RPGTinyHeroWavePBR/Animator/ForShowcasing/THS.controller
+  uploadId: 754875

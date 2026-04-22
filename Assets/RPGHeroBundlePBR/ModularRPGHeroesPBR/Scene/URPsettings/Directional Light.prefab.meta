@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c2c4db68e1d441a2ae2402de90b2b642
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Scene/URPsettings/Directional
+    Light.prefab
+  uploadId: 754875

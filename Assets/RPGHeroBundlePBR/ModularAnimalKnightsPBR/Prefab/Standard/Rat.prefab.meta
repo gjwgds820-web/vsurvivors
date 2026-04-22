@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4c328a63507b1434c96aac39612037a7
+timeCreated: 1543232974
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularAnimalKnightsPBR/Prefab/Standard/Rat.prefab
+  uploadId: 754875

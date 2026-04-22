@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b3c59567400c4409adda470ec7d5062f
+timeCreated: 1552018636
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animations/Bow/ForAnimationLayers/BowRunning.unity
+  uploadId: 754875

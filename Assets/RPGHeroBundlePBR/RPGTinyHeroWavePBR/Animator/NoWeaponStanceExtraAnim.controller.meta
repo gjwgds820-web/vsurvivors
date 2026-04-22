@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 337e4ebe27f93aa4a9b56384dc78b957
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/RPGTinyHeroWavePBR/Animator/NoWeaponStanceExtraAnim.controller
+  uploadId: 754875

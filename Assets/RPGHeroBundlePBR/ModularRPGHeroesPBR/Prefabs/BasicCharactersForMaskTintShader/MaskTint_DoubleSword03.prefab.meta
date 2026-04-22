@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c649028b9cb04ed6a5a37480e5a5398f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Prefabs/BasicCharactersForMaskTintShader/MaskTint_DoubleSword03.prefab
+  uploadId: 754875

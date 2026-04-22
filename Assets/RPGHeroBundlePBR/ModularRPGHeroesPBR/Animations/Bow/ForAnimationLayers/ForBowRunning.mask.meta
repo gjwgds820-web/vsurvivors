@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 342621cbc03b45cdacaf9926886729bb
+timeCreated: 1551610318
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 31900000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 319525
+  packageName: RPG Modular Hero Bundle PBR
+  packageVersion: 1.0
+  assetPath: Assets/RPGHeroBundlePBR/ModularRPGHeroesPBR/Animations/Bow/ForAnimationLayers/ForBowRunning.mask
+  uploadId: 754875
