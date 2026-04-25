@@ -4,11 +4,20 @@ using UnityEngine;
 public class SkillData
 {
     public int ID;
+    public int GroupID;
+    public int Level;
     public SkillType Type;
     public string Name;
     public string Description;
     public int MaxLevel;
     public int CurrentLevel;
+    
+    // New fields from CSV
+    public string Stats;
+    public string Value;
+    public string DisplayDescription;
+    public string IconPath;
+
     [Newtonsoft.Json.JsonIgnore] 
     public Sprite Icon;
 }
@@ -115,6 +124,15 @@ public class EnemyData
     public float HitboxDuration;
     public bool IsPiercing;
     public bool IsBoss;
+
+    // New fields from CSV
+    public int AttackType;
+    public int MaxPierce;
+    public float Def;
+    public string EliteType;
+    public int Skill1;
+    public int Skill2;
+
     public Sprite Icon;
 }
 [System.Serializable]

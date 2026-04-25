@@ -13,48 +13,45 @@ MonoBehaviour:
   m_Name: EnemyDatabase
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDatabase
   enemies:
-  - ID: 60000001
-    Name: Enemy_1
-    Description: This is a test enemy.
+  - ID: 310100001
+    Name: "\uC544\uBA40\uB791"
+    Description: '-'
     Type: 0
-    MaxHealth: 100
-    AttackPower: 10
+    MaxHealth: 10
+    AttackPower: 5
     AttackRange: 1
     AttackCooldown: 1
-    MoveSpeed: 2
-    HitBoxShape: 3
-    HitboxRadius: 0.5
-    HitboxDuration: 0.1
-    IsPiercing: 1
-    IsBoss: 0
-    Icon: {fileID: 0}
-  - ID: 60000002
-    Name: Enemy_2
-    Description: This is a test enemy.
-    Type: 0
-    MaxHealth: 200
-    AttackPower: 20
-    AttackRange: 2
-    AttackCooldown: 1.5
-    MoveSpeed: 1.5
-    HitBoxShape: 2
-    HitboxRadius: 0.7
-    HitboxDuration: 0.2
-    IsPiercing: 1
-    IsBoss: 0
-    Icon: {fileID: 0}
-  - ID: 60000003
-    Name: Enemy_3
-    Description: This is a test enemy.
-    Type: 0
-    MaxHealth: 500
-    AttackPower: 50
-    AttackRange: 2
-    AttackCooldown: 2
-    MoveSpeed: 1
+    MoveSpeed: 3
     HitBoxShape: 0
-    HitboxRadius: 1
-    HitboxDuration: 0.5
+    HitboxRadius: 0
+    HitboxDuration: 0
+    IsPiercing: 1
+    IsBoss: 0
+    AttackType: 1
+    MaxPierce: 1
+    Def: 0
+    EliteType: 
+    Skill1: 0
+    Skill2: 0
+    Icon: {fileID: 0}
+  - ID: 330100001
+    Name: "\uBD88\uD0F1\uD06C"
+    Description: '-'
+    Type: 0
+    MaxHealth: 100
+    AttackPower: 50
+    AttackRange: 10
+    AttackCooldown: 10
+    MoveSpeed: 10
+    HitBoxShape: 0
+    HitboxRadius: 0
+    HitboxDuration: 0
     IsPiercing: 1
     IsBoss: 1
+    AttackType: 0
+    MaxPierce: 10
+    Def: 0
+    EliteType: elite
+    Skill1: 330100001
+    Skill2: 330100002
     Icon: {fileID: 0}

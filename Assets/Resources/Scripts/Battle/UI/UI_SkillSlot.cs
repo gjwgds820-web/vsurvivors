@@ -53,21 +53,14 @@ public class UI_SkillSlot : UI_Base
         _onReroll = onReroll;
 
         GetText((int)Texts.SkillNameText).text = skillData.Name;
-        GetText((int)Texts.SkillDescriptionText).text = skillData.Description;
+        // 기획상 추가된 DisplayDescription을 우선 노출, 없으면 기존 Description 노출
+        GetText((int)Texts.SkillDescriptionText).text = string.IsNullOrEmpty(skillData.DisplayDescription) ? skillData.Description : skillData.DisplayDescription;
         
         // 아이콘이 비어있다면 리소스 폴더에서 동적으로 로드 시도
         Sprite iconSprite = skillData.Icon;
         if (iconSprite == null)
         {
-            if (skillData.Type == SkillType.Shadow)
-            {
-                iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Shadows/Shadow_{skillData.ID - 40000000}");
-            }
-            else // Passive 등 다른 타입일 경우
-            {
-                // 패시브 아이콘 경로에 맞게 확장하세요
-                iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Passives/Passive_{skillData.ID}");
-            }
+            iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Skills/{skillData.ID}");
         }
         
         GetImage((int)Images.SkillIconImage).sprite = iconSprite;

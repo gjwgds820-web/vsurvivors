@@ -2051,7 +2051,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 88cab4be4b1697a42b8e1d73fb9a23b8, type: 2}
+  - {fileID: 2100000, guid: 304d8b3cf6b3f1c47924abef7c057d61, type: 2}
   - {fileID: 2100000, guid: c38968b96b442334db4638cdd25da8e8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -3435,7 +3435,7 @@ GameObject:
   - component: {fileID: 3084901761375826747}
   - component: {fileID: 3180426530870547205}
   m_Layer: 0
-  m_Name: Shadow_1Visual
+  m_Name: 22030306Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

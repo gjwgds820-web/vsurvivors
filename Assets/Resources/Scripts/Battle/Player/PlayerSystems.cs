@@ -78,8 +78,9 @@ public partial struct PlayerMovementSystem : ISystem
 #endregion
 
 #region Death System
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(UnitHealthSystem))]
+[UpdateBefore(typeof(VisualCleanupSystem))]
 [BurstCompile]
 public partial struct PlayerDeathSystem : ISystem
 {
@@ -117,11 +118,14 @@ public partial struct ShadowSpawnerSystem : ISystem
 
         float deltaTime = SystemAPI.Time.DeltaTime;
         var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var random = new Unity.Mathematics.Random((uint)(SystemAPI.Time.ElapsedTime * 1000) + 1);
 
         foreach (var (playerData, spawnerData, playerTransform, entity) in
                  SystemAPI.Query<RefRW<PlayerData>, RefRO<ShadowSpawnData>,  RefRO<LocalTransform>>().WithEntityAccess())
         {
             var shadowSlots = SystemAPI.GetBuffer<ShadowSlotElement>(entity);
+            var activeSkills = SystemAPI.GetBuffer<ActiveShadowSkillElement>(entity);
+
             // 현재 살아있는 그림자 수 확인 및 죽은 그림자 동기화
             int aliveCount = 0;
             for (int i = 0; i < shadowSlots.Length; i++)
@@ -169,9 +173,10 @@ public partial struct ShadowSpawnerSystem : ISystem
                     Entity targetShadow = Entity.Null;
                     bool needInstantiate = false;
 
-                    // 먼저 게임 매니저나 실제 플레이어가 보유한 그림자 목록에 맞게 ID를 동적으로 가져올 수 있게 확장 고려
-                    // 현재는 기본 ID(40000001)로 고정
-                    int shadowID = 401000; 
+                    if (activeSkills.Length == 0) continue; // No shadows equipped
+                    
+                    int skillIndex = random.NextInt(0, activeSkills.Length);
+                    int shadowID = activeSkills[skillIndex].ShadowID;
                     
                     for (int i = 0; i < shadowSlots.Length; i++)
                     {
@@ -198,8 +203,6 @@ public partial struct ShadowSpawnerSystem : ISystem
                         // 지금은 유저가 "보유중인 그림자 수가 줄어들어야 하는데"라고 표현했으므로
                         // 특정 슬롯 인덱스별로 ID가 다를 수 있음
                         
-                        // 현재 테스트 시나리오에 맞춰서 스폰 로직 그대로 유지
-                        int currentLevel = 1;
                         ref var shadows = ref shadowDB.DatabaseRef.Value.Shadows;
                         int dbIndex = -1;
                         for (int i = 0; i < shadows.Length; i++)
@@ -215,6 +218,7 @@ public partial struct ShadowSpawnerSystem : ISystem
 
                         // 레벨 스탯 가져오기 (단일 스탯 구조로 변경됨)
                         ref var shadowDef = ref shadows[dbIndex];
+                        int currentLevel = shadowID % 100;
                         
 
                         // 스폰 위치 계산

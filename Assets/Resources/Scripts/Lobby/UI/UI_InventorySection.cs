@@ -111,9 +111,11 @@ public class UI_InventorySection : UI_Base
         ClearSlots(_shadowContent);
         List<int> currentFormation = userData.FormationData.ContainsKey(_currentFormationIndex)
                                  ? userData.FormationData[_currentFormationIndex]
-                                 : new List<int>(10); // 理쒕? 10媛쒖쓽 洹몃┝???щ’
+                                 : new List<int>(10); // 최대 10개의 그림자 슬롯
         foreach (int shadowID in DataManager.Instance.ShadowDict.Keys)
         {
+            if (shadowID % 10 != 1) continue; // 레벨 1(끝자리가 1)인 그림자만 편성창에 표시
+
             Sprite icon = DataManager.Instance.ShadowDict[shadowID].Icon;
             int quantity = userData.Inventory.ContainsKey(shadowID) ? userData.Inventory[shadowID] : 0;
             bool isEquipped = currentFormation.Contains(shadowID);

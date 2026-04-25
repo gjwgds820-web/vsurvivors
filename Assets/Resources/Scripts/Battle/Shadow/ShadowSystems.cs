@@ -297,8 +297,9 @@ public partial struct ShadowCombatSystem : ISystem
 #endregion
 
 #region ShadowDeathSystem
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(UnitHealthSystem))]
+[UpdateBefore(typeof(VisualCleanupSystem))]
 [BurstCompile]
 public partial struct ShadowDeathSystem : ISystem
 {

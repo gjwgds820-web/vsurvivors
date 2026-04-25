@@ -1,0 +1,15 @@
+key,help,value
+portal_create_phase1,{phase_time_1}분 미만의 포탈 생성 주기,30
+portal_max_phase1,{phase_time_1}분 미만의 최대 포탈 개수,5
+portal_summon_phase1,{phase_time_1}분 미만의 소환 주기,7
+phase_time_1,{value} 미만의 시간을 표시,5
+portal_create_phase2,{phase_time_2}분 미만의 포탈 생성 주기,25
+portal_max_phase2,{phase_time_2}분 미만의 최대 포탈 개수,10
+portal_summon_phase2,{phase_time_2}분 미만의 소환 주기,5
+phase_time_2,{value} 미만의 시간을 표시,10
+portal_create_phase3,{phase_time_3}분 미만의 포탈 생성 주기,20
+portal_max_phase3,{phase_time_3}분 미만의 최대 포탈 개수,15
+portal_summon_phase3,{phase_time_3}분 미만의 소환 주기,3
+phase_time_3,{value} 미만의 시간을 표시,15
+portal_destroy_time_per_shadow,포탈에 소멸 되는데 걸리는 시간 (s),3
+portal_boss_timer,보스 포탈 내에서 사용되는 전용 타이머 (s),180
