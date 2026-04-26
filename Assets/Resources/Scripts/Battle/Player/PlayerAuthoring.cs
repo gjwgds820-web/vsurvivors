@@ -61,6 +61,7 @@ public class PlayerAuthoring : MonoBehaviour
                 ShadowPrefab = GetEntity(authoring.shadowPrefab, TransformUsageFlags.Dynamic)
             });
             AddBuffer<ShadowSlotElement>(entity);
+            AddBuffer<ActiveShadowSkillElement>(entity);
             AddBuffer<DamageBufferElement>(entity);
             AddComponent<CameraTargetTag>(entity);
             AddComponent<PhysicsGraphicalInterpolationBuffer>(entity);

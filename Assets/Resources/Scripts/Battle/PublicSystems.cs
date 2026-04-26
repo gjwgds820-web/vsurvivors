@@ -54,7 +54,6 @@ public partial struct ProjectileMovementSystem : ISystem
 
 #region HitBoxCollision
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(PhysicsSystemGroup))]
 public partial struct HitBoxCollisionSystem : ISystem
 {
     public unsafe void OnUpdate(ref SystemState state)

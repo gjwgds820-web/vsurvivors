@@ -19,14 +19,26 @@ public partial struct EnemyMovementSystem : ISystem
 
         if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld)) return;
 
+        bool isIsolatedPhase = false;
+        if (SystemAPI.TryGetSingleton<GameDirectorData>(out var director))
+        {
+            isIsolatedPhase = director.CurrentPhase == GamePhase.IsolatedBossFight;
+        }
+
         var collisionWorld = physicsWorld.CollisionWorld;
 
         float separationRadius = 1.5f;
         float separationWeight = 2.0f;
 
-        foreach (var (transform, velocity, physicsMass, enemyData, targetData) in
-                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRW<TargetingData>>())
+        foreach (var (transform, velocity, physicsMass, enemyData, targetData, entity) in
+                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRW<TargetingData>>().WithEntityAccess())
         {
+            if (isIsolatedPhase && !SystemAPI.HasComponent<IsolatedBossTag>(entity))
+            {
+                velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
+                continue;
+            }
+
             physicsMass.ValueRW.InverseInertia = float3.zero;
 
             // [수정] 솟아오르는 것 및 땅으로 꺼지는 현상 방지 (상태와 무관하게 항상 Y, X, Z 회전 축 고정)
@@ -167,11 +179,18 @@ public partial struct EnemyCombatSystem : ISystem
         _hitBoxLookup.Update(ref state);
         float deltaTime = SystemAPI.Time.DeltaTime;
 
+        bool isIsolatedPhase = false;
+        if (SystemAPI.TryGetSingleton<GameDirectorData>(out var director))
+        {
+            isIsolatedPhase = director.CurrentPhase == GamePhase.IsolatedBossFight;
+        }
+
         var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
         foreach (var (enemyData, targetData, transform) in
                  SystemAPI.Query<RefRW<CEnemyData>, RefRO<TargetingData>, RefRO<LocalTransform>>())
         {
+            if (isIsolatedPhase) continue;
             if (enemyData.ValueRO.IsBoss) continue; // 보스는 전용 Combat 로직(BossSystems) 사용
 
             enemyData.ValueRW.CurrentCooldown -= deltaTime;
@@ -218,8 +237,9 @@ public partial struct EnemyCombatSystem : ISystem
 #endregion
 
 #region Death & Drop System
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(UnitHealthSystem))]
+[UpdateBefore(typeof(VisualCleanupSystem))]
 [BurstCompile]
 public partial struct EnemyDeathSystem : ISystem
 {
@@ -240,21 +260,24 @@ public partial struct EnemyDeathSystem : ISystem
         {
             if (enemyData.ValueRO.IsBoss)
             {
-                // 현재 조건에 따른 보스 선택
-                int currentBossWave = 1;
-                if (SystemAPI.TryGetSingleton<GameDirectorData>(out var directorData))
+                if (!SystemAPI.HasComponent<IsolatedBossTag>(entity))
                 {
-                    currentBossWave = directorData.CurrentWave;
-                }
+                    // 현재 조건에 따른 보스 선택
+                    int currentBossWave = 1;
+                    if (SystemAPI.TryGetSingleton<GameDirectorData>(out var directorData))
+                    {
+                        currentBossWave = directorData.CurrentWave;
+                    }
 
-                var eventEntity = ecb.CreateEntity();
-                if (currentBossWave >= 3)
-                {
-                    ecb.AddComponent(eventEntity, new GameClearEventTag { ClearanceLevel = currentBossWave });
-                }
-                else
-                {
-                    ecb.AddComponent(eventEntity, new ElementAscensionEventTag { BossLevel = currentBossWave });
+                    var eventEntity = ecb.CreateEntity();
+                    if (currentBossWave >= 3)
+                    {
+                        ecb.AddComponent(eventEntity, new GameClearEventTag { ClearanceLevel = currentBossWave });
+                    }
+                    else
+                    {
+                        ecb.AddComponent(eventEntity, new ElementAscensionEventTag { BossLevel = currentBossWave });
+                    }
                 }
             }
             else

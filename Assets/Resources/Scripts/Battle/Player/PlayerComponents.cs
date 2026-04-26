@@ -46,6 +46,11 @@ public struct ShadowSlotElement : IBufferElementData
     public bool IsAlive;
 }
 
+public struct ActiveShadowSkillElement : IBufferElementData
+{
+    public int ShadowID;
+}
+
 public struct CameraTargetTag : IComponentData { }
 
 public struct LevelUpEventTag : IComponentData 

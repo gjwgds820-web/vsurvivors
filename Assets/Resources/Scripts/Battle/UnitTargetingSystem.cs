@@ -5,7 +5,6 @@ using Unity.Mathematics;
 using Unity.Transforms;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateBefore(typeof(FixedStepSimulationSystemGroup))]
 [BurstCompile]
 public partial struct UnitTargetingSystem : ISystem
 {

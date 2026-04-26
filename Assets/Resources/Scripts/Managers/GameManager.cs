@@ -23,8 +23,16 @@ public class GameManager : MonoBehaviour
     // 현재 보유 중인 원소 (최대 2개)
     public List<int> SelectedElements { get; private set; } = new List<int>();
 
+    private float _baseMaxHealth = -1f;
+    private float _baseMoveSpeed = -1f;
+    private float _baseMaxShadow = -1f;
+
     void Start()
     {
+        _baseMaxHealth = -1f;
+        _baseMoveSpeed = -1f;
+        _baseMaxShadow = -1f;
+
         _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         _levelUpQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<LevelUpEventTag>());
         _goldLootQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GoldEventTag>());
@@ -58,22 +66,159 @@ public class GameManager : MonoBehaviour
         {
             VSurvivors.Managers.LoadingManager.Instance.FinishLoading();
         }
+        
+        SyncShadowSkillsToPlayer();
+    }
+
+    public void SyncShadowSkillsToPlayer()
+    {
+        EntityQuery playerQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerData>());
+        if (playerQuery.CalculateEntityCount() == 0) return;
+
+        Entity playerEntity = playerQuery.GetSingletonEntity();
+        
+        if (_entityManager.HasBuffer<ActiveShadowSkillElement>(playerEntity))
+        {
+            DynamicBuffer<ActiveShadowSkillElement> buffer = _entityManager.GetBuffer<ActiveShadowSkillElement>(playerEntity);
+            buffer.Clear();
+            
+            foreach (var shadow in currentShadows)
+            {
+                if (int.TryParse(shadow.Value, out int shadowID))
+                {
+                    buffer.Add(new ActiveShadowSkillElement { ShadowID = shadowID });
+                }
+            }
+        }
+    }
+
+    public void SyncPassiveSkillsToPlayer()
+    {
+        EntityQuery playerQuery = _entityManager.CreateEntityQuery(
+            ComponentType.ReadWrite<PlayerData>(), 
+            ComponentType.ReadWrite<PlayerMovementData>(), 
+            ComponentType.ReadWrite<HealthData>());
+            
+        if (playerQuery.CalculateEntityCount() == 0) return;
+
+        Entity playerEntity = playerQuery.GetSingletonEntity();
+        var playerData = _entityManager.GetComponentData<PlayerData>(playerEntity);
+        var moveData = _entityManager.GetComponentData<PlayerMovementData>(playerEntity);
+        var healthData = _entityManager.GetComponentData<HealthData>(playerEntity);
+
+        if (_baseMaxHealth < 0f)
+        {
+            _baseMaxHealth = healthData.MaxHealth;
+            _baseMoveSpeed = moveData.MoveSpeed;
+            _baseMaxShadow = playerData.MaxShadow;
+        }
+
+        float hpAdd = 0f;
+        float speedMult = 0f;
+        float shadowAdd = 0f;
+
+        foreach (var passive in currentPassives)
+        {
+            if (passive.Stats == "hp" && float.TryParse(passive.Value, out float hpVal)) hpAdd += hpVal;
+            if (passive.Stats == "speed" && float.TryParse(passive.Value, out float spdVal)) speedMult += spdVal;
+            if (passive.Stats == "shadow_max" && float.TryParse(passive.Value, out float shdVal)) shadowAdd += shdVal;
+        }
+
+        playerData.MaxShadow = _baseMaxShadow + shadowAdd;
+        moveData.MoveSpeed = _baseMoveSpeed * (1f + speedMult);
+        
+        float oldMax = healthData.MaxHealth;
+        healthData.MaxHealth = _baseMaxHealth + hpAdd;
+        if (healthData.MaxHealth > oldMax) 
+        {
+            healthData.CurrentHealth += (healthData.MaxHealth - oldMax);
+        }
+        else if (healthData.CurrentHealth > healthData.MaxHealth)
+        {
+            healthData.CurrentHealth = healthData.MaxHealth;
+        }
+
+        _entityManager.SetComponentData(playerEntity, playerData);
+        _entityManager.SetComponentData(playerEntity, moveData);
+        _entityManager.SetComponentData(playerEntity, healthData);
     }
 
     private void InitializeAvailableSkills()
     {
         availableSkills.Clear();
+        currentShadows.Clear();
+        currentPassives.Clear();
 
-        List<int> deckIDs = DataManager.Instance.currentUserData.SelectedShadowsID;
+        List<int> formationIDs = DataManager.Instance.currentUserData.FormationData.ContainsKey(0) 
+                                 ? DataManager.Instance.currentUserData.FormationData[0] 
+                                 : new List<int>();
 
-        foreach (int id in deckIDs)
+        List<int> deckGroupIDs = new List<int>();
+
+        // 편성된 그림자 ID(21010101 등)를 이용해 덱에 포함시킬 스킬 그룹 ID 매핑
+        foreach (int shadowID in formationIDs)
         {
-            if (DataManager.Instance.SkillDict.TryGetValue(id, out SkillData skill))
+            if (shadowID == 0) continue;
+
+            int targetVal = shadowID == 21010101 ? 21010102 : shadowID;
+
+            foreach (var kvp in DataManager.Instance.SkillDict)
             {
-                availableSkills.Add(skill);
+                if (kvp.Value.Value == targetVal.ToString())
+                {
+                    if (!deckGroupIDs.Contains(kvp.Value.GroupID))
+                    {
+                        deckGroupIDs.Add(kvp.Value.GroupID);
+
+                        if (shadowID == 21010101)
+                        {
+                            // 기본 그림자는 1레벨(혹은 그와 동등한 장착상태)로 시작하므로 가짜 SkillData나 1레벨 취급으로 Add
+                            // 여기서는 targetVal(2렙 데이터)을 바탕으로 1레벨 형태의 더미를 만들거나
+                            // 아니면 2레벨의 데이터를 참고해 GroupID만 맞추고 레벨 1이라고 명시한 카피를 넣을 수도 있음.
+                            // 가장 쉬운 것은, 레벨을 1로 임시 지정한 클론 객체를 만들어 currentShadows에 넣는 것입니다.
+                            SkillData dummyLv1 = new SkillData
+                            {
+                                ID = kvp.Value.ID - 1,
+                                GroupID = kvp.Value.GroupID,
+                                Level = 1,
+                                MaxLevel = kvp.Value.MaxLevel,
+                                Type = kvp.Value.Type,
+                                Value = "21010101",
+                                Name = "기본 그림자(1)",
+                                Description = "기본 그림자 LV1"
+                            };
+                            currentShadows.Add(dummyLv1);
+                            
+                            if (DataManager.Instance.ShadowDict.TryGetValue(shadowID, out ShadowData sData))
+                            {
+                                int element = (int)sData.Element;
+                                if (element != 0 && !SelectedElements.Contains(element)) 
+                                {
+                                    SelectedElements.Add(element);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
             }
         }
-        availableSkills.AddRange(DataManager.Instance.GetAllPassiveSkills());
+        
+        foreach (var kvp in DataManager.Instance.SkillDict)
+        {
+            SkillData skill = kvp.Value;
+            if (skill.Type == SkillType.Shadow)
+            {
+                if (deckGroupIDs.Contains(skill.GroupID) || deckGroupIDs.Contains(skill.ID))
+                {
+                    availableSkills.Add(skill);
+                }
+            }
+            else
+            {
+                availableSkills.Add(skill); // Passive etc.
+            }
+        }
     }
 
     void Update()
@@ -188,7 +333,17 @@ public class GameManager : MonoBehaviour
         // 풀에서 중복 없이 3개 뽑기
         List<SkillData> selectedOptions = new List<SkillData>();
 
-        // 풀이 비어있지 않다면 최대 3개까지 추출
+        // 1순위: 속성 초월 우대. 6레벨 스킬이 풀에 있다면 첫 번째 슬롯에 확정 배치 (여러 개일 경우 난수 1개)
+        List<SkillData> transcendenceSkills = validPool.FindAll(s => s.Level == 6);
+        if (transcendenceSkills.Count > 0)
+        {
+            int randomIndex = Random.Range(0, transcendenceSkills.Count);
+            SkillData pick = transcendenceSkills[randomIndex];
+            selectedOptions.Add(pick);
+            validPool.Remove(pick);
+        }
+
+        // 풀이 비어있지 않다면 최대 3개까지 나머지 자리 추출
         while (selectedOptions.Count < 3 && validPool.Count > 0)
         {
             int randomIndex = Random.Range(0, validPool.Count);
@@ -207,62 +362,74 @@ public class GameManager : MonoBehaviour
     public List<SkillData> GetValidSkillPool()
     {
         List<SkillData> filteredPool = new List<SkillData>();
-
-        foreach (SkillData skill in availableSkills)
+        
+        // Add only the next sequence levels for grouped skills. 
+        // Group by GroupID to unique skills
+        Dictionary<int, List<SkillData>> groupedSkills = new Dictionary<int, List<SkillData>>();
+        foreach (var s in availableSkills)
         {
-            if (skill.Type == SkillType.Shadow)
-            {
-                bool isOwned = currentShadows.Exists(s => s.ID == skill.ID);
+            if (!groupedSkills.ContainsKey(s.GroupID)) groupedSkills[s.GroupID] = new List<SkillData>();
+            groupedSkills[s.GroupID].Add(s);
+        }
 
-                if (isOwned)
+        foreach (var kvp in groupedSkills)
+        {
+            int groupID = kvp.Key;
+            List<SkillData> groupList = kvp.Value;
+            
+            // Sort by level just in case
+            groupList.Sort((a, b) => a.Level.CompareTo(b.Level));
+            
+            SkillData firstSkill = groupList[0];
+            bool isShadow = firstSkill.Type == SkillType.Shadow;
+            List<SkillData> targetList = isShadow ? currentShadows : currentPassives;
+            
+            // Find existing skill
+            SkillData existingSkill = targetList.Find(s => s.GroupID == groupID);
+            
+            if (existingSkill != null)
+            {
+                int currentLevel = existingSkill.Level; // or existingSkill.CurrentLevel
+                int maxAllowedLevel = firstSkill.MaxLevel;
+                
+                // Shadow element check 
+                if (isShadow && maxAllowedLevel > 5)
                 {
-                    int currentLevel = GetCurrentSkillLevel(skill.ID, currentShadows);
-                    
-                    // 기본 최대 레벨은 5로 제한
-                    int limitLevel = 5;
-                    
-                    // 만약 보유중인 원소 리스트에 이 스킬이 요구하는 원소가 있다면 MaxLevel(6)로 해방
-                    // ShadowDict에서 해당하는 원소를 찾아옵니다.
                     bool hasMatchingElement = false;
-                    if (DataManager.Instance.ShadowDict.TryGetValue(skill.ID, out ShadowData shadowData))
+                    if (DataManager.Instance.ShadowDict.TryGetValue(existingSkill.ID, out ShadowData shadowData))
                     {
                         hasMatchingElement = SelectedElements.Contains((int)shadowData.Element);
                     }
-                    
-                    if (skill.MaxLevel > 5 && hasMatchingElement)
-                    {
-                        limitLevel = skill.MaxLevel;
-                    }
-
-                    if (currentLevel < limitLevel) filteredPool.Add(skill);
+                    if (!hasMatchingElement) maxAllowedLevel = 5;
                 }
-                else
+
+                if (currentLevel < maxAllowedLevel)
                 {
-                    if (currentShadows.Count < MAX_SLOTS) filteredPool.Add(skill);
+                    // Find next level skill data
+                    SkillData nextSkill = groupList.Find(s => s.Level == currentLevel + 1);
+                    if (nextSkill != null)
+                    {
+                        filteredPool.Add(nextSkill);
+                    }
                 }
             }
             else
             {
-                bool isOwned = currentPassives.Exists(s => s.ID == skill.ID);
-
-                if (isOwned)
+                // Not owned
+                if (targetList.Count < MAX_SLOTS)
                 {
-                    int currentLevel = GetCurrentSkillLevel(skill.ID, currentPassives);
-                    if (currentLevel < skill.MaxLevel) filteredPool.Add(skill);
-                }
-                else
-                {
-                    if (currentPassives.Count < MAX_SLOTS) filteredPool.Add(skill);
+                    filteredPool.Add(groupList[0]); // Lowest level
                 }
             }
         }
+        
         return filteredPool;
     }
 
-    private int GetCurrentSkillLevel(int skillID, List<SkillData> skillList)
+    private int GetCurrentSkillLevel(int groupID, List<SkillData> skillList)
     {
-        var exist = skillList.Find(s => s.ID == skillID);
-        return exist != null ? exist.CurrentLevel : 0;
+        var exist = skillList.Find(s => s.GroupID == groupID);
+        return exist != null ? exist.Level : 0;
     }
 
     public SkillData RerollSingleOption(SkillData oldSkill, List<SkillData> currentlyDisplayedOptions)
@@ -270,7 +437,7 @@ public class GameManager : MonoBehaviour
         List<SkillData> validPool = GetValidSkillPool();
 
         // 현재 화면에 표시중인 3개 중 방금 버린 스킬을 제외
-        validPool.RemoveAll(s => currentlyDisplayedOptions.Exists(disp => disp.ID == s.ID) || s.ID == oldSkill.ID);
+        validPool.RemoveAll(s => currentlyDisplayedOptions.Exists(disp => disp.GroupID == s.GroupID) || s.GroupID == oldSkill.GroupID);
 
         // 주석 복구됨
         if (validPool.Count == 0)
@@ -287,33 +454,24 @@ public class GameManager : MonoBehaviour
     public SkillData LevelUp(SkillData selectedSkill)
     {
         SkillData ownedSkill = null;
+        List<SkillData> targetList = selectedSkill.Type == SkillType.Shadow ? currentShadows : currentPassives;
+
+        ownedSkill = targetList.Find(s => s.GroupID == selectedSkill.GroupID);
+        if (ownedSkill != null) 
+        {
+            targetList.Remove(ownedSkill);
+        }
+        
+        targetList.Add(selectedSkill);
+        ownedSkill = selectedSkill;
+
         if (selectedSkill.Type == SkillType.Shadow)
         {
-            ownedSkill = currentShadows.Find(s => s.ID == selectedSkill.ID);
-            if (ownedSkill != null) 
-            {
-                ownedSkill.CurrentLevel++;
-            }
-            else 
-            {
-                selectedSkill.CurrentLevel = 1; // 1레벨로 초기화
-                currentShadows.Add(selectedSkill);
-                ownedSkill = selectedSkill;
-            }
+            SyncShadowSkillsToPlayer();
         }
-        else
+        else if (selectedSkill.Type == SkillType.Passive)
         {
-            ownedSkill = currentPassives.Find(s => s.ID == selectedSkill.ID);   
-            if (ownedSkill != null) 
-            {
-                ownedSkill.CurrentLevel++;
-            }
-            else 
-            {
-                selectedSkill.CurrentLevel = 1; // 1레벨로 초기화
-                currentPassives.Add(selectedSkill);
-                ownedSkill = selectedSkill;
-            }
+            SyncPassiveSkillsToPlayer();
         }
 
         return ownedSkill;

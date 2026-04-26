@@ -17,6 +17,8 @@ public enum EnemyState
 #endregion
 
 #region EnemyData
+public struct IsolatedBossTag : IComponentData {}
+
 public struct CEnemyData : IComponentData
 {
     public int ID;

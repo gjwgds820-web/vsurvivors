@@ -54,8 +54,12 @@ public partial struct BossCombatSystem : ISystem
                     if (bossData.ValueRO.DashTimer >= 2.0f)
                     {
                         bossData.ValueRW.DashTimer = -1f; // 이벤트 중복 방지
-                        Entity ascTag = ecb.CreateEntity();
-                        ecb.AddComponent<ElementAscensionEventTag>(ascTag);
+                        
+                        if (!SystemAPI.HasComponent<IsolatedBossTag>(entity))
+                        {
+                            Entity ascTag = ecb.CreateEntity();
+                            ecb.AddComponent<ElementAscensionEventTag>(ascTag);
+                        }
                     }
                 }
                 continue; // 아래 어택 로직 스킵

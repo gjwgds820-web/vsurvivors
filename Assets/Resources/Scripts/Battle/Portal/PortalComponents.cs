@@ -1,6 +1,8 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
 
+public struct HiddenIsolatedPortalTag : IComponentData { }
+
 public struct CPortalData : IComponentData
 {
     public int PortalID; // from PortalDatabase

@@ -148,7 +148,8 @@ public class UI_ElementAscensionPopup : UI_Base
         }
 
         // 그릠자 아이콘 세팅
-        int[] temp = { 40000001, 40000002, 40000003, 40000004 }; // 예시로 원소별 초월 가능한 그림자 ID
+        // 초월 가능한 그림자 GroupID 맵핑 (510102: 전사, 510103: 궁수, 510104: 마법사, 510105: 도적)
+        int[] temp = { 510102, 510103, 510104, 510105 }; 
         foreach (var shadowID in temp)
         {
             if (_shadowIconPrefab == null)
@@ -168,7 +169,7 @@ public class UI_ElementAscensionPopup : UI_Base
             SkillData ownedShadow = null;
             if (_gameManager != null && _gameManager.CurrentShadows != null)
             {
-                ownedShadow = _gameManager.CurrentShadows.Find(s => s.ID == shadowID);
+                ownedShadow = _gameManager.CurrentShadows.Find(s => s.GroupID == shadowID);
             }
 
             if (slotUI != null && ownedShadow != null)
@@ -201,7 +202,8 @@ public class UI_ElementAscensionPopup : UI_Base
                 
                 if (imgComponent != null)
                 {
-                    imgComponent.sprite = ResourceManager.Instance.LoadSprite($"Icons/Shadows/Shadow_{shadowID-40000000}");
+                    // 미보유 시 해당 그룹의 1레벨(01) 아이콘 경로를 가져옴
+                    imgComponent.sprite = ResourceManager.Instance.LoadSprite($"Icons/Skills/{shadowID}01");
                     imgComponent.gameObject.SetActive(true);
                     imgComponent.color = new Color(0.3f, 0.3f, 0.3f, 1f); // 미보유 어둡게 처리
                 }

@@ -100,7 +100,12 @@ public class DataManager : MonoBehaviour
         }
         currentUserData.AddItem(new List<int> {11010101, 11010102}, 1); // 기본 캐릭터 지급
         currentUserData.AddItem(new List<int> { 30000001, 30000002, 30000003 }, new List<int> { 1, 1, 1 }); // 기본 유물 지급
-        currentUserData.AddItem(new List<int> { 21050101, 21020201, 21020301, 21020401, 21020501, 21020601, 21020701, 21030801 }, 1); // 기본 그림자 지급
+        List<int> initialShadows = new List<int> { 21010101, 21020201, 22030301, 22040401, 21060601 };
+        currentUserData.AddItem(initialShadows, 1); // 기본 그림자 지급
+        
+        // 1번 편성창(index 0)에 지급된 5개의 그림자 자동 장착
+        if (currentUserData.FormationData == null) currentUserData.FormationData = new Dictionary<int, List<int>>();
+        currentUserData.FormationData[0] = new List<int>(initialShadows);
     }
 
     public List<int> GetFormation(int formationIndex)
