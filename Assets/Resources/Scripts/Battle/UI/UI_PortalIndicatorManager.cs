@@ -30,14 +30,22 @@ public class UI_PortalIndicatorManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (_entityManager == default || _portalQuery.IsEmptyIgnoreFilter)
+        if (_entityManager == default || _portalQuery.IsEmptyIgnoreFilter || _mainCamera == null)
         {
             HideAllIndicators();
             return;
         }
 
         var portalEntities = _portalQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
-        int activeIndicatorIndex = 0;
+        
+        // Find Player
+        var playerQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerInput>(), ComponentType.ReadOnly<LocalTransform>());
+        if (playerQuery.IsEmptyIgnoreFilter) return;
+        var playerPos = _entityManager.GetComponentData<LocalTransform>(playerQuery.GetSingletonEntity()).Position;
+
+        // Group by Type to find the closest per type
+        Dictionary<int, Entity> closestPortals = new Dictionary<int, Entity>();
+        Dictionary<int, float> closestDistances = new Dictionary<int, float>();
 
         foreach (var entity in portalEntities)
         {
@@ -45,14 +53,31 @@ public class UI_PortalIndicatorManager : MonoBehaviour
 
             if (cPortalData.IsActive)
             {
-                // 42020101 (파괴 불가)는 인디케이터를 띄우지 않습니다.
-                if (cPortalData.PortalID == 42020101) continue;
+                if (cPortalData.RequiredShadows == 0) continue; // QA: Hide 0/0 and Indestructible
+                if (cPortalData.PortalID == 42010101) continue; // Hardcode override if needed
 
                 var portalTransform = _entityManager.GetComponentData<LocalTransform>(entity);
-                if (UpdateIndicator(activeIndicatorIndex, portalTransform.Position, cPortalData.PortalID))
+                float distSq = Unity.Mathematics.math.distancesq(playerPos, portalTransform.Position);
+
+                int typeKey = cPortalData.PortalID; // Grouping by ID
+                if (!closestDistances.ContainsKey(typeKey) || distSq < closestDistances[typeKey])
                 {
-                    activeIndicatorIndex++;
+                    closestDistances[typeKey] = distSq;
+                    closestPortals[typeKey] = entity;
                 }
+            }
+        }
+
+        int activeIndicatorIndex = 0;
+        foreach (var kvp in closestPortals)
+        {
+            var entity = kvp.Value;
+            var cPortalData = _entityManager.GetComponentData<CPortalData>(entity);
+            var portalTransform = _entityManager.GetComponentData<LocalTransform>(entity);
+            
+            if (UpdateIndicator(activeIndicatorIndex, portalTransform.Position, cPortalData.PortalID))
+            {
+                activeIndicatorIndex++;
             }
         }
 

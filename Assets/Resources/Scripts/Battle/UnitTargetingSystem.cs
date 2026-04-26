@@ -103,7 +103,7 @@ public partial struct UnitTargetingSystem : ISystem
                     }
                     else if (targeting.ValueRO.Faction == TargetingFaction.Ally)
                     {
-                        if (isEnemy[i]) isValidTarget = true; // Ally targets Enemy
+                        if (isEnemy[i]) isValidTarget = true; // Ally targets Enemy (includes both Normal and Boss)
                     }
 
                     if (!isValidTarget) continue;
@@ -133,11 +133,7 @@ public partial struct UnitTargetingSystem : ISystem
                     {
                         score -= 50f; // Random small offset to favor player
                     }
-                    // 그림자가 탐색 범위 내에 들어왔다면 플레이어보다 무조건 최우선 타겟 지정 (단, 보스 제외)
-                    if (targeting.ValueRO.Faction == TargetingFaction.Enemy && isShadow[i] && !SystemAPI.HasComponent<BossTag>(selfEntity))
-                    {
-                        score -= 1000000f; 
-                    }
+                    
                     if (score < bestScore)
                     {
                         bestScore = score;
@@ -145,7 +141,10 @@ public partial struct UnitTargetingSystem : ISystem
                     }
                 }
 
-                targeting.ValueRW.CurrentTarget = bestTarget;
+                if (bestTarget != Entity.Null)
+                {
+                    targeting.ValueRW.CurrentTarget = bestTarget;
+                }
             }
         }
 

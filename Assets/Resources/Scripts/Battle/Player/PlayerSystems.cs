@@ -196,7 +196,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                         needInstantiate = true;
                     }
 
-                    if (targetIndex != -1)
+                    if (targetIndex != -1 && targetIndex < playerData.ValueRO.MaxShadow)
                     {
                         // 1. 보유중인 섀도우 데이터를 GameManager 혹은 PlayerData 버퍼에서 가져오는 것이 맞음
                         // 만약 별도의 버퍼(ActiveShadows)가 있다면 해당 스킬 ID를 참조해야 함
@@ -243,7 +243,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                         // 스폰 위치 로직 끝
 
                         // 공통적으로 사용할 LocalTransform 위치
-                        var newTr = new LocalTransform { Position = spawnPos, Scale = 1f, Rotation = quaternion.identity };
+                        var newTr = new LocalTransform { Position = spawnPos, Scale = 0.7f, Rotation = quaternion.identity };
 
                         if (spawnerData.ValueRO.ShadowPrefab == Entity.Null)
                         {
@@ -276,6 +276,8 @@ public partial struct ShadowSpawnerSystem : ISystem
                         
                         var targetingData = SystemAPI.GetComponent<TargetingData>(spawnerData.ValueRO.ShadowPrefab);
                         targetingData.Priority = (TargetingType)shadowDef.TargetPriority;
+                        targetingData.MaxSearchRangeSq = shadowDef.Recognize * shadowDef.Recognize;
+                        if (targetingData.MaxSearchRangeSq <= 0.1f) targetingData.MaxSearchRangeSq = 144f; // fallback
                         ecb.SetComponent(targetShadow, targetingData);
 
                         var healthData = SystemAPI.GetComponent<HealthData>(spawnerData.ValueRO.ShadowPrefab);
@@ -461,12 +463,10 @@ public partial struct PlayerLevelUpSystem : ISystem
     [BurstCompile]
     public static float GetRequiredExpForNextLevel(int currentLevel)
     {
-        if (currentLevel < 1) return 13f;
+        if (currentLevel < 1) return 20f; // Start a bit harder
         
-        // 50레벨 이상일 경우 500, 그 외엔 13 + 8 * (currentLevel - 1)
-        if (currentLevel >= 50) return 500f;
-        
-        return 13f + 8f * (currentLevel - 1);
+        // EXP Curve QA adjusting
+        return 20f + 15f * (currentLevel - 1);
     }
 
     [BurstCompile]

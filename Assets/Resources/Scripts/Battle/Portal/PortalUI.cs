@@ -25,6 +25,16 @@ public class PortalUI : MonoBehaviour
 
     private void UpdateUI()
     {
+        if (currentRequired == 0)
+        {
+            if (textCount != null) textCount.gameObject.SetActive(false);
+            return;
+        }
+        else
+        {
+            if (textCount != null) textCount.gameObject.SetActive(true);
+        }
+
         if (textCount != null)
         {
             textCount.text = $"{currentAbsorbed}/{currentRequired}";

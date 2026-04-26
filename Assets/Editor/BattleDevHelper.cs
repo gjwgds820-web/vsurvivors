@@ -177,6 +177,14 @@ public class BattleDevHelper : EditorWindow
         }
 
         GUILayout.Space(20);
+        GUILayout.Label("Portal Testing", EditorStyles.boldLabel);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("포탈 소환 (ID: 1)", GUILayout.Height(30))) SpawnPortal(em, directorData, 1);
+        if (GUILayout.Button("포탈 소환 (ID: 2)", GUILayout.Height(30))) SpawnPortal(em, directorData, 2);
+        if (GUILayout.Button("포탈 소환 (ID: 3)", GUILayout.Height(30))) SpawnPortal(em, directorData, 3);
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(20);
         GUILayout.Label("Player Action Testing", EditorStyles.boldLabel);
 
         if (GUILayout.Button("플레이어 피격 애니메이션 테스트 (10 데미지)"))
@@ -212,5 +220,36 @@ public class BattleDevHelper : EditorWindow
 
         EditorGUILayout.Space();
         EditorGUILayout.HelpBox("동적 변경사항이 즉시 반영됩니다. \nGameDirectorAuthoring의 기본값을 변경하려면 인스펙터에서 수정하세요.", MessageType.None);
+    }
+
+    private void SpawnPortal(EntityManager em, GameDirectorData directorData, int portalId)
+    {
+        Entity portalPrefab = directorData.PortalPrefab;
+
+        if (portalPrefab != Entity.Null)
+        {
+            var playerQuery = em.CreateEntityQuery(typeof(PlayerData), typeof(Unity.Transforms.LocalTransform));
+            if (!playerQuery.IsEmpty)
+            {
+                var playerTr = playerQuery.GetSingleton<Unity.Transforms.LocalTransform>();
+                Entity portal = em.Instantiate(portalPrefab);
+                em.SetComponentData(portal, new Unity.Transforms.LocalTransform 
+                { 
+                    Position = playerTr.Position + new Unity.Mathematics.float3(5, 0.5f, 0), 
+                    Scale = 1f, 
+                    Rotation = Unity.Mathematics.quaternion.identity 
+                });
+                
+                var portalData = em.GetComponentData<CPortalData>(portalPrefab);
+                portalData.PortalID = portalId;
+                portalData.State = 0;
+                em.SetComponentData(portal, portalData);
+                Debug.Log($"[Battle Dev Helper] 포탈(ID:{portalId})을 즉시 소환했습니다.");
+            }
+            else
+            {
+                Debug.LogWarning("[Battle Dev Helper] 플레이어를 찾을 수 없어 포탈을 소환할 수 없습니다.");
+            }
+        }
     }
 }

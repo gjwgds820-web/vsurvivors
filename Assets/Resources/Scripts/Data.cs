@@ -79,6 +79,7 @@ public class ShadowData
     public int MaxPierce;
     public float Defence;
     public float MoveSpeed;
+    public float Recognize;
     public int SkillID;
 }
 

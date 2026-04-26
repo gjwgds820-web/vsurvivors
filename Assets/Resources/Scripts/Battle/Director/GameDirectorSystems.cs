@@ -129,6 +129,8 @@ public partial struct GameDirectorSystem : ISystem
 
                 ref var enemyDef = ref enemyDB.DatabaseRef.Value.Enemies[enemyIndexToSpawn];
                 var baseEnemyData = SystemAPI.GetComponent<CEnemyData>(data.ValueRO.EnemyPrefab);
+                
+                float timeMultiplier = 1f + (float)math.floor(SystemAPI.Time.ElapsedTime / 60f) * 0.2f;
 
                 foreach (var (portalTransform, cPortalData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<CPortalData>>())
                 {
@@ -147,7 +149,7 @@ public partial struct GameDirectorSystem : ISystem
                     var newEnemyData = new CEnemyData
                     {
                         ID = enemyDef.ID, Type = enemyDef.Type, CurrentState = baseEnemyData.CurrentState,
-                        AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = enemyDef.AttackPower,
+                        AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = enemyDef.AttackPower * timeMultiplier,
                         AttackRange = enemyDef.AttackRange, AttackCooldown = enemyDef.AttackCooldown,
                         CurrentCooldown = 0f, MoveSpeed = enemyDef.MoveSpeed, IsBoss = enemyDef.IsBoss, IsAlive = true
                     };
@@ -156,7 +158,7 @@ public partial struct GameDirectorSystem : ISystem
                     var baseHealthData = SystemAPI.GetComponent<HealthData>(data.ValueRO.EnemyPrefab);
                     ecb.SetComponent(enemyEntity, new HealthData
                     {
-                        MaxHealth = enemyDef.MaxHealth, CurrentHealth = enemyDef.MaxHealth,
+                        MaxHealth = enemyDef.MaxHealth * timeMultiplier, CurrentHealth = enemyDef.MaxHealth * timeMultiplier,
                         DamageReduction = baseHealthData.DamageReduction, InvincibilityTimer = baseHealthData.InvincibilityTimer
                     });
                     
@@ -198,7 +200,9 @@ public partial struct GameDirectorSystem : ISystem
                 spawnPos += new float3(randomOffset.x, 0, randomOffset.y);
                 spawnPos.y = 0.5f;
 
-                ecb.SetComponent(bossEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
+                float timeMultiplier = 1f + (float)math.floor(SystemAPI.Time.ElapsedTime / 60f) * 0.2f;
+
+                ecb.SetComponent(bossEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 3f });
                 if (SystemAPI.HasComponent<PhysicsGraphicalInterpolationBuffer>(data.ValueRO.BossPrefab))
                 {
                     var initTransform = new RigidTransform(quaternion.identity, spawnPos);
@@ -209,7 +213,7 @@ public partial struct GameDirectorSystem : ISystem
                 var newBossData = new CEnemyData
                 {
                     ID = bossDef.ID, Type = bossDef.Type, CurrentState = baseEnemyData.CurrentState,
-                    AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = bossDef.AttackPower,
+                    AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = bossDef.AttackPower * timeMultiplier,
                     AttackRange = bossDef.AttackRange, AttackCooldown = bossDef.AttackCooldown,
                     CurrentCooldown = 0f, MoveSpeed = bossDef.MoveSpeed, IsBoss = true, IsAlive = true
                 };
@@ -219,7 +223,7 @@ public partial struct GameDirectorSystem : ISystem
                 var baseBossHealth = SystemAPI.GetComponent<HealthData>(data.ValueRO.BossPrefab);
                 ecb.SetComponent(bossEntity, new HealthData
                 {
-                    MaxHealth = bossDef.MaxHealth, CurrentHealth = bossDef.MaxHealth,
+                    MaxHealth = bossDef.MaxHealth * timeMultiplier, CurrentHealth = bossDef.MaxHealth * timeMultiplier,
                     DamageReduction = baseBossHealth.DamageReduction, InvincibilityTimer = baseBossHealth.InvincibilityTimer
                 });
 
@@ -281,6 +285,8 @@ public partial struct GameDirectorSystem : ISystem
 
                 ref var enemyDef = ref enemyDB2.DatabaseRef.Value.Enemies[enemyIndexToSpawn];
                 var baseEnemyData = SystemAPI.GetComponent<CEnemyData>(data.ValueRO.EnemyPrefab);
+                
+                float timeMultiplier = 1f + (float)math.floor(SystemAPI.Time.ElapsedTime / 60f) * 0.2f;
 
                 foreach (var (portalTransform, cPortalData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<CPortalData>>())
                 {
@@ -299,7 +305,7 @@ public partial struct GameDirectorSystem : ISystem
                     var newEnemyData = new CEnemyData
                     {
                         ID = enemyDef.ID, Type = enemyDef.Type, CurrentState = baseEnemyData.CurrentState,
-                        AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = enemyDef.AttackPower,
+                        AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = enemyDef.AttackPower * timeMultiplier,
                         AttackRange = enemyDef.AttackRange, AttackCooldown = enemyDef.AttackCooldown,
                         CurrentCooldown = 0f, MoveSpeed = enemyDef.MoveSpeed, IsBoss = enemyDef.IsBoss, IsAlive = true
                     };
@@ -308,7 +314,7 @@ public partial struct GameDirectorSystem : ISystem
                     var baseHealthData = SystemAPI.GetComponent<HealthData>(data.ValueRO.EnemyPrefab);
                     ecb.SetComponent(enemyEntity, new HealthData
                     {
-                        MaxHealth = enemyDef.MaxHealth, CurrentHealth = enemyDef.MaxHealth,
+                        MaxHealth = enemyDef.MaxHealth * timeMultiplier, CurrentHealth = enemyDef.MaxHealth * timeMultiplier,
                         DamageReduction = baseHealthData.DamageReduction, InvincibilityTimer = baseHealthData.InvincibilityTimer
                     });
                     
@@ -345,7 +351,9 @@ public partial struct GameDirectorSystem : ISystem
                 spawnPos += new float3(randomOffset.x, 0, randomOffset.y);
                 spawnPos.y = 0.5f;
 
-                ecb.SetComponent(bossEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 1f });
+                float timeMultiplier = 1f + (float)math.floor(SystemAPI.Time.ElapsedTime / 60f) * 0.2f;
+
+                ecb.SetComponent(bossEntity, new LocalTransform { Position = spawnPos, Rotation = quaternion.identity, Scale = 3f });
                 if (SystemAPI.HasComponent<PhysicsGraphicalInterpolationBuffer>(data.ValueRO.BossPrefab))
                 {
                     var initTransform = new RigidTransform(quaternion.identity, spawnPos);
@@ -356,7 +364,7 @@ public partial struct GameDirectorSystem : ISystem
                 var newBossData = new CEnemyData
                 {
                     ID = bossDef.ID, Type = bossDef.Type, CurrentState = baseEnemyData.CurrentState,
-                    AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = bossDef.AttackPower,
+                    AttackPrefab = baseEnemyData.AttackPrefab, AttackPower = bossDef.AttackPower * timeMultiplier,
                     AttackRange = bossDef.AttackRange, AttackCooldown = bossDef.AttackCooldown,
                     CurrentCooldown = 0f, MoveSpeed = bossDef.MoveSpeed, IsBoss = true, IsAlive = true
                 };
@@ -366,7 +374,7 @@ public partial struct GameDirectorSystem : ISystem
                 var baseBossHealth = SystemAPI.GetComponent<HealthData>(data.ValueRO.BossPrefab);
                 ecb.SetComponent(bossEntity, new HealthData
                 {
-                    MaxHealth = bossDef.MaxHealth, CurrentHealth = bossDef.MaxHealth,
+                    MaxHealth = bossDef.MaxHealth * timeMultiplier, CurrentHealth = bossDef.MaxHealth * timeMultiplier,
                     DamageReduction = baseBossHealth.DamageReduction, InvincibilityTimer = baseBossHealth.InvincibilityTimer
                 });
 
@@ -439,8 +447,31 @@ public partial struct GameDirectorSystem : ISystem
         float3 playerPos = SystemAPI.GetComponent<LocalTransform>(playerEntity).Position;
 
         float offScreenRadius = 30f;
-        float angle = _random.NextFloat(0, math.PI * 2);
-        float3 spawnPos = playerPos + new float3(math.cos(angle) * offScreenRadius, 1, math.sin(angle) * offScreenRadius);
+        float3 spawnPos = float3.zero;
+        bool validPosFound = false;
+        int maxAttempts = 10;
+
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            float angle = _random.NextFloat(0, math.PI * 2);
+            spawnPos = playerPos + new float3(math.cos(angle) * offScreenRadius, 1, math.sin(angle) * offScreenRadius);
+            
+            bool tooClose = false;
+            foreach (var (portalTransform, _) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<CPortalData>>())
+            {
+                if (math.distancesq(spawnPos, portalTransform.ValueRO.Position) < 225f) // min 15 distance
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (!tooClose)
+            {
+                validPosFound = true;
+                break;
+            }
+        }
 
         var portalEntity = ecb.Instantiate(directorData.PortalPrefab);
         if (SystemAPI.HasComponent<Parent>(directorData.PortalPrefab))
@@ -482,3 +513,4 @@ public partial struct GameDirectorSystem : ISystem
         });
     }
 }
+

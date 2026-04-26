@@ -62,6 +62,12 @@ public struct ShadowDefBlob
     public float AttackCooldown;
     public int TargetPriority;
     public int AttackType;
+    public ElementType Element;
+    public int MaxPierce;
+    public float Defence;
+    public float MoveSpeed;
+    public float Recognize;
+    public int SkillID;
 }
 
 public struct ShadowDatabaseBlob

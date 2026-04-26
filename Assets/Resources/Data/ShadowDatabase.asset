@@ -30,6 +30,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 0
   - ID: 21010102
     Name: "\uAE30\uBCF8"
@@ -48,6 +49,7 @@ MonoBehaviour:
     MaxPierce: 2
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 0
   - ID: 21010103
     Name: "\uAE30\uBCF8"
@@ -66,6 +68,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 3
+    Recognize: 0
     SkillID: 0
   - ID: 21010104
     Name: "\uAE30\uBCF8"
@@ -84,6 +87,7 @@ MonoBehaviour:
     MaxPierce: 4
     Defence: 0
     MoveSpeed: 4
+    Recognize: 0
     SkillID: 0
   - ID: 21010105
     Name: "\uAE30\uBCF8"
@@ -102,6 +106,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 5
+    Recognize: 0
     SkillID: 0
   - ID: 21020201
     Name: "\uC804\uC0AC"
@@ -119,6 +124,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 0
   - ID: 21020202
     Name: "\uC804\uC0AC"
@@ -136,6 +142,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 0
   - ID: 21020203
     Name: "\uC804\uC0AC"
@@ -153,6 +160,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 0
   - ID: 21020204
     Name: "\uC804\uC0AC"
@@ -170,6 +178,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 0
   - ID: 21020205
     Name: "\uC804\uC0AC"
@@ -187,6 +196,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 0
   - ID: 21020206
     Name: "\uC804\uC0AC"
@@ -204,6 +214,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 1
+    Recognize: 0
     SkillID: 21020206
   - ID: 22030301
     Name: "\uAD81\uC218"
@@ -221,6 +232,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 1.5
+    Recognize: 0
     SkillID: 0
   - ID: 22030302
     Name: "\uAD81\uC218"
@@ -238,6 +250,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 1.5
+    Recognize: 0
     SkillID: 0
   - ID: 22030303
     Name: "\uAD81\uC218"
@@ -255,6 +268,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 1.5
+    Recognize: 0
     SkillID: 0
   - ID: 22030304
     Name: "\uAD81\uC218"
@@ -272,6 +286,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 1.5
+    Recognize: 0
     SkillID: 0
   - ID: 22030305
     Name: "\uAD81\uC218"
@@ -289,6 +304,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 1.5
+    Recognize: 0
     SkillID: 0
   - ID: 22030306
     Name: "\uAD81\uC218"
@@ -306,6 +322,7 @@ MonoBehaviour:
     MaxPierce: 3
     Defence: 0
     MoveSpeed: 1.5
+    Recognize: 0
     SkillID: 22030306
   - ID: 22040401
     Name: "\uB9C8\uBC95\uC0AC"
@@ -323,6 +340,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 0.8
+    Recognize: 0
     SkillID: 0
   - ID: 22040402
     Name: "\uB9C8\uBC95\uC0AC"
@@ -340,6 +358,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 0.8
+    Recognize: 0
     SkillID: 0
   - ID: 22040403
     Name: "\uB9C8\uBC95\uC0AC"
@@ -357,6 +376,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 0.8
+    Recognize: 0
     SkillID: 0
   - ID: 22040404
     Name: "\uB9C8\uBC95\uC0AC"
@@ -374,6 +394,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 0.8
+    Recognize: 0
     SkillID: 0
   - ID: 22040405
     Name: "\uB9C8\uBC95\uC0AC"
@@ -391,6 +412,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 0.8
+    Recognize: 0
     SkillID: 0
   - ID: 22040406
     Name: "\uB9C8\uBC95\uC0AC"
@@ -408,6 +430,7 @@ MonoBehaviour:
     MaxPierce: 5
     Defence: 0
     MoveSpeed: 0.8
+    Recognize: 0
     SkillID: 22040406
   - ID: 21060601
     Name: "\uB3C4\uC801"
@@ -425,6 +448,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 0
   - ID: 21060602
     Name: "\uB3C4\uC801"
@@ -442,6 +466,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 0
   - ID: 21060603
     Name: "\uB3C4\uC801"
@@ -459,6 +484,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 0
   - ID: 21060604
     Name: "\uB3C4\uC801"
@@ -476,6 +502,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 0
   - ID: 21060605
     Name: "\uB3C4\uC801"
@@ -493,6 +520,7 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 0
   - ID: 21060606
     Name: "\uB3C4\uC801"
@@ -510,4 +538,5 @@ MonoBehaviour:
     MaxPierce: 1
     Defence: 0
     MoveSpeed: 2
+    Recognize: 0
     SkillID: 21060606

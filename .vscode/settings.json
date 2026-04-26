@@ -67,7 +67,7 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "vsurvivors.slnx",
+    "dotnet.defaultSolution": "VSurvivors.slnx",
     "chat.tools.terminal.autoApprove": {
         "/^\\(Get-Content -Raw \"C:\\\\Users\\\\qpdoc\\\\Documents\\\\VSurvivors\\\\Assets\\\\Resources\\\\Scripts\\\\Managers\\\\GameManager\\.cs\"\\) -replace 'if \\\\\\(selectedOptions\\.Count == 0\\\\\\)\\\\s\\*\\\\\\{\\\\s\\*Debug\\\\\\.Log\\\\\\(\\[\\^;\\]\\+\\\\\\);\\\\s\\*return;\\\\s\\*\\\\\\}', 'if \\(selectedOptions\\.Count == 0\\) \\{ Debug\\.Log\\(\"No skills\"\\); \\}' \\| Set-Content \"C:\\\\Users\\\\qpdoc\\\\Documents\\\\VSurvivors\\\\Assets\\\\Resources\\\\Scripts\\\\Managers\\\\GameManager\\.cs\"$/": {
             "approve": true,

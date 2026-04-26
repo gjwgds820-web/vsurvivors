@@ -184,10 +184,15 @@ public partial class VisualSyncSystem : SystemBase
             {
                 var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
                 var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
-                var shadowData = EntityManager.GetComponentData<CShadowData>(entity);
+                
+                int visualId = 1; // Default
+                if (EntityManager.HasComponent<ShadowInstanceData>(entity))
+                {
+                    visualId = EntityManager.GetComponentData<ShadowInstanceData>(entity).ShadowID / 10000;
+                }
 
                 // ID 기반 로드 (실패시 기본 Fallback)
-                var pPath = $"Prefabs/VisualPrefabs/{(shadowData.Index)}Visual";
+                var pPath = $"Prefabs/VisualPrefabs/Shadow{visualId}Visual";
                 var prefab = Resources.Load<GameObject>(pPath);
                 if (prefab == null) prefab = VisualManager.Instance.ShadowVisualPrefab;
 

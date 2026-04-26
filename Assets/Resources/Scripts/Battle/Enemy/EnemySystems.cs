@@ -65,8 +65,7 @@ public partial struct EnemyMovementSystem : ISystem
             toTarget.y = 0; 
             float distance = math.length(toTarget);
 
-            // 보스는 항상 유저를 추적하며, 자신의 공격 쿨타임과 사거리는 BossCombatSystem에서 자체적으로 계산합니다.
-            if (enemyData.ValueRO.IsBoss || distance > enemyData.ValueRO.AttackRange)
+            if (distance > enemyData.ValueRO.AttackRange)
             {
                 enemyData.ValueRW.CurrentState = EnemyState.Move;
                 float3 moveDir = toTarget / distance;

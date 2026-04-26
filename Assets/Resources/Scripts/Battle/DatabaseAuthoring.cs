@@ -67,6 +67,13 @@ public class DatabaseAuthoring : MonoBehaviour
                     arrayBuilder[i].AttackPower = data.AttackPower;
                     arrayBuilder[i].AttackRange = data.AttackRange;
                     arrayBuilder[i].AttackCooldown = data.AttackCooldown;
+
+                    arrayBuilder[i].Element = data.Element;
+                    arrayBuilder[i].MaxPierce = data.MaxPierce;
+                    arrayBuilder[i].Defence = data.Defence;
+                    arrayBuilder[i].MoveSpeed = data.MoveSpeed;
+                    arrayBuilder[i].Recognize = data.Recognize;
+                    arrayBuilder[i].SkillID = data.SkillID;
                 }
 
                 var blobRef = builder.CreateBlobAssetReference<ShadowDatabaseBlob>(Allocator.Persistent);

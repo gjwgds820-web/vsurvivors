@@ -110,7 +110,7 @@ public class GameManager : MonoBehaviour
         {
             _baseMaxHealth = healthData.MaxHealth;
             _baseMoveSpeed = moveData.MoveSpeed;
-            _baseMaxShadow = playerData.MaxShadow;
+            _baseMaxShadow = 5f; // QA: 제한 5마리 고정
         }
 
         float hpAdd = 0f;
