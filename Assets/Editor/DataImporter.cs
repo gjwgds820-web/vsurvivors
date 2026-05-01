@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 
 public class DataImporter
 {
@@ -9,7 +11,7 @@ public class DataImporter
     [MenuItem("Tools/Import Skill Data(CSV)")]
     public static void ImportSkillDataFromCSV()
     {
-        string path = Application.dataPath + "/Resources/Data/abillity.csv";
+        string path = Application.dataPath + "/GameAssets/Data/abillity.csv";
 
         if (!File.Exists(path))
         {
@@ -18,7 +20,7 @@ public class DataImporter
         }
 
         string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
-        string assetPath = "Assets/Resources/Data/SkillDatabase.asset";
+        string assetPath = "Assets/GameAssets/Data/SkillDatabase.asset";
 
         SkillDatabase database = AssetDatabase.LoadAssetAtPath<SkillDatabase>(assetPath);
 
@@ -54,12 +56,13 @@ public class DataImporter
                 MaxLevel = row[3].Trim() == "Active" ? 6 : 5 // 임시로 Active는 6, 아니면 5
             };
             
-            skill.Icon = Resources.Load<Sprite>("Icons/Skills/" + skill.ID);
+            skill.Icon = LoadIconSprite("Assets/GameAssets/Icons/Skills", skill.ID.ToString());
             database.skills.Add(skill);
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
         Debug.Log("Skill data imported successfully from CSV.");
         AssetDatabase.Refresh();
     }
@@ -69,7 +72,7 @@ public class DataImporter
     [MenuItem("Tools/Import Character Data(JSON)")]
     public static void ImportCharacterDataFromJson()
     {
-        string path = Application.dataPath + "/Resources/Data/CharacterData.json";
+        string path = Application.dataPath + "/GameAssets/Data/CharacterData.json";
 
         if (!File.Exists(path))
         {
@@ -78,7 +81,7 @@ public class DataImporter
         }
 
         string jsonContent = File.ReadAllText(path);
-        string assetPath = "Assets/Resources/Data/CharacterDatabase.asset";
+        string assetPath = "Assets/GameAssets/Data/CharacterDatabase.asset";
 
         CharacterDatabase database = AssetDatabase.LoadAssetAtPath<CharacterDatabase>(assetPath);
 
@@ -92,15 +95,16 @@ public class DataImporter
         JsonUtility.FromJsonOverwrite(jsonContent, database);
         foreach (CharacterData character in database.characters)
         {
-            character.Icon = Resources.Load<Sprite>("Icons/Characters/" + character.Name);
+            character.Icon = LoadIconSprite("Assets/GameAssets/Icons/Characters", character.Name);
             if (character.Icon == null)
             {
-                Debug.LogWarning($"[캐릭터 아이콘 로드 실패] ID: {character.ID} / 찾으려는 경로: Resources/Icons/Characters/{character.Name}");
+                Debug.LogWarning($"[캐릭터 아이콘 로드 실패] ID: {character.ID} / 찾으려는 경로: Assets/GameAssets/Icons/Characters/{character.Name}");
             }
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
         Debug.Log("Character data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
@@ -110,7 +114,7 @@ public class DataImporter
     [MenuItem("Tools/Import Relic Data(JSON)")]
     public static void ImportRelicDataFromJson()
     {
-        string path = Application.dataPath + "/Resources/Data/RelicData.json";
+        string path = Application.dataPath + "/GameAssets/Data/RelicData.json";
 
         if (!File.Exists(path))
         {
@@ -119,7 +123,7 @@ public class DataImporter
         }
 
         string jsonContent = File.ReadAllText(path);
-        string assetPath = "Assets/Resources/Data/RelicDatabase.asset";
+        string assetPath = "Assets/GameAssets/Data/RelicDatabase.asset";
 
         RelicDatabase database = AssetDatabase.LoadAssetAtPath<RelicDatabase>(assetPath);
 
@@ -133,29 +137,30 @@ public class DataImporter
         JsonUtility.FromJsonOverwrite(jsonContent, database);
         foreach (RelicData relic in database.relics)
         {
-            relic.Icon = Resources.Load<Sprite>("Icons/Relics/" + relic.Name);
+            relic.Icon = LoadIconSprite("Assets/GameAssets/Icons/Relics", relic.Name);
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
         Debug.Log("Relic data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
     #endregion
 
     #region Shadow
-    [MenuItem("Tools/Import Shadow Data(JSON)")]
-    public static void ImportShadowDataFromJson()
+    [MenuItem("Tools/Import Shadow Data(CSV)")]
+    public static void ImportShadowDataFromCSV()
     {
-        string path = Application.dataPath + "/Resources/Data/ShadowData.json";
+        string path = Application.dataPath + "/GameAssets/Data/shadow.csv";
         if (!File.Exists(path))
         {
-            Debug.LogError("ShadowData.json file not found at: " + path);
+            Debug.LogError("shadow.csv file not found at: " + path);
             return;
         }
 
-        string jsonContent = File.ReadAllText(path);
-        string assetPath = "Assets/Resources/Data/ShadowDatabase.asset";
+        string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
+        string assetPath = "Assets/GameAssets/Data/ShadowDatabase.asset";
 
         ShadowDatabase database = AssetDatabase.LoadAssetAtPath<ShadowDatabase>(assetPath);
 
@@ -166,15 +171,55 @@ public class DataImporter
             Debug.Log("Created new ShadowDatabase asset at: " + assetPath);
         }
 
-        JsonUtility.FromJsonOverwrite(jsonContent, database);
-        foreach (ShadowData shadow in database.shadows)
+        if (database.shadows == null) database.shadows = new System.Collections.Generic.List<ShadowData>();
+        database.shadows.Clear();
+
+        for (int i = 1; i < lines.Length; i++)
         {
-            shadow.Icon = Resources.Load<Sprite>("Icons/Shadows/" + shadow.ID);
+            if (string.IsNullOrWhiteSpace(lines[i])) continue;
+
+            string[] row = lines[i].Split(',');
+            if (row.Length < 14) continue;
+
+            ShadowData shadow = new ShadowData
+            {
+                ID = int.Parse(row[0]),
+                Name = row[1],
+                Description = row[2],
+                Element = row[3].Trim() switch
+                {
+                    "무속성" => ElementType.None,
+                    "불" => ElementType.Fire,
+                    "물" => ElementType.Water,
+                    "풀" => ElementType.Leaf,
+                    "나무" => ElementType.Leaf,
+                    "빛" => ElementType.Light,
+                    "어둠" => ElementType.Dark,
+                    _ => ElementType.None
+                },
+                AttackType = int.Parse(row[4]),
+                Recognize = float.Parse(row[5]),
+                MaxHealth = float.Parse(row[6]),
+                AttackPower = float.Parse(row[7]),
+                AttackCooldown = float.Parse(row[8]),
+                AttackRange = float.Parse(row[9]),
+                MaxPierce = int.Parse(row[10]),
+                Defence = float.Parse(row[11]),
+                MoveSpeed = float.Parse(row[12]),
+                SkillID = int.TryParse(row[13], out int skillId) ? skillId : 0,
+                CurrentLevel = int.Parse(row[0]) % 100,
+                MaxLevel = 6,
+                TargetPriority = 0
+            };
+            
+            shadow.Icon = LoadIconSprite("Assets/GameAssets/Icons/Shadows", shadow.ID.ToString());
+            database.shadows.Add(shadow);
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
-        Debug.Log("Shadow data imported successfully from JSON.");
+        SetAssetAddressable(assetPath);
+        Debug.Log("Shadow data imported successfully from CSV.");
         AssetDatabase.Refresh();
     }
     #endregion
@@ -183,7 +228,7 @@ public class DataImporter
     [MenuItem("Tools/Import Upgrade Data(JSON)")]
     public static void ImportUpgradeDataFromJson()
     {
-        string path = Application.dataPath + "/Resources/Data/UpgradeData.json";
+        string path = Application.dataPath + "/GameAssets/Data/UpgradeData.json";
         if (!File.Exists(path))
         {
             Debug.LogError("UpgradeData.json file not found at: " + path);
@@ -191,7 +236,7 @@ public class DataImporter
         }
 
         string jsonContent = File.ReadAllText(path);
-        string assetPath = "Assets/Resources/Data/UpgradeDatabase.asset";
+        string assetPath = "Assets/GameAssets/Data/UpgradeDatabase.asset";
 
         UpgradeDatabase database = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>(assetPath);
 
@@ -205,11 +250,12 @@ public class DataImporter
         JsonUtility.FromJsonOverwrite(jsonContent, database);
         foreach (UpgradeData upgrade in database.upgrades)
         {
-            upgrade.Icon = Resources.Load<Sprite>("Icons/Upgrades/" + upgrade.Name);
+            upgrade.Icon = LoadIconSprite("Assets/GameAssets/Icons/Upgrades", upgrade.Name);
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
         Debug.Log("Upgrade data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
@@ -218,7 +264,7 @@ public class DataImporter
     [MenuItem("Tools/Import Enemy Data(CSV)")]
     public static void ImportEnemyDataFromCSV()
     {
-        string assetPath = "Assets/Resources/Data/EnemyDatabase.asset";
+        string assetPath = "Assets/GameAssets/Data/EnemyDatabase.asset";
         EnemyDatabase database = AssetDatabase.LoadAssetAtPath<EnemyDatabase>(assetPath);
 
         if (database == null)
@@ -231,7 +277,7 @@ public class DataImporter
         database.enemies.Clear();
 
         // 1. Load Monster CSV
-        string monsterPath = Application.dataPath + "/Resources/Data/monster.csv";
+        string monsterPath = Application.dataPath + "/GameAssets/Data/monster.csv";
         if (File.Exists(monsterPath))
         {
             string[] lines = File.ReadAllLines(monsterPath, System.Text.Encoding.UTF8);
@@ -257,7 +303,7 @@ public class DataImporter
                     IsBoss = false,
                     IsPiercing = int.Parse(row[8]) > 0 // 임시 맵핑 (max_pierce에 따라)
                 };
-                enemy.Icon = Resources.Load<Sprite>("Icons/Enemies/" + enemy.Name);
+                enemy.Icon = LoadIconSprite("Assets/GameAssets/Icons/Enemies", enemy.Name);
                 database.enemies.Add(enemy);
             }
         }
@@ -267,7 +313,7 @@ public class DataImporter
         }
 
         // 2. Load Boss CSV
-        string bossPath = Application.dataPath + "/Resources/Data/boss.csv";
+        string bossPath = Application.dataPath + "/GameAssets/Data/boss.csv";
         if (File.Exists(bossPath))
         {
             string[] lines = File.ReadAllLines(bossPath, System.Text.Encoding.UTF8);
@@ -295,7 +341,7 @@ public class DataImporter
                     IsBoss = true,
                     IsPiercing = int.Parse(row[8]) > 0
                 };
-                enemy.Icon = Resources.Load<Sprite>("Icons/Enemies/" + enemy.Name);
+                enemy.Icon = LoadIconSprite("Assets/GameAssets/Icons/Enemies", enemy.Name);
                 database.enemies.Add(enemy);
             }
         }
@@ -306,6 +352,7 @@ public class DataImporter
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
         Debug.Log("Enemy data imported successfully from Monster and Boss CSVs.");
         AssetDatabase.Refresh();
     }
@@ -315,7 +362,7 @@ public class DataImporter
     [MenuItem("Tools/Import Stage Data(JSON)")]
     public static void ImportStageDataFromJson()
     {
-        string path = Application.dataPath + "/Resources/Data/StageData.json";
+        string path = Application.dataPath + "/GameAssets/Data/StageData.json";
 
         if (!File.Exists(path))
         {
@@ -324,7 +371,7 @@ public class DataImporter
         }
 
         string jsonContent = File.ReadAllText(path);
-        string assetPath = "Assets/Resources/Data/StageDatabase.asset";
+        string assetPath = "Assets/GameAssets/Data/StageDatabase.asset";
 
         StageDatabase database = AssetDatabase.LoadAssetAtPath<StageDatabase>(assetPath);
 
@@ -339,9 +386,54 @@ public class DataImporter
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
         Debug.Log("Stage data imported successfully from JSON.");
         AssetDatabase.Refresh();
     }
     #endregion
+
+    private static void SetAssetAddressable(string assetPath)
+    {
+        AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+        if (settings == null)
+        {
+            Debug.LogWarning("[DataImporter] AddressableAssetSettings를 찾을 수 없습니다. 어드레서블 자동 설정을 건너뜁니다.");
+            return;
+        }
+
+        string groupName = "ScriptableObjects";
+        AddressableAssetGroup group = settings.FindGroup(groupName);
+
+        if (group == null)
+        {
+            Debug.Log($"[DataImporter] '{groupName}' 그룹이 없어 새로 생성합니다.");
+            // 기본 번들 압축 스키마 등을 사용해 그룹 생성
+            group = settings.CreateGroup(groupName, false, false, true, null);
+        }
+
+        string guid = AssetDatabase.AssetPathToGUID(assetPath);
+        AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, false, true);
+
+        if (entry != null)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(assetPath);
+            entry.SetAddress(fileName);
+            settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
+        }
+    }
+
+    private static Sprite LoadIconSprite(string folderPath, string assetName)
+    {
+        string[] guids = AssetDatabase.FindAssets($"{assetName} t:Sprite", new[] { folderPath });
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (Path.GetFileNameWithoutExtension(path).Equals(assetName, StringComparison.OrdinalIgnoreCase))
+            {
+                return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            }
+        }
+        return null;
+    }
 }
 

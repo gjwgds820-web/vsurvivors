@@ -3,6 +3,8 @@ using UnityEngine;
 using Unity.Entities;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
+using Cysharp.Threading.Tasks;
+using VSurvivors.Managers;
 
 [InitializeOnLoad]
 public class BattleDevHelper : EditorWindow
@@ -20,40 +22,45 @@ public class BattleDevHelper : EditorWindow
             {
                 EditorPrefs.SetBool("FastStartBattle", false);
                 
-                // 로비 씬의 매니저들이 DontDestroyOnLoad 구조를 완료하도록 한 프레임 지연
-                EditorApplication.delayCall += () =>
-                {
-                    // DataManager에 접근하여 테스트용 그림자(최대 4개) 임시 장착
-                    if (DataManager.Instance != null && DataManager.Instance.currentUserData != null)
-                    {
-                        var dummyShadows = new System.Collections.Generic.List<int>();
-                        foreach (var kvp in DataManager.Instance.SkillDict)
-                        {
-                            if (kvp.Value.Type == SkillType.Shadow)
-                            {
-                                dummyShadows.Add(kvp.Key);
-                                if (dummyShadows.Count >= 4) break;
-                            }
-                        }
-                        
-                        DataManager.Instance.currentUserData.SelectedShadowsID = dummyShadows;
-                        Debug.Log($"[Battle Dev Helper] 빠른 시작 테스트를 위해 그림자 {dummyShadows.Count}개를 임시 장착했습니다.");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[Battle Dev Helper] DataManager를 찾을 수 없어 그림자 장착을 건너뜁니다.");
-                    }
-
-                    if (VSurvivors.Managers.LoadingManager.Instance != null)
-                    {
-                        VSurvivors.Managers.LoadingManager.Instance.LoadScene("BattleScene", true);
-                    }
-                    else
-                    {
-                        SceneManager.LoadScene("BattleScene");
-                    }
-                };
+                // 비동기 부트스트랩 대기를 위해 UniTask로 분리된 메서드 호출
+                DelayedStartBattleAsync().Forget();
             }
+        }
+    }
+
+    private static async UniTaskVoid DelayedStartBattleAsync()
+    {
+        // 전역 매니저들의 비동기 로딩이 완료될 때까지 대기
+        await UniTask.WaitUntil(() => AppManager.IsInitialized);
+
+        // DataManager에 접근하여 테스트용 그림자(최대 4개) 임시 장착
+        if (DataManager.Instance != null && DataManager.Instance.currentUserData != null)
+        {
+            var dummyShadows = new System.Collections.Generic.List<int>();
+            foreach (var kvp in DataManager.Instance.SkillDict)
+            {
+                if (kvp.Value.Type == SkillType.Shadow)
+                {
+                    dummyShadows.Add(kvp.Key);
+                    if (dummyShadows.Count >= 4) break;
+                }
+            }
+            
+            DataManager.Instance.currentUserData.SelectedShadowsID = dummyShadows;
+            Debug.Log($"[Battle Dev Helper] 빠른 시작 테스트를 위해 그림자 {dummyShadows.Count}개를 임시 장착했습니다.");
+        }
+        else
+        {
+            Debug.LogWarning("[Battle Dev Helper] DataManager를 찾을 수 없어 그림자 장착을 건너뜁니다.");
+        }
+
+        if (VSurvivors.Managers.LoadingManager.Instance != null)
+        {
+            VSurvivors.Managers.LoadingManager.Instance.LoadScene("BattleScene", true);
+        }
+        else
+        {
+            SceneManager.LoadScene("BattleScene");
         }
     }
 
@@ -86,7 +93,7 @@ public class BattleDevHelper : EditorWindow
                 EditorPrefs.SetBool("FastStartBattle", true);
                 if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 {
-                    EditorSceneManager.OpenScene("Assets/Resources/Scenes/LobbyScene.unity");
+                    EditorSceneManager.OpenScene("Assets/GameAssets/Scenes/LobbyScene.unity");
                     EditorApplication.isPlaying = true;
                 }
             }
@@ -240,10 +247,18 @@ public class BattleDevHelper : EditorWindow
                     Rotation = Unity.Mathematics.quaternion.identity 
                 });
                 
-                var portalData = em.GetComponentData<CPortalData>(portalPrefab);
-                portalData.PortalID = portalId;
-                portalData.State = 0;
-                em.SetComponentData(portal, portalData);
+                if (em.HasComponent<CPortalData>(portal))
+                {
+                    var portalData = em.GetComponentData<CPortalData>(portal);
+                    portalData.PortalID = portalId;
+                    portalData.State = 0;
+                    em.SetComponentData(portal, portalData);
+                }
+                else
+                {
+                    em.AddComponentData(portal, new CPortalData { PortalID = portalId, State = 0 });
+                }
+                
                 Debug.Log($"[Battle Dev Helper] 포탈(ID:{portalId})을 즉시 소환했습니다.");
             }
             else
