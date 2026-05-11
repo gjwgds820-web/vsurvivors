@@ -22,6 +22,16 @@ public partial class VisualHitFeedbackSystem : SystemBase
         Shader.PropertyToID("_Color7"),
         Shader.PropertyToID("_Color8"),
         Shader.PropertyToID("_Color9_Skin"),
+        Shader.PropertyToID("_Color01"),
+        Shader.PropertyToID("_Color02"),
+        Shader.PropertyToID("_Color03"),
+        Shader.PropertyToID("_Color04"),
+        Shader.PropertyToID("_Color05"),
+        Shader.PropertyToID("_Color06"),
+        Shader.PropertyToID("_Color07"),
+        Shader.PropertyToID("_Color08"),
+        Shader.PropertyToID("_Color09"),
+        Shader.PropertyToID("_Color09_Skin"),
         Shader.PropertyToID("_EmissionColor")
     };
 

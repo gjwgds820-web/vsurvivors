@@ -8,19 +8,26 @@ public enum BossAttackPattern
     Dash
 }
 
+public enum BossState
+{
+    Chasing,
+    Prep,
+    Hitting,
+    Cooldown
+}
+
 public struct BossCombatData : IComponentData
 {
+    public BossState CurrentState;
     public float StateTimer;
     public BossAttackPattern CurrentPattern;
     
     // 공격 진행 상태
-    public bool IsAttacking;
-    public float AttackDelayTimer;
-    public float3 PendingTargetPosition;
+    public float3 AttackPosition;
+    public quaternion AttackRotation;
     public float3 DashDirection;
-    public float DashSpeed; // 돌진 속도 조절용
-    public float DashTimer;
-    public bool IsDashingPhase;
+    public float DashSpeed;
+    public float DashTimer; // Death 이벤트에서도 사용
     
     public float AttackCooldown;
 }

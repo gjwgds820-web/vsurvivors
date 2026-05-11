@@ -7,6 +7,22 @@ using UnityEditor.AddressableAssets.Settings;
 
 public class DataImporter
 {
+    #region Import All
+    [MenuItem("Tools/Import All Data")]
+    public static void ImportAllData()
+    {
+        Debug.Log("Starting to import all data...");
+        ImportSkillDataFromCSV();
+        ImportCharacterDataFromJson();
+        ImportRelicDataFromJson();
+        ImportShadowDataFromCSV();
+        ImportUpgradeDataFromJson();
+        ImportEnemyDataFromCSV();
+        ImportStageDataFromJson();
+        Debug.Log("All data imported successfully.");
+    }
+    #endregion
+
     #region Skill
     [MenuItem("Tools/Import Skill Data(CSV)")]
     public static void ImportSkillDataFromCSV()

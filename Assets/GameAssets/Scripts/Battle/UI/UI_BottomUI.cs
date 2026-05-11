@@ -50,6 +50,8 @@ public class UI_BottomUI : UI_Base
     {
         if (!_init) return;
 
+        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+
         UpdateExpData();
         AnimateSliders();
     }

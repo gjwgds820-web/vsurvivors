@@ -97,7 +97,17 @@ public class CameraController : MonoBehaviour
                     float distance = Vector2.Distance(_touchStartPos, currentPointerPos);
                     if (distance > dragActivationThreshold)
                     {
-                        StartDrag();
+                        Vector2 delta = currentPointerPos - _touchStartPos;
+                        // 수평 스크롤일 때만 카메라를 이동 (수직 스크롤은 무시)
+                        if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
+                        {
+                            StartDrag();
+                        }
+                        else
+                        {
+                            // 수직 스크롤 판정 시 이 터치에 대한 카메라 드래그 인식 취소
+                            _isTouchDown = false; 
+                        }
                     }
                 }
 

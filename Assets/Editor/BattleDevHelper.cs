@@ -48,6 +48,8 @@ public class BattleDevHelper : EditorWindow
             
             DataManager.Instance.currentUserData.SelectedShadowsID = dummyShadows;
             Debug.Log($"[Battle Dev Helper] 빠른 시작 테스트를 위해 그림자 {dummyShadows.Count}개를 임시 장착했습니다.");
+            
+            DataManager.Instance.BackupUserData(); // 에디터 헬퍼에서도 백업 생성
         }
         else
         {
@@ -186,10 +188,28 @@ public class BattleDevHelper : EditorWindow
         GUILayout.Space(20);
         GUILayout.Label("Portal Testing", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("포탈 소환 (ID: 1)", GUILayout.Height(30))) SpawnPortal(em, directorData, 1);
-        if (GUILayout.Button("포탈 소환 (ID: 2)", GUILayout.Height(30))) SpawnPortal(em, directorData, 2);
-        if (GUILayout.Button("포탈 소환 (ID: 3)", GUILayout.Height(30))) SpawnPortal(em, directorData, 3);
+        if (GUILayout.Button("일반 포탈 (삭제불가)", GUILayout.Height(30))) SpawnPortal(em, directorData, 42010101);
+        if (GUILayout.Button("일반 포탈 (삭제가능)", GUILayout.Height(30))) SpawnPortal(em, directorData, 42010002);
+        if (GUILayout.Button("보스 포탈", GUILayout.Height(30))) SpawnPortal(em, directorData, 42020103);
         GUILayout.EndHorizontal();
+
+        GUILayout.Space(20);
+        GUILayout.Label("AI Range Visualization (Gizmos)", EditorStyles.boldLabel);
+        
+        bool showPlayerLeash = EditorPrefs.GetBool("ShowPlayerLeash", false);
+        bool showShadowRange = EditorPrefs.GetBool("ShowShadowRange", false);
+        bool showEnemyRange = EditorPrefs.GetBool("ShowEnemyRange", false);
+
+        EditorGUI.BeginChangeCheck();
+        showPlayerLeash = EditorGUILayout.Toggle("플레이어 그림자 리쉬 범위 (초록)", showPlayerLeash);
+        showShadowRange = EditorGUILayout.Toggle("그림자 탐지 범위 (파랑)", showShadowRange);
+        showEnemyRange = EditorGUILayout.Toggle("적 탐지 범위 (빨강)", showEnemyRange);
+        if (EditorGUI.EndChangeCheck())
+        {
+            EditorPrefs.SetBool("ShowPlayerLeash", showPlayerLeash);
+            EditorPrefs.SetBool("ShowShadowRange", showShadowRange);
+            EditorPrefs.SetBool("ShowEnemyRange", showEnemyRange);
+        }
 
         GUILayout.Space(20);
         GUILayout.Label("Player Action Testing", EditorStyles.boldLabel);
@@ -238,6 +258,24 @@ public class BattleDevHelper : EditorWindow
             var playerQuery = em.CreateEntityQuery(typeof(PlayerData), typeof(Unity.Transforms.LocalTransform));
             if (!playerQuery.IsEmpty)
             {
+                int reqShadows = 3;
+                var directorQuery = em.CreateEntityQuery(typeof(GameDirectorData));
+                if (directorQuery.TryGetSingletonEntity<GameDirectorData>(out var directorEntity))
+                {
+                    if (em.HasBuffer<PortalConfigElement>(directorEntity))
+                    {
+                        var buffer = em.GetBuffer<PortalConfigElement>(directorEntity);
+                        for (int i = 0; i < buffer.Length; i++)
+                        {
+                            if (buffer[i].ID == portalId)
+                            {
+                                reqShadows = buffer[i].DelPortal;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 var playerTr = playerQuery.GetSingleton<Unity.Transforms.LocalTransform>();
                 Entity portal = em.Instantiate(portalPrefab);
                 em.SetComponentData(portal, new Unity.Transforms.LocalTransform 
@@ -251,15 +289,24 @@ public class BattleDevHelper : EditorWindow
                 {
                     var portalData = em.GetComponentData<CPortalData>(portal);
                     portalData.PortalID = portalId;
+                    portalData.RequiredShadows = reqShadows;
+                    portalData.InteractionRadius = 5.0f;
+                    portalData.IsActive = true;
                     portalData.State = 0;
                     em.SetComponentData(portal, portalData);
                 }
                 else
                 {
-                    em.AddComponentData(portal, new CPortalData { PortalID = portalId, State = 0 });
+                    em.AddComponentData(portal, new CPortalData { 
+                        PortalID = portalId, 
+                        RequiredShadows = reqShadows,
+                        InteractionRadius = 5.0f,
+                        IsActive = true,
+                        State = 0 
+                    });
                 }
                 
-                Debug.Log($"[Battle Dev Helper] 포탈(ID:{portalId})을 즉시 소환했습니다.");
+                Debug.Log($"[Battle Dev Helper] 포탈(ID:{portalId}, ReqShadows:{reqShadows})을 즉시 소환했습니다.");
             }
             else
             {

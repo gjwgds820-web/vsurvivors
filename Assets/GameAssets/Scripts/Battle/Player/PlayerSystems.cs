@@ -324,7 +324,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                         ecb.SetComponent(targetShadow, new ShadowInstanceData { ShadowID = shadowID, CurrentLevel = currentLevel });
                         var baseShadowData = SystemAPI.GetComponent<CShadowData>(spawnerData.ValueRO.ShadowPrefab);
                         baseShadowData.Index = targetIndex;
-                        baseShadowData.CurrentState = FormationState.Idle;
+                        baseShadowData.CurrentState = ShadowAIState.Idle;
                         baseShadowData.StateChangeTimer = 0f;
                         ecb.SetComponent(targetShadow, baseShadowData);
                         // 스탯 주입
@@ -332,13 +332,14 @@ public partial struct ShadowSpawnerSystem : ISystem
                         combatData.AttackPower = shadowDef.AttackPower;
                         combatData.AttackRange = shadowDef.AttackRange;
                         combatData.AttackCooldown = shadowDef.AttackCooldown;
-                        combatData.AttackType = (AttackType)shadowDef.AttackType;
+                        combatData.AttackType = (AttackType)(shadowDef.AttackType - 1);
                         combatData.IsAlive = true;
                         ecb.SetComponent(targetShadow, combatData);
                         
                         var targetingData = SystemAPI.GetComponent<TargetingData>(spawnerData.ValueRO.ShadowPrefab);
                         targetingData.Priority = (TargetingType)shadowDef.TargetPriority;
-                        targetingData.MaxSearchRangeSq = shadowDef.Recognize * shadowDef.Recognize;
+                        float totalRange = shadowDef.Recognize + shadowDef.AttackRange;
+                        targetingData.MaxSearchRangeSq = totalRange * totalRange;
                         if (targetingData.MaxSearchRangeSq <= 0.1f) targetingData.MaxSearchRangeSq = 144f; // fallback
                         ecb.SetComponent(targetShadow, targetingData);
 

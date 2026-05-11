@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
+using Cysharp.Threading.Tasks;
 
 public class UI_ShopSection : UI_Base
 {
@@ -91,6 +92,9 @@ public class UI_ShopSection : UI_Base
     {
         if (!Enum.TryParse(tabName, out ShopTab selectedTab)) return;
 
+        // 선택된 탭을 기록해두어 화면 이동이나 갱신 시 상태 유지
+        _pendingTabName = tabName;
+
         if (selectedTab == ShopTab.LimitedPackage)
         {
             selectedTab = ShopTab.LimitedPackageDaily;
@@ -130,6 +134,60 @@ public class UI_ShopSection : UI_Base
                     btn.image.color = (tab == selectedTab) ? Color.yellow : Color.white;
                 }
             }
+        }
+
+        // 컨테이너 교체 후 중첩된 레이아웃 그룹들이 크기를 1차적으로 계산할 수 있도록 프레임을 넘겨 대기합니다
+        if (gameObject.activeInHierarchy)
+        {
+            RefreshScrollDelayAsync().Forget();
+        }
+    }
+
+    private async UniTaskVoid RefreshScrollDelayAsync()
+    {
+        ScrollRect scrollRect = GetComponentInChildren<ScrollRect>();
+        /*
+        if (scrollRect != null && scrollRect.content != null)
+        {
+            Debug.Log($"[ShopScroll Debug] 탭 클릭 직후 - Content Height: {scrollRect.content.rect.height}");
+        }
+        */
+
+        // 유니티 UI 렌더 및 레이아웃 패스가 한 번 돌도록 대기 (가장 확실한 중첩 레이아웃 해결법)
+        await UniTask.DelayFrame(2, PlayerLoopTiming.Update);
+
+        // 대기하는 동안 오브젝트가 파괴되었거나 꺼졌다면 취소
+        if (this == null || !gameObject.activeInHierarchy) return;
+
+        if (scrollRect != null && scrollRect.content != null)
+        {
+            // 하위 오브젝트들(컨테이너들)부터 상위 오브젝트(Content) 순으로 역순 강제 갱신
+            foreach (RectTransform child in scrollRect.content)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(child);
+                }
+            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.content);
+
+            /*
+            float contentHeight = scrollRect.content.rect.height;
+            float viewportHeight = scrollRect.viewport != null ? scrollRect.viewport.rect.height : 0f;
+            
+            Debug.Log($"[ShopScroll Debug] Rebuild 완료 - Content Height: {contentHeight}, Viewport Height: {viewportHeight}");
+            
+            if (contentHeight <= viewportHeight && contentHeight > 0)
+            {
+                Debug.LogWarning("[ShopScroll Debug] 원인 발견: Content의 세로 길이가 Viewport(보이는 영역)보다 작거나 같습니다. 이 경우 상하 스크롤이 트리거되지 않습니다!");
+            }
+            if (contentHeight == 0)
+            {
+                Debug.LogWarning("[ShopScroll Debug] 원인 발견: Content의 세로 길이가 0입니다. 자식 컨테이너들에 ContentSizeFitter가 없거나, 내용물이 없는 상태로 인식되고 있습니다.");
+            }
+            */
+
+            scrollRect.verticalNormalizedPosition = 1f;
         }
     }
 

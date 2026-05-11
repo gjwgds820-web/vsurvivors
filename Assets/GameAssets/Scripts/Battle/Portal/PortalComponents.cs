@@ -10,6 +10,7 @@ public struct CPortalData : IComponentData
     public int AbsorbedShadows;
     public float InteractionRadius;
     public float AbsorbtionTimer;
+    public float MaxHoldTime; // Added for UI progress
     public bool IsActive;
 
     public int State;

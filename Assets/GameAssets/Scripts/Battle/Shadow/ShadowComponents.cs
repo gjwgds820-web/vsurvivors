@@ -2,10 +2,11 @@
 using Unity.Mathematics;
 using UnityEngine;
 
-public enum FormationState
+public enum ShadowAIState
 {
     Idle,
-    Moveing,
+    Engage,
+    ReturnToPlayer
 }
 
 public enum AttackType
@@ -18,8 +19,9 @@ public struct CShadowData : IComponentData
 {
     public int Index;
     public float MoveSpeed;
-    public FormationState CurrentState;
+    public ShadowAIState CurrentState;
     public float StateChangeTimer;
+    public Entity TargetEnemy; // 교전 중인 적
 }
 
 public struct TargetPositionData : IComponentData

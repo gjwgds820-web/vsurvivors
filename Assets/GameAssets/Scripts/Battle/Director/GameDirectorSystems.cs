@@ -508,6 +508,7 @@ public partial struct GameDirectorSystem : ISystem
             AbsorbedShadows = 0,
             InteractionRadius = 5.0f,
             AbsorbtionTimer = 0f,
+            MaxHoldTime = 3.0f,
             IsActive = true,
             State = 0
         });

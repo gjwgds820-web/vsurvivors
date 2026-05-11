@@ -22,6 +22,8 @@ public class PlayerInputBridge : MonoBehaviour
 
     private void Update()
     {
+        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+
         if (joystick == null) return;
 
         // Debug.Log($"조이스틱 입력: {joystick.InputVector}"); 

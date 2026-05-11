@@ -98,12 +98,12 @@ public partial struct UnitTargetingSystem : ISystem
                     bool isValidTarget = false;
                     if (targeting.ValueRO.Faction == TargetingFaction.Enemy)    
                     {
-                        if (isPlayer[i]) isValidTarget = true; // Enemy targets Player
-                        else if (isShadow[i] && !SystemAPI.HasComponent<BossTag>(selfEntity)) isValidTarget = true; // 일반 몬스터만 그림자를 타겟팅
+                        if (isPlayer[i]) isValidTarget = true;
+                        else if (isShadow[i]) isValidTarget = true;
                     }
                     else if (targeting.ValueRO.Faction == TargetingFaction.Ally)
                     {
-                        if (isEnemy[i]) isValidTarget = true; // Ally targets Enemy (includes both Normal and Boss)
+                        if (isEnemy[i]) isValidTarget = true;
                     }
 
                     if (!isValidTarget) continue;
@@ -112,26 +112,40 @@ public partial struct UnitTargetingSystem : ISystem
                     float3 targetPos2DScan = new float3(transforms[i].Position.x, 0, transforms[i].Position.z);
                     float distSq = math.distancesq(myPos2DScan, targetPos2DScan);
                     
-                    // 일반 몬스터가 플레이어를 찾을 때는 거리를 무시(항상 최우선 탐색군), 그림자나 아군의 탐색에만 거리 제한 적용
-                    if (distSq > targeting.ValueRO.MaxSearchRangeSq && !isPlayer[i]) continue;
-
                     float score = float.MaxValue;
-
-                    switch (targeting.ValueRO.Priority)
+                    float scanRangeSq = targeting.ValueRO.MaxSearchRangeSq;
+                    
+                    if (targeting.ValueRO.Faction == TargetingFaction.Enemy)
                     {
-                        case TargetingType.Nearest:
-                            score = distSq;
-                            break;
-                        case TargetingType.LowestHP:
-                            score = healths[i].CurrentHealth;
-                            break;
-                            // Add Random and HighestHP later if needed
+                        if (isShadow[i])
+                        {
+                            if (distSq <= scanRangeSq)
+                                score = distSq - 2000000f; // 1순위: 인식 범위 내 그림자
+                            else
+                                continue; // 멀리 있는 그림자는 무시
+                        }
+                        else if (isPlayer[i])
+                        {
+                            if (distSq <= scanRangeSq)
+                                score = distSq - 1000000f; // 2순위: 인식 범위 내 플레이어
+                            else
+                                score = distSq; // 3순위: 전체 맵 플레이어 (어디 있든 추적)
+                        }
                     }
-
-                    // For Enemies, maybe prioritize Player slightly if in range?
-                    if (targeting.ValueRO.Faction == TargetingFaction.Enemy && isPlayer[i] && targeting.ValueRO.UseCrowdControl)
+                    else
                     {
-                        score -= 50f; // Random small offset to favor player
+                        // 아군 타겟팅
+                        if (distSq > scanRangeSq) continue;
+
+                        switch (targeting.ValueRO.Priority)
+                        {
+                            case TargetingType.Nearest:
+                                score = distSq;
+                                break;
+                            case TargetingType.LowestHP:
+                                score = healths[i].CurrentHealth;
+                                break;
+                        }
                     }
                     
                     if (score < bestScore)
@@ -140,7 +154,6 @@ public partial struct UnitTargetingSystem : ISystem
                         bestTarget = entities[i];
                     }
                 }
-
                 if (bestTarget != Entity.Null)
                 {
                     targeting.ValueRW.CurrentTarget = bestTarget;
@@ -156,5 +169,6 @@ public partial struct UnitTargetingSystem : ISystem
         isShadow.Dispose();
     }
 }
+
 
 

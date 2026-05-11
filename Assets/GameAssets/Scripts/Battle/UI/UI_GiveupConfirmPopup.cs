@@ -28,7 +28,7 @@ public class UI_GiveupConfirmPopup : UI_Base
         // 정상적인 속도로 복구 후 로비 씬으로 이동
         Time.timeScale = 1f;
         UIManager.Instance.CloseAllPopups(); // 혹시 열려있는 다른 팝업 정리
-        SceneManager.LoadScene("LobbyScene");
+        VSurvivors.Managers.LoadingManager.Instance.LoadScene("LobbyScene");
     }
 
     private void OnCancelButtonClicked()

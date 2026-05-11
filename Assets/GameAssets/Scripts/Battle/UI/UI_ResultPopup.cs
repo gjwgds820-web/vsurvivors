@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -65,14 +65,11 @@ public class UI_ResultPopup : UI_Base
         GetText((int)Texts.TitleText).text = _isVictory ? "VICTORY" : "GAME OVER";
         GetText((int)Texts.ResultText).text = _isVictory ? "STAGE CLEARED" : "FAILED";
         
-        // Example stage data mappings
         GetText((int)Texts.StageIndexText).text = "STAGE 1";
         GetText((int)Texts.StageNameText).text = "Dark Forest";
 
-        // Query ECS Data
         var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         
-        // Get GameDirectorData
         var directorQuery = entityManager.CreateEntityQuery(typeof(GameDirectorData));
         if (directorQuery.TryGetSingleton<GameDirectorData>(out var directorData))
         {
@@ -90,7 +87,6 @@ public class UI_ResultPopup : UI_Base
             GetText((int)Texts.TimerText).text = "00:00";
         }
 
-        // Get PlayerData Level
         var playerQuery = entityManager.CreateEntityQuery(typeof(PlayerData));
         if (playerQuery.TryGetSingleton<PlayerData>(out var playerData))
         {
@@ -132,13 +128,37 @@ public class UI_ResultPopup : UI_Base
     private void OnClickLobby()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("LobbyScene");
+
+        if (DataManager.Instance != null)
+        {
+            DataManager.Instance.ClearBackup();
+            // 보통 로비로 나갈때는 획득 재화를 유지하고 세이브하는 등을 여기서 처리합니다.
+            // DataManager.Instance.SaveGame(); 
+        }
+        
+        // 로비로 나갈때도 ECS 월드 충돌을 방지하기위해 초기화
+        World.DisposeAllWorlds();
+        DefaultWorldInitialization.Initialize("Default World", false);
+
+        VSurvivors.Managers.LoadingManager.Instance.LoadScene("LobbyScene");
     }
 
     private void OnClickRetry()
     {
         UIManager.Instance.CloseAllPopups();
         Time.timeScale = 1f;
-        SceneManager.LoadScene("BattleScene");
+
+        // 사망 시 리트라이를 위해, 전투 중에 획득한 경험치, 골드 등을 모두 리셋 필요
+        // 게임 진입 시 찍어두었던 스냅샷(백업) 데이터로 복원하여 임시 데이터만 깔끔하게 날림
+        if (DataManager.Instance != null)
+        {
+            DataManager.Instance.RestoreUserDataFromBackup();
+        }
+
+        // ECS 월드 제거 및 재생성 (무한 로딩 및 잔존 엔티티 제거)
+        World.DisposeAllWorlds();
+        DefaultWorldInitialization.Initialize("Default World", false);
+
+        VSurvivors.Managers.LoadingManager.Instance.LoadScene("BattleScene", true);
     }
 }

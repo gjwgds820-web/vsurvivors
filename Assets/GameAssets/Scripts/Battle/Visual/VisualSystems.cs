@@ -17,6 +17,7 @@ public partial class VisualSyncSystem : SystemBase
     private EntityQuery _itemMissingVisualQuery;
     private EntityQuery _playerMissingVisualQuery;
     private EntityQuery _effectMissingVisualQuery;
+    private EntityQuery _projectileMissingVisualQuery;
 
     protected override void OnCreate()
     {
@@ -27,6 +28,7 @@ public partial class VisualSyncSystem : SystemBase
         _itemMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, DroppedItemData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _playerMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, PlayerData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _effectMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EffectVisualInfo>().WithNone<SubSceneVisualModel, Prefab>().Build();
+        _projectileMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, ProjectileVisualInfo>().WithNone<SubSceneVisualModel, Prefab>().Build();
     }
 
     protected override void OnUpdate()
@@ -53,8 +55,8 @@ public partial class VisualSyncSystem : SystemBase
                     }
                 }
 
-                string pPath = $"Prefabs/VisualPrefabs/{charName}(Battle)";
-                GameObject prefab = ResourceManager.Instance.LoadPrefab(pPath);
+                string addressName = $"{charName}(Battle)";
+                GameObject prefab = ResourceManager.Instance.LoadPrefab(addressName);
                 
                 if (prefab != null)
                 {
@@ -100,7 +102,7 @@ public partial class VisualSyncSystem : SystemBase
                 }
                 else
                 {
-                    Debug.LogError($"[VisualSystems] Player Visual Prefab NOT FOUND: {pPath}");
+                    Debug.LogError($"[VisualSystems] Entity Visual Prefab NOT FOUND: {addressName}");
                 }
             }
             entities.Dispose();
@@ -302,14 +304,35 @@ public partial class VisualSyncSystem : SystemBase
                 var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
                 var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
                 var effectInfo = EntityManager.GetComponentData<EffectVisualInfo>(entity);
-                if (VisualManager.Instance.EffectVisualPrefabs != null && effectInfo.PrefabID >= 0 && effectInfo.PrefabID < VisualManager.Instance.EffectVisualPrefabs.Length)
+                
+                string addressName = $"{effectInfo.ID}AttackVisual";
+                GameObject prefab = ResourceManager.Instance.LoadPrefab(addressName);
+
+                if (prefab != null)
                 {
-                    GameObject prefab = VisualManager.Instance.EffectVisualPrefabs[effectInfo.PrefabID];
-                    if (prefab != null)
-                    {
-                        var go = Object.Instantiate(prefab, pos, rot);
-                        EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
-                    }
+                    var go = Object.Instantiate(prefab, pos, rot);
+                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+                }
+            }
+            entities.Dispose();
+        }
+
+        if (!_projectileMissingVisualQuery.IsEmpty)
+        {
+            var entities = _projectileMissingVisualQuery.ToEntityArray(Allocator.TempJob);
+            foreach (var entity in entities)
+            {
+                var pos = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                var rot = EntityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                var projInfo = EntityManager.GetComponentData<ProjectileVisualInfo>(entity);
+                
+                string addressName = $"{projInfo.ID}AttackVisual";
+                GameObject prefab = ResourceManager.Instance.LoadPrefab(addressName);
+
+                if (prefab != null)
+                {
+                    var go = Object.Instantiate(prefab, pos, rot);
+                    EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
                 }
             }
             entities.Dispose();

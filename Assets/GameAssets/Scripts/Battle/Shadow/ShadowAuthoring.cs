@@ -27,9 +27,10 @@ public class ShadowAuthoring : MonoBehaviour
             AddComponent(entity, new CShadowData
             {
                 Index = 0,
-                CurrentState = FormationState.Idle,
+                CurrentState = ShadowAIState.Idle,
                 StateChangeTimer = 0f,
-                MoveSpeed = authoring.moveSpeed
+                MoveSpeed = authoring.moveSpeed,
+                TargetEnemy = Entity.Null
             });
 
             AddComponent(entity, new ShadowCombatData

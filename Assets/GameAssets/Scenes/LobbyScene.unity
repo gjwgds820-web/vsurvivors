@@ -1084,7 +1084,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1840078678}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.13596746
+  m_Size: 0.13471502
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2025,6 +2025,7 @@ GameObject:
   m_Component:
   - component: {fileID: 267080462}
   - component: {fileID: 267080463}
+  - component: {fileID: 267080464}
   m_Layer: 0
   m_Name: DailyShopContainer
   m_TagString: Untagged
@@ -2051,10 +2052,10 @@ RectTransform:
   - {fileID: 1711852245}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -1440}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &267080463
 MonoBehaviour:
@@ -2082,6 +2083,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &267080464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 267080461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &273019959
 GameObject:
   m_ObjectHideFlags: 0
@@ -10236,6 +10251,7 @@ GameObject:
   m_Component:
   - component: {fileID: 984930107}
   - component: {fileID: 984930108}
+  - component: {fileID: 984930109}
   m_Layer: 0
   m_Name: EnergyShopContainer
   m_TagString: Untagged
@@ -10262,10 +10278,10 @@ RectTransform:
   - {fileID: 188749449}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -16330}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &984930108
 MonoBehaviour:
@@ -10293,6 +10309,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &984930109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 984930106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &985584138
 GameObject:
   m_ObjectHideFlags: 0
@@ -10918,6 +10948,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1092701787}
   - component: {fileID: 1092701788}
+  - component: {fileID: 1092701789}
   m_Layer: 0
   m_Name: LimitedPackageDailyContainer
   m_TagString: Untagged
@@ -10944,10 +10975,10 @@ RectTransform:
   - {fileID: 1702795531}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -5980}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1092701788
 MonoBehaviour:
@@ -10975,6 +11006,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &1092701789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092701786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &1107468526
 GameObject:
   m_ObjectHideFlags: 0
@@ -13537,6 +13582,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1341753691}
   - component: {fileID: 1341753692}
+  - component: {fileID: 1341753693}
   m_Layer: 0
   m_Name: DiamondShopContainer
   m_TagString: Untagged
@@ -13563,10 +13609,10 @@ RectTransform:
   - {fileID: 194716725}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -12190}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1341753692
 MonoBehaviour:
@@ -13594,6 +13640,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &1341753693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1341753690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!4 &1345069979 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3dcb7923871a02e4288f8c602d3ab3f3, type: 3}
@@ -17135,6 +17195,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1686666140}
   - component: {fileID: 1686666141}
+  - component: {fileID: 1686666142}
   m_Layer: 0
   m_Name: SpecialPackageContainer
   m_TagString: Untagged
@@ -17161,10 +17222,10 @@ RectTransform:
   - {fileID: 1408165171}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -3910}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1686666141
 MonoBehaviour:
@@ -17192,6 +17253,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &1686666142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1686666139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &1693295204
 GameObject:
   m_ObjectHideFlags: 0
@@ -18325,6 +18400,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1768945774}
   - component: {fileID: 1768945775}
+  - component: {fileID: 1768945776}
   m_Layer: 0
   m_Name: LimitedPackageWeeklyContainer
   m_TagString: Untagged
@@ -18351,10 +18427,10 @@ RectTransform:
   - {fileID: 1402744147}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -8050}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1768945775
 MonoBehaviour:
@@ -18382,6 +18458,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &1768945776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768945773}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &1795070520
 GameObject:
   m_ObjectHideFlags: 0
@@ -18392,6 +18482,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1795070521}
   - component: {fileID: 1795070522}
+  - component: {fileID: 1795070523}
   m_Layer: 0
   m_Name: GoldShopContainer
   m_TagString: Untagged
@@ -18418,10 +18509,10 @@ RectTransform:
   - {fileID: 1270642449}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -14260}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1795070522
 MonoBehaviour:
@@ -18449,6 +18540,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &1795070523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795070520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &1799496291
 GameObject:
   m_ObjectHideFlags: 0
@@ -21397,6 +21502,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2049266786}
   - component: {fileID: 2049266787}
+  - component: {fileID: 2049266788}
   m_Layer: 0
   m_Name: LimitedPackageMonthlyContainer
   m_TagString: Untagged
@@ -21423,10 +21529,10 @@ RectTransform:
   - {fileID: 1026879691}
   m_Father: {fileID: 1445243154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2120}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 486.5, y: -10120}
+  m_SizeDelta: {x: 933, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2049266787
 MonoBehaviour:
@@ -21454,6 +21560,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &2049266788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2049266785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &2049394479
 GameObject:
   m_ObjectHideFlags: 0

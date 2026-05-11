@@ -65,6 +65,8 @@ public class UI_TopUI : UI_Base
     {
         if (!_init) return;
 
+        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+
         // 0.1초마다 UI 업데이트 갱신 (성능 최적화)
         _updateTimer += Time.unscaledDeltaTime;
         if (_updateTimer >= UPDATE_INTERVAL)

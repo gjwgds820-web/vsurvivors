@@ -17,21 +17,14 @@ public partial struct EnemyMovementSystem : ISystem
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld)) return;
-
         bool isIsolatedPhase = false;
         if (SystemAPI.TryGetSingleton<GameDirectorData>(out var director))
         {
             isIsolatedPhase = director.CurrentPhase == GamePhase.IsolatedBossFight;
         }
 
-        var collisionWorld = physicsWorld.CollisionWorld;
-
-        float separationRadius = 1.5f;
-        float separationWeight = 2.0f;
-
         foreach (var (transform, velocity, physicsMass, enemyData, targetData, entity) in
-                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRW<TargetingData>>().WithEntityAccess())
+                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRO<TargetingData>>().WithEntityAccess())
         {
             if (isIsolatedPhase && !SystemAPI.HasComponent<IsolatedBossTag>(entity))
             {
@@ -41,7 +34,6 @@ public partial struct EnemyMovementSystem : ISystem
 
             physicsMass.ValueRW.InverseInertia = float3.zero;
 
-            // [수정] 솟아오르는 것 및 땅으로 꺼지는 현상 방지 (상태와 무관하게 항상 Y, X, Z 회전 축 고정)
             float3 fixedPos = transform.ValueRO.Position;
             fixedPos.y = 0f;
             transform.ValueRW.Position = fixedPos;
@@ -50,7 +42,7 @@ public partial struct EnemyMovementSystem : ISystem
             transform.ValueRW.Rotation.value.z = 0;
             transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
 
-            if (enemyData.ValueRO.IsAttacking) continue; // 보스 패턴 등 공격 중이면 일반 추적 정지
+            if (enemyData.ValueRO.IsAttacking) continue;
 
             if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget))
             {
@@ -69,82 +61,14 @@ public partial struct EnemyMovementSystem : ISystem
             {
                 enemyData.ValueRW.CurrentState = EnemyState.Move;
                 float3 moveDir = toTarget / distance;
-                float3 lookDir = moveDir;
-
-                // Separation 계산
-                float3 separationVec = float3.zero;
-                CollisionFilter filter = CollisionFilter.Default;
-                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
-                if (collisionWorld.CalculateDistance(new PointDistanceInput 
-                { 
-                    Position = currentPos, 
-                    MaxDistance = separationRadius, 
-                    Filter = filter 
-                }, ref hits))
-                {
-                    int neighborCount = 0;
-                    for (int i = 0; i < hits.Length; i++)
-                    {
-                        float3 neighborPos = hits[i].Position;
-                        float3 diff = currentPos - neighborPos;
-                        diff.y = 0;
-                        float sqrMag = math.lengthsq(diff);
-
-                        // 아주 미세한 거리 방어
-                        if (sqrMag > 0.001f && sqrMag < separationRadius * separationRadius)
-                        {
-                            float dist = math.sqrt(sqrMag);
-                            separationVec += (diff / dist) * (1.0f - (dist / separationRadius));
-                            neighborCount++;
-                        }
-                    }
-                    if (neighborCount > 0)
-                    {
-                        // 평균 분리 벡터
-                        separationVec /= neighborCount;
-                        float pushBackFactor = math.dot(lookDir, separationVec);
-
-                        if (pushBackFactor < -0.2f)
-                        {
-                            enemyData.ValueRW.BlockedTimer += deltaTime;
-                            if (enemyData.ValueRO.BlockedTimer > 1.0f)
-                            {
-                                targetData.ValueRW.CurrentTarget = Entity.Null;
-                                targetData.ValueRW.ScanTimer = 0f;
-                                enemyData.ValueRW.BlockedTimer = 0f;
-                                continue;
-                            }
-
-                            // 회전 처리를 위한 순수 방향
-                            float3 rightDir = math.cross(math.up(), lookDir);   
-                            float dirSign = (currentPos.x * currentPos.z) % 2f > 0 ? 1f : -1f;
-
-                            // 배회 벡터
-                            float3 orbitVec = rightDir * dirSign * 2.0f;        
-
-                            // 회전 처리를 위한 순수 방향
-                            moveDir = math.normalize(lookDir + separationVec * separationWeight + orbitVec);
-                        }
-                        else
-                        {
-                            enemyData.ValueRW.BlockedTimer = 0f;
-                            moveDir = math.normalize(moveDir + separationVec * separationWeight);
-                        }
-                    }
-                    else
-                    {
-                        moveDir = lookDir; 
-                    }
-                }
-                hits.Dispose();
 
                 velocity.ValueRW.Linear = new float3(
                     moveDir.x * enemyData.ValueRO.MoveSpeed,
-                    velocity.ValueRO.Linear.y, // 기존 Y 축 중력을 존중 (이후 고정)
+                    velocity.ValueRO.Linear.y,
                     moveDir.z * enemyData.ValueRO.MoveSpeed
                 );
 
-                quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
+                quaternion targetRot = quaternion.LookRotationSafe(moveDir, math.up());
                 transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
             }
             else
@@ -156,7 +80,6 @@ public partial struct EnemyMovementSystem : ISystem
     }
 }
 #endregion
-
 #region Combat System
 [BurstCompile]
 public partial struct EnemyCombatSystem : ISystem
@@ -371,6 +294,7 @@ public partial struct EnemyDeathSystem : ISystem
     }
 }
 #endregion
+
 
 
 

@@ -13,6 +13,7 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
     public static DataManager Instance { get; private set; }
 
     public UserData currentUserData;
+    private UserData _sessionBackupData; // 전투 진입 시 임시 저장용 백업 데이터
     private String saveFilePath;
     public Dictionary<int, SkillData> SkillDict { get; private set; } = new Dictionary<int, SkillData>();
     public Dictionary<int, CharacterData> CharacterDict { get; private set; } = new Dictionary<int, CharacterData>();
@@ -58,6 +59,34 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
     }
 
     #region Save and Load
+    public void BackupUserData()
+    {
+        if (currentUserData != null)
+        {
+            string jsonData = JsonConvert.SerializeObject(currentUserData);
+            _sessionBackupData = JsonConvert.DeserializeObject<UserData>(jsonData);
+        }
+    }
+
+    public void RestoreUserDataFromBackup()
+    {
+        if (_sessionBackupData != null)
+        {
+            string jsonData = JsonConvert.SerializeObject(_sessionBackupData);
+            currentUserData = JsonConvert.DeserializeObject<UserData>(jsonData);
+        }
+        else
+        {
+            Debug.LogWarning("No session backup data exists. Loading from file insteaed.");
+            LoadGame();
+        }
+    }
+
+    public void ClearBackup()
+    {
+        _sessionBackupData = null;
+    }
+
     public void SaveGame()
     {
         try

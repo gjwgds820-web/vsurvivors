@@ -63,6 +63,7 @@ public partial struct PortalInteractionSystem : ISystem
             float radiusSq = cPortalData.ValueRO.InteractionRadius * cPortalData.ValueRO.InteractionRadius;
 
             float requiredHoldTime = (portalType == 42020103) ? 3.0f : (constData.PortalDestroyTimePerShadow > 0 ? constData.PortalDestroyTimePerShadow : 3.0f);
+            cPortalData.ValueRW.MaxHoldTime = requiredHoldTime; // For UI
 
             // 반경 안
             if (distSq <= radiusSq)

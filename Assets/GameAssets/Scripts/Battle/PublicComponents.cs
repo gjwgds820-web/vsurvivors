@@ -49,13 +49,18 @@ public struct DeathTag : IComponentData { }
 
 public struct EffectVisualInfo : IComponentData
 {
-    public int PrefabID;
+    public int ID;
 }
 
 public struct SpinningProjectileData : IComponentData
 {
     public float SpinSpeed;
     public float3 SpinAxis;
+}
+
+public struct ProjectileVisualInfo : IComponentData
+{
+    public int ID;
 }
 
 public struct DestroyEntityTag : IComponentData { }

@@ -16,6 +16,8 @@ public class UI_PortalIndicatorManager : MonoBehaviour
     private EntityQuery _portalQuery;
     
     private List<GameObject> _indicatorPool = new List<GameObject>();
+    private Dictionary<Entity, float> _portalProgress = new Dictionary<Entity, float>();
+    private Dictionary<Entity, Vector3> _portalScreenPositions = new Dictionary<Entity, Vector3>();
 
     private void Start()
     {
@@ -30,18 +32,23 @@ public class UI_PortalIndicatorManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+
         if (_entityManager == default || _portalQuery.IsEmptyIgnoreFilter || _mainCamera == null)
         {
             HideAllIndicators();
             return;
         }
 
-        var portalEntities = _portalQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
-        
         // Find Player
         var playerQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerInput>(), ComponentType.ReadOnly<LocalTransform>());
         if (playerQuery.IsEmptyIgnoreFilter) return;
         var playerPos = _entityManager.GetComponentData<LocalTransform>(playerQuery.GetSingletonEntity()).Position;
+
+        var portalEntities = _portalQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+
+        _portalProgress.Clear();
+        _portalScreenPositions.Clear();
 
         // Group by Type to find the closest per type
         Dictionary<int, Entity> closestPortals = new Dictionary<int, Entity>();
@@ -54,7 +61,7 @@ public class UI_PortalIndicatorManager : MonoBehaviour
             if (cPortalData.IsActive)
             {
                 if (cPortalData.RequiredShadows == 0) continue; // QA: Hide 0/0 and Indestructible
-                if (cPortalData.PortalID == 42010101) continue; // Hardcode override if needed
+                // removed hardcode skip for 42010101 so DevHelper test portals show up correctly
 
                 var portalTransform = _entityManager.GetComponentData<LocalTransform>(entity);
                 float distSq = Unity.Mathematics.math.distancesq(playerPos, portalTransform.Position);
@@ -81,6 +88,21 @@ public class UI_PortalIndicatorManager : MonoBehaviour
             }
         }
 
+        foreach (var entity in portalEntities)
+        {
+            var cPortalData = _entityManager.GetComponentData<CPortalData>(entity);
+            var tr = _entityManager.GetComponentData<LocalTransform>(entity);
+            if (cPortalData.IsActive && cPortalData.AbsorbtionTimer > 0f && cPortalData.AbsorbtionTimer < cPortalData.MaxHoldTime)
+            {
+                Vector3 sp = _mainCamera.WorldToScreenPoint(tr.Position + new Unity.Mathematics.float3(0, 2f, 0));
+                if (sp.z > 0)
+                {
+                    _portalScreenPositions[entity] = sp;
+                    _portalProgress[entity] = 1f - (cPortalData.AbsorbtionTimer / cPortalData.MaxHoldTime);
+                }
+            }
+        }
+
         for (int i = activeIndicatorIndex; i < _indicatorPool.Count; i++)
         {
             _indicatorPool[i].SetActive(false);
@@ -91,6 +113,8 @@ public class UI_PortalIndicatorManager : MonoBehaviour
 
     private void HideAllIndicators()
     {
+        _portalProgress.Clear();
+        _portalScreenPositions.Clear();
         foreach (var indicator in _indicatorPool)
         {
             if (indicator != null && indicator.activeSelf)
@@ -163,5 +187,36 @@ public class UI_PortalIndicatorManager : MonoBehaviour
         indicatorRect.rotation = Quaternion.Euler(0, 0, angleDegrees);
 
         return true;
+    }
+
+    private void OnGUI()
+    {
+        if (_portalProgress == null || _portalProgress.Count == 0) return;
+
+        float width = 60f;
+        float height = 10f;
+
+        foreach (var kvp in _portalProgress)
+        {
+            var entity = kvp.Key;
+            var progress = kvp.Value;
+            var pos = _portalScreenPositions[entity];
+
+            // In GUI, Y=0 is Top, so invert Y
+            float guiY = Screen.height - pos.y;
+            
+            Rect bgRect = new Rect(pos.x - (width / 2f), guiY - (height / 2f), width, height);
+            Rect fillRect = new Rect(pos.x - (width / 2f), guiY - (height / 2f), width * progress, height);
+
+            // Draw Background
+            GUI.color = new Color(0, 0, 0, 0.7f);
+            GUI.DrawTexture(bgRect, Texture2D.whiteTexture);
+
+            // Draw Fill (Yellow for progress)
+            GUI.color = Color.yellow;
+            GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
+        }
+
+        GUI.color = Color.white; // Reset
     }
 }

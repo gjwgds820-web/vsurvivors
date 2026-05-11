@@ -24,8 +24,8 @@ public class HitBoxAuthoring : MonoBehaviour
     public float TickRate = 0f;
     
     [Header("Visual Binding")]
-    [Tooltip("VisualManager의 EffectVisualPrefabs 배열 인덱스입니다. -1이면 시각화하지 않습니다.")]
-    public int VisualPrefabID = -1;
+    [Tooltip("어드레서블로 시각화 효과를 연결할 ID입니다. (IDAttackVisual). -1이면 시각화하지 않습니다.")]
+    public int VisualID = -1;
     
     class Baker : Baker<HitBoxAuthoring>
     {
@@ -49,9 +49,27 @@ public class HitBoxAuthoring : MonoBehaviour
                 TargetFaction = -1 // 스포너가 덮어쓸 값입니다. (0: 플레이어가 타격, 1: 적이 타격)
             });
 
-            if (authoring.VisualPrefabID >= 0)
+            int finalVisualID = authoring.VisualID;
+            if (finalVisualID == -1)
             {
-                AddComponent(entity, new EffectVisualInfo { PrefabID = authoring.VisualPrefabID });
+                // 이름 앞부분의 숫자(ID) 추출을 시도합니다.
+                string objName = authoring.gameObject.name;
+                string numStr = "";
+                foreach (char c in objName)
+                {
+                    if (char.IsDigit(c)) numStr += c;
+                    else break;
+                }
+
+                if (!string.IsNullOrEmpty(numStr))
+                {
+                    int.TryParse(numStr, out finalVisualID);
+                }
+            }
+
+            if (finalVisualID >= 0)
+            {
+                AddComponent(entity, new EffectVisualInfo { ID = finalVisualID });
             }
 
             // 히트 기록용 버퍼 자동 추가

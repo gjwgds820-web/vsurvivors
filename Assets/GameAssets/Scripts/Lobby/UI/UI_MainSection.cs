@@ -89,6 +89,9 @@ public class UI_MainSection : UI_Base
         if (userData.CurrentEnergy >= _battleEnergyCost)
         {
             userData.CurrentEnergy -= _battleEnergyCost;
+            // 전투 진입 전 데이터 백업 (리트라이 시 복구용)
+            DataManager.Instance.BackupUserData();
+            
             // DataManager.Instance.SaveGame();
             if (VSurvivors.Managers.LoadingManager.Instance != null)
             {
