@@ -135,6 +135,7 @@ public class UI_PortalIndicatorManager : MonoBehaviour
         if (index >= _indicatorPool.Count)
         {
             var newInst = Instantiate(indicatorPrefab, parentCanvas);
+            newInst.transform.SetAsFirstSibling();
             _indicatorPool.Add(newInst);
         }
 

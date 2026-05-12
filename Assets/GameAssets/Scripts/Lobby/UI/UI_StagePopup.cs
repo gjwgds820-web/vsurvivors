@@ -54,6 +54,15 @@ public class UI_StagePopup : UI_Base, IBeginDragHandler, IEndDragHandler, IDragH
         return true;
     }
 
+    private void OnEnable()
+    {
+        if (!_init) return;
+        
+        _availableStages = DataManager.Instance.currentUserData.UnlockedStages;
+        _currentStageID = DataManager.Instance.currentUserData.CurrentStage;
+        UpdateStageInfo();
+    }
+
     private void UpdateStageInfo()
     {
         if (DataManager.Instance.StageDict.TryGetValue(_currentStageID, out var stageData))

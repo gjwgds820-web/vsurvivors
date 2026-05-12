@@ -162,19 +162,15 @@ public class BattleDevHelper : EditorWindow
                 var pEntity = playerQuery.GetSingletonEntity();
                 var pData = em.GetComponentData<PlayerData>(pEntity);
                 
-                var queryDirector = em.CreateEntityQuery(typeof(GameDirectorData));
-                float expBase = 100f;
-                if (queryDirector.HasSingleton<GameDirectorData>())
-                    expBase = queryDirector.GetSingleton<GameDirectorData>().ExpRequirementBase;
+                float requiredExp = PlayerLevelUpSystem.GetRequiredExpForNextLevel(pData.Level);
                 
-                float requiredExp = expBase * pData.Level;
                 // 현재 경험치가 요구치보다 적다면 딱 1레벨업에 필요한 양만 채워주기
                 if (pData.EXP < requiredExp)
                 {
                     pData.EXP = requiredExp;
                 }
                 em.SetComponentData(pEntity, pData);
-                Debug.Log("플레이어에게 1레벨업 만큼의 경험치를 주었습니다.");
+                Debug.Log($"플레이어에게 1레벨업 만큼의 경험치({requiredExp})를 주었습니다.");
             }
         }
 

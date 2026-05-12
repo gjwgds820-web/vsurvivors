@@ -11,14 +11,15 @@ public partial struct GameDirectorSystem : ISystem
 {
     private Unity.Mathematics.Random _random;
 
-    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<GameDirectorData>();
         state.RequireForUpdate<PlayerInput>();
         state.RequireForUpdate<ConstConfigData>();
 
-        _random = new Unity.Mathematics.Random(1234);
+        uint seed = (uint)System.DateTime.Now.Ticks;
+        if (seed == 0) seed = 1;
+        _random = new Unity.Mathematics.Random(seed);
     }
 
     [BurstCompile]

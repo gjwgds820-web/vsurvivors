@@ -25,6 +25,25 @@ public class UI_OwnedSkillSlot : UI_Base
         BindImage(typeof(Images));
         BindObject(typeof(GameObjects));
 
+        // 슬롯 크기(스케일) 변화에 맞춰 별(Star) UI도 비율에 따라 동적으로 위치와 크기가 맞춰지도록 Anchor 조정
+        for (int i = 0; i < 5; i++)
+        {
+            var starImg = GetImage((int)Images.Star1 + i);
+            if (starImg != null)
+            {
+                RectTransform rt = starImg.rectTransform;
+                float step = 1f / 5f;
+                
+                // 가로를 5등분하고, 세로는 부모 기준 하단 25% 영역만큼 차지하도록 비율(Anchor)로 고정합니다.
+                rt.anchorMin = new Vector2(i * step, 0f);
+                rt.anchorMax = new Vector2((i + 1) * step, 0.25f);
+                
+                // 고정 픽셀 여백을 0으로 만들어버려서 부모 크기에 완벽히 비례하게 만듭니다.
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+            }
+        }
+
         return true;
     }
 

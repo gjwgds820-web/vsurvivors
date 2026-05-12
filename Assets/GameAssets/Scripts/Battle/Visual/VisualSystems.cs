@@ -171,6 +171,14 @@ public partial class VisualSyncSystem : SystemBase
 
                 // 포탈 프리팹 원본의 Rotation을 그대로 유지하여 스폰합니다 (ECS Identity를 덮어씌움 방지)
                 var go = Object.Instantiate(prefab, pos, prefab.transform.rotation);
+                
+                // TODO: 임시로 포탈의 오디오 소스 끎
+                var audioSources = go.GetComponentsInChildren<AudioSource>(true);
+                foreach (var audio in audioSources)
+                {
+                    audio.enabled = false;
+                }
+                
                 EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
                 
                 // ECS의 Transform 회전값도 프리팹 베이스에 맞춰 Slerp로 인해 축이 틀어지는 현상을 방지합니다.
