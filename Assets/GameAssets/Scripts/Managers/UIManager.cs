@@ -95,6 +95,11 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
             popup.SetActive(false);
         }
     }
+
+    public bool HasActivePopup()
+    {
+        return _activePopups != null && _activePopups.Count > 0;
+    }
         private GameObject GetOrCreatePopup(string popupName)
         {
             if (_popupInstanceCache.TryGetValue(popupName, out GameObject popup))

@@ -40,6 +40,18 @@ public class UI_PortalIndicatorManager : MonoBehaviour
             return;
         }
 
+        // Check if director is in IsolatedBossFight Phase
+        var directorQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameDirectorData>());
+        if (!directorQuery.IsEmptyIgnoreFilter)
+        {
+            var directorData = _entityManager.GetComponentData<GameDirectorData>(directorQuery.GetSingletonEntity());
+            if (directorData.CurrentPhase == GamePhase.IsolatedBossFight)
+            {
+                HideAllIndicators();
+                return;
+            }
+        }
+
         // Find Player
         var playerQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerInput>(), ComponentType.ReadOnly<LocalTransform>());
         if (playerQuery.IsEmptyIgnoreFilter) return;
@@ -192,6 +204,8 @@ public class UI_PortalIndicatorManager : MonoBehaviour
 
     private void OnGUI()
     {
+        if (UIManager.Instance.HasActivePopup()) return;
+        
         if (_portalProgress == null || _portalProgress.Count == 0) return;
 
         float width = 60f;

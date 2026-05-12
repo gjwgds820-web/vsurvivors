@@ -660,7 +660,7 @@ MonoBehaviour:
   healthRegenPerSecond: 0
   damageReduction: 0
   maxShadow: 5
-  shadowRegenCooldown: 3
+  shadowRegenCooldown: 5
   summonAnimationDelay: 0.5
   magnetismRadius: 3
   collectRadius: 0.5

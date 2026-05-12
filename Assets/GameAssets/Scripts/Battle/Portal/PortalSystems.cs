@@ -65,16 +65,16 @@ public partial struct PortalInteractionSystem : ISystem
             float requiredHoldTime = (portalType == 42020103) ? 3.0f : (constData.PortalDestroyTimePerShadow > 0 ? constData.PortalDestroyTimePerShadow : 3.0f);
             cPortalData.ValueRW.MaxHoldTime = requiredHoldTime; // For UI
 
-            // 그림자 소모 포탈(42020102)인 경우, 보유한 그림자가 있는지 먼저 검사합니다.
+            // 그림자 소모 포탈(필요 그림자가 1 이상)인 경우, 보유한 그림자가 있는지 먼저 검사하여 자원을 낭비하지 않습니다.
             bool canCharge = true;
-            if (portalType == 42020102)
+            if (cPortalData.ValueRO.RequiredShadows > 0 && portalType != 42020103)
             {
                 int tempAliveCount = 0;
                 for (int i = 0; i < shadowSlots.Length; i++)
                 {
                     if (shadowSlots[i].IsAlive && shadowSlots[i].ShadowEntity != Entity.Null && shadowSlots[i].ShadowEntity.Index >= 0)
                     {
-                        if (!SystemAPI.HasComponent<DeathTag>(shadowSlots[i].ShadowEntity))
+                        if (SystemAPI.Exists(shadowSlots[i].ShadowEntity) && !SystemAPI.HasComponent<DeathTag>(shadowSlots[i].ShadowEntity))
                         {
                             tempAliveCount++;
                         }
@@ -131,7 +131,7 @@ public partial struct PortalInteractionSystem : ISystem
                         {
                             if (shadowSlots[i].IsAlive && shadowSlots[i].ShadowEntity != Entity.Null && shadowSlots[i].ShadowEntity.Index >= 0)
                             {
-                                if (!SystemAPI.HasComponent<DeathTag>(shadowSlots[i].ShadowEntity))
+                                if (SystemAPI.Exists(shadowSlots[i].ShadowEntity) && !SystemAPI.HasComponent<DeathTag>(shadowSlots[i].ShadowEntity))
                                 {
                                     aliveShadowIndices.Add(i);
                                 }

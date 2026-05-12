@@ -65,11 +65,12 @@ public class Vortex_Controller : MonoBehaviour
             {
                 part.Play();
             }
-
+            /*
             foreach (AudioSource audioS in effectsAudio)
             {
                 audioS.Play();
             }
+            */
 
             transitionCor = StartCoroutine(TransitionSequence());
             animateRocksCor = StartCoroutine(RocksAnimation());
