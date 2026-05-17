@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem;
 using Unity.Entities;
 using System.Collections.Generic;
 
@@ -31,6 +32,11 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+        // 윈도우 스탠드얼론 빌드 시 모바일 비율(1440x3040의 절반 크기인 720x1520 비율 유지) 창 모드로 강제 고정
+        Screen.SetResolution(720, 1520, FullScreenMode.Windowed);
+#endif
+
         _baseMaxHealth = -1f;
         _baseMoveSpeed = -1f;
         _baseMaxShadow = -1f;
@@ -222,6 +228,19 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 임시 게임 종료 단축키 (F12)
+        if (Keyboard.current != null && Keyboard.current.f12Key.wasPressedThisFrame)
+        {
+            Debug.Log("Force Quitting the game...");
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+#endif
+
         if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
 
         if (!_levelUpQuery.IsEmptyIgnoreFilter)

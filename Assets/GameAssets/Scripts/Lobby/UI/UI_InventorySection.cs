@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Entities.UniversalDelegates;
 using Unity.VisualScripting;
-using Unity.Android.Gradle.Manifest;
 
 public class UI_InventorySection : UI_Base
 {

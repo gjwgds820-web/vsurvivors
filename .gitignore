@@ -108,3 +108,13 @@ InitTestScene*.unity*
 
 # Large Fonts
 Assets/BMJUA_ttf SDF.asset
+
+# Profiler & Memory Analyzer
+*.profdata
+*.profraw
+*.prof
+*.snap
+*.snap.meta
+
+# Profiler Captures (Contains .data, .highlights, .png)
+/[Pp]rofiler[Cc]aptures/

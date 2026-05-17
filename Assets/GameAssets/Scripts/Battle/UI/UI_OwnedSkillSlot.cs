@@ -53,8 +53,15 @@ public class UI_OwnedSkillSlot : UI_Base
 
         if (skillData != null)
         {
+            Sprite iconSprite = skillData.Icon;
+            if (iconSprite == null)
+            {
+                int baseID = (skillData.ID / 10) * 10 + 1;
+                iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Skills/{baseID}");
+            }
+
             GetImage((int)Images.SkillIconImage).gameObject.SetActive(true);
-            GetImage((int)Images.SkillIconImage).sprite = skillData.Icon;
+            GetImage((int)Images.SkillIconImage).sprite = iconSprite;
 
             for (int i = 0; i < 5; i++)
             {

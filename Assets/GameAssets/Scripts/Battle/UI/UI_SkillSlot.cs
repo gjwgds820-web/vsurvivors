@@ -60,7 +60,8 @@ public class UI_SkillSlot : UI_Base
         Sprite iconSprite = skillData.Icon;
         if (iconSprite == null)
         {
-            iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Skills/{skillData.ID}");
+            int baseID = (skillData.ID / 10) * 10 + 1;
+            iconSprite = ResourceManager.Instance.LoadSprite($"Icons/Skills/{baseID}");
         }
         
         GetImage((int)Images.SkillIconImage).sprite = iconSprite;
