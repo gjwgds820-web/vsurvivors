@@ -118,3 +118,7 @@ Assets/BMJUA_ttf SDF.asset
 
 # Profiler Captures (Contains .data, .highlights, .png)
 /[Pp]rofiler[Cc]aptures/
+
+# VS Code workspace settings
+/.vscode/
+

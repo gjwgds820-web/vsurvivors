@@ -78,6 +78,8 @@ namespace Polyart
 
             GameObject prefab = cropPrefab.plantStages[cropPrefab.plantStages.Count - 1].mesh;
 
+            if (prefab == null) return;
+
             for (int i = 0; i < crops.Length; i++)
             {
                 GameObject crop = Instantiate(prefab, transform);
