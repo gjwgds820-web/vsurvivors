@@ -1,174 +1,202 @@
 ﻿using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Collections;
 using Unity.Transforms;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [BurstCompile]
 public partial struct UnitTargetingSystem : ISystem
 {
+    private ComponentLookup<LocalToWorld> _transformLookup;
+    private ComponentLookup<HealthData> _healthLookup;
+    private ComponentLookup<PlayerData> _playerLookup;
+    private ComponentLookup<CEnemyData> _enemyLookup;
+    private ComponentLookup<EnemyTag> _enemyTagLookup;
+    private ComponentLookup<ShadowCombatData> _shadowLookup;
+    private ComponentLookup<ShadowTag> _shadowTagLookup;
+
+    private EntityQuery _targetableQuery;
     private EntityQuery _targetingQuery;
-    private EntityQuery _damagableQuery;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        _targetingQuery = SystemAPI.QueryBuilder()
-            .WithAllRW<TargetingData>()
-            .WithAll<LocalTransform>()
-            .Build();
+        _transformLookup = state.GetComponentLookup<LocalToWorld>(true);
+        _healthLookup = state.GetComponentLookup<HealthData>(true);
+        _playerLookup = state.GetComponentLookup<PlayerData>(true);
+        _enemyLookup = state.GetComponentLookup<CEnemyData>(true);
+        _enemyTagLookup = state.GetComponentLookup<EnemyTag>(true);
+        _shadowLookup = state.GetComponentLookup<ShadowCombatData>(true);
+        _shadowTagLookup = state.GetComponentLookup<ShadowTag>(true);
 
-        _damagableQuery = SystemAPI.QueryBuilder()
-            .WithAll<HealthData>()
-            .WithAll<LocalTransform>()
+        _targetableQuery = SystemAPI.QueryBuilder()
+            .WithAll<HealthData, LocalToWorld>()
             .WithNone<DeathTag>()
             .Build();
 
+        _targetingQuery = SystemAPI.QueryBuilder().WithAllRW<TargetingData>().WithAll<LocalToWorld>().Build();
         state.RequireForUpdate(_targetingQuery);
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var entities = _damagableQuery.ToEntityArray(Allocator.TempJob);
-        var transforms = _damagableQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
-        var healths = _damagableQuery.ToComponentDataArray<HealthData>(Allocator.TempJob);
+        _transformLookup.Update(ref state);
+        _healthLookup.Update(ref state);
+        _playerLookup.Update(ref state);
+        _enemyLookup.Update(ref state);
+        _enemyTagLookup.Update(ref state);
+        _shadowLookup.Update(ref state);
+        _shadowTagLookup.Update(ref state);
+
+        var targetableEntities = _targetableQuery.ToEntityArray(Allocator.TempJob);
+
+        var job = new TargetingJob
+        {
+            Targetables = targetableEntities,
+            TransformLookup = _transformLookup,
+            HealthLookup = _healthLookup,
+            PlayerLookup = _playerLookup,
+            EnemyLookup = _enemyLookup,
+            EnemyTagLookup = _enemyTagLookup,
+            ShadowLookup = _shadowLookup,
+            ShadowTagLookup = _shadowTagLookup,
+            DeltaTime = SystemAPI.Time.DeltaTime
+        };
         
-        // Factions
-        var isPlayer = new NativeArray<bool>(entities.Length, Allocator.TempJob);
-        var isEnemy = new NativeArray<bool>(entities.Length, Allocator.TempJob);
-        var isShadow = new NativeArray<bool>(entities.Length, Allocator.TempJob);
-
-        for (int i = 0; i < entities.Length; i++)
-        {
-            var entity = entities[i];
-            isPlayer[i] = SystemAPI.HasComponent<PlayerData>(entity);
-            isEnemy[i] = SystemAPI.HasComponent<EnemyTag>(entity);
-            isShadow[i] = SystemAPI.HasComponent<ShadowTag>(entity);
-        }
-
-        float deltaTime = SystemAPI.Time.DeltaTime;
-
-        foreach (var (targeting, transform, selfEntity) in SystemAPI.Query<RefRW<TargetingData>, RefRO<LocalTransform>>().WithEntityAccess())
-        {
-            targeting.ValueRW.ScanTimer -= deltaTime;
-
-            // Check if current target is valid
-            bool needNewTarget = targeting.ValueRO.CurrentTarget == Entity.Null;
-            int currentTargetIndex = -1;
-            
-            if (!needNewTarget)
-            {
-                currentTargetIndex = entities.IndexOf(targeting.ValueRO.CurrentTarget);
-                if (currentTargetIndex == -1 || healths[currentTargetIndex].CurrentHealth <= 0)
-                {
-                    targeting.ValueRW.CurrentTarget = Entity.Null;
-                    targeting.ValueRW.ScanTimer = 0f; // 즉각적인 재탐색
-                    needNewTarget = true;
-                }
-                else
-                {
-                    // Check range (2D distance to avoid height mismatch)
-                    float3 myPos2D = new float3(transform.ValueRO.Position.x, 0, transform.ValueRO.Position.z);
-                    float3 targetPos2D = new float3(transforms[currentTargetIndex].Position.x, 0, transforms[currentTargetIndex].Position.z);
-                    float distSq = math.distancesq(myPos2D, targetPos2D);
-                    if (distSq > targeting.ValueRO.MaxFollowRangeSq)
-                    {
-                        targeting.ValueRW.CurrentTarget = Entity.Null;
-                        targeting.ValueRW.ScanTimer = 0f; // 사거리 이탈 시 즉시 재탐색
-                        needNewTarget = true;
-                    }
-                }
-            }
-
-            // 조건 1. 현재 타겟이 유효하지 않아 새 타겟이 즉시 필요한 경우
-            // 조건 2. 스캔 타이머가 만료되어 주변을 주기적으로 다시 살피는 경우 (가장 가까운 대상 갱신)
-            if (needNewTarget || targeting.ValueRO.ScanTimer <= 0)
-            {
-                targeting.ValueRW.ScanTimer = targeting.ValueRO.ScanInterval;   
-                Entity bestTarget = Entity.Null;
-                float bestScore = float.MaxValue;
-
-                for (int i = 0; i < entities.Length; i++)
-                {
-                    if (entities[i] == selfEntity) continue;
-                    if (healths[i].CurrentHealth <= 0) continue;
-
-                    bool isValidTarget = false;
-                    if (targeting.ValueRO.Faction == TargetingFaction.Enemy)    
-                    {
-                        if (isPlayer[i]) isValidTarget = true;
-                        else if (isShadow[i]) isValidTarget = true;
-                    }
-                    else if (targeting.ValueRO.Faction == TargetingFaction.Ally)
-                    {
-                        if (isEnemy[i]) isValidTarget = true;
-                    }
-
-                    if (!isValidTarget) continue;
-
-                    float3 myPos2DScan = new float3(transform.ValueRO.Position.x, 0, transform.ValueRO.Position.z);
-                    float3 targetPos2DScan = new float3(transforms[i].Position.x, 0, transforms[i].Position.z);
-                    float distSq = math.distancesq(myPos2DScan, targetPos2DScan);
-                    
-                    float score = float.MaxValue;
-                    float scanRangeSq = targeting.ValueRO.MaxSearchRangeSq;
-                    
-                    if (targeting.ValueRO.Faction == TargetingFaction.Enemy)
-                    {
-                        if (isShadow[i])
-                        {
-                            if (distSq <= scanRangeSq)
-                                score = distSq - 2000000f; // 1순위: 인식 범위 내 그림자
-                            else
-                                continue; // 멀리 있는 그림자는 무시
-                        }
-                        else if (isPlayer[i])
-                        {
-                            if (distSq <= scanRangeSq)
-                                score = distSq - 1000000f; // 2순위: 인식 범위 내 플레이어
-                            else
-                                score = distSq; // 3순위: 전체 맵 플레이어 (어디 있든 추적)
-                        }
-                    }
-                    else
-                    {
-                        // 아군 타겟팅
-                        if (distSq > scanRangeSq) continue;
-
-                        switch (targeting.ValueRO.Priority)
-                        {
-                            case TargetingType.Nearest:
-                                score = distSq;
-                                break;
-                            case TargetingType.LowestHP:
-                                score = healths[i].CurrentHealth;
-                                break;
-                        }
-                    }
-                    
-                    if (score < bestScore)
-                    {
-                        bestScore = score;
-                        bestTarget = entities[i];
-                    }
-                }
-                if (bestTarget != Entity.Null)
-                {
-                    targeting.ValueRW.CurrentTarget = bestTarget;
-                }
-            }
-        }
-
-        entities.Dispose();
-        transforms.Dispose();
-        healths.Dispose();
-        isPlayer.Dispose();
-        isEnemy.Dispose();
-        isShadow.Dispose();
+        state.Dependency = job.ScheduleParallel(_targetingQuery, state.Dependency);
+        
+        state.Dependency = targetableEntities.Dispose(state.Dependency);
     }
 }
 
+[BurstCompile]
+public partial struct TargetingJob : IJobEntity
+{
+    [ReadOnly] public NativeArray<Entity> Targetables;
+    [ReadOnly] public ComponentLookup<LocalToWorld> TransformLookup;
+    [ReadOnly] public ComponentLookup<HealthData> HealthLookup;
+    [ReadOnly] public ComponentLookup<PlayerData> PlayerLookup;
+    [ReadOnly] public ComponentLookup<CEnemyData> EnemyLookup;
+    [ReadOnly] public ComponentLookup<EnemyTag> EnemyTagLookup;
+    [ReadOnly] public ComponentLookup<ShadowCombatData> ShadowLookup;
+    [ReadOnly] public ComponentLookup<ShadowTag> ShadowTagLookup;
+    public float DeltaTime;
+
+    private void Execute(Entity selfEntity, ref TargetingData targeting, in LocalToWorld transform)
+    {
+        targeting.ScanTimer -= DeltaTime;
+
+        bool needNewTarget = targeting.CurrentTarget == Entity.Null;
+        
+        if (!needNewTarget)
+        {
+            if (!HealthLookup.HasComponent(targeting.CurrentTarget) || HealthLookup[targeting.CurrentTarget].CurrentHealth <= 0)
+            {
+                targeting.CurrentTarget = Entity.Null;
+                targeting.ScanTimer = 0f; 
+                needNewTarget = true;
+            }
+            else if (TransformLookup.HasComponent(targeting.CurrentTarget))
+            {
+                float3 myPos2D = new float3(transform.Position.x, 0, transform.Position.z);
+                float3 targetPos2D = new float3(TransformLookup[targeting.CurrentTarget].Position.x, 0, TransformLookup[targeting.CurrentTarget].Position.z);
+                float distSq = math.distancesq(myPos2D, targetPos2D);
+                
+                float maxFollowSq = targeting.MaxFollowRangeSq;
+                
+                if (distSq > maxFollowSq)
+                {
+                    targeting.CurrentTarget = Entity.Null;
+                    targeting.ScanTimer = 0f; 
+                    needNewTarget = true;
+                }
+            }
+        }
+
+        if (needNewTarget || targeting.ScanTimer <= 0)
+        {
+            targeting.ScanTimer = targeting.ScanInterval;   
+            Entity bestTarget = Entity.Null;
+            float bestScore = float.MaxValue;
+
+            float3 myPos2DScan = new float3(transform.Position.x, 0, transform.Position.z);
+            
+            float scanRangeSq = targeting.MaxSearchRangeSq;
+            TargetingFaction faction = targeting.Faction;
+            TargetingType priority = targeting.Priority;
+
+            for (int i = 0; i < Targetables.Length; i++)
+            {
+                Entity checkEnt = Targetables[i];
+                if (checkEnt == selfEntity) continue;
+                if (!HealthLookup.HasComponent(checkEnt) || HealthLookup[checkEnt].CurrentHealth <= 0) continue;
+
+                bool isValidTarget = false;
+                
+                bool isPl = PlayerLookup.HasComponent(checkEnt);
+                bool isSh = ShadowLookup.HasComponent(checkEnt) || ShadowTagLookup.HasComponent(checkEnt);
+                bool isEn = EnemyTagLookup.HasComponent(checkEnt) || EnemyLookup.HasComponent(checkEnt);
+
+                if (faction == TargetingFaction.Enemy)    
+                {
+                    if (isPl || isSh) isValidTarget = true;
+                }
+                else if (faction == TargetingFaction.Ally)
+                {
+                    if (isEn) isValidTarget = true;
+                }
+
+                if (!isValidTarget) continue;
+                if (!TransformLookup.HasComponent(checkEnt)) continue;
+
+                float3 targetPos2DScan = new float3(TransformLookup[checkEnt].Position.x, 0, TransformLookup[checkEnt].Position.z);
+                float distSq = math.distancesq(myPos2DScan, targetPos2DScan);
+                
+                float score = float.MaxValue;
+                
+                if (faction == TargetingFaction.Enemy)
+                {
+                    if (isSh)
+                    {
+                        if (distSq <= scanRangeSq) score = distSq - 2000000f; 
+                        else continue; 
+                    }
+                    else if (isPl)
+                    {
+                        if (distSq <= scanRangeSq) score = distSq - 1000000f; 
+                        else score = distSq; 
+                    }
+                }
+                else
+                {
+                    if (distSq > scanRangeSq) continue;
+
+                    if (priority == TargetingType.LowestHP)
+                    {
+                        score = HealthLookup[checkEnt].CurrentHealth;
+                    }
+                    else
+                    {
+                        score = distSq; // Fallback to Nearest
+                    }
+                }
+                
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestTarget = checkEnt;
+                }
+            }
+            
+            // Regardless of whether we found one or not, if needNewTarget evaluates to true, force update
+            if (needNewTarget || bestTarget != Entity.Null)
+            {
+                targeting.CurrentTarget = bestTarget;
+            }
+        }
+    }
+}
 
 

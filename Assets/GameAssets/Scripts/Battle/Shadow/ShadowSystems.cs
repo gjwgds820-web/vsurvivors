@@ -11,18 +11,20 @@ using NUnit.Framework;
 using Unity.Entities.UniversalDelegates;
 using UnityEngine.UIElements;
 
-#region BrainSystem
+#region BehaviorSystem (Brain + Movement)
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(TransformSystemGroup))]
 [BurstCompile]
-public partial struct ShadowBrainSystem : ISystem
+public partial struct ShadowBehaviorSystem : ISystem
 {
     private EntityQuery _playerQuery;
-    private ComponentLookup<LocalTransform> _transformLookup;
+    private ComponentLookup<LocalToWorld> _transformLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerInput, LocalTransform>().Build();
-        _transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
+        _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerInput, LocalToWorld>().Build();
+        _transformLookup = SystemAPI.GetComponentLookup<LocalToWorld>(true);
     }
 
     [BurstCompile]
@@ -31,7 +33,7 @@ public partial struct ShadowBrainSystem : ISystem
         if (_playerQuery.IsEmpty) return;
         
         var playerEntity = _playerQuery.GetSingletonEntity();
-        var playerTransform = SystemAPI.GetComponent<LocalTransform>(playerEntity);
+        var playerTransform = SystemAPI.GetComponent<LocalToWorld>(playerEntity);
         var playerInput = SystemAPI.GetComponent<PlayerInput>(playerEntity);
         
         bool isPlayerMoving = math.length(playerInput.Move) > 0.01f;
@@ -39,14 +41,14 @@ public partial struct ShadowBrainSystem : ISystem
         
         _transformLookup.Update(ref state);
 
-        var job = new ShadowBrainJob
+        var job = new ShadowBehaviorJob
         {
             PlayerPos = playerTransform.Position,
             PlayerForward = playerForward,
             IsPlayerMoving = isPlayerMoving,
-            LeashDistSq = 15f * 15f,
-            ReturnDistSq = 1.5f * 1.5f,
-            TransformLookup = _transformLookup
+            LeashDistSq = 20f * 20f,
+            TransformLookup = _transformLookup,
+            DeltaTime = SystemAPI.Time.DeltaTime
         };
 
         job.ScheduleParallel();
@@ -54,222 +56,111 @@ public partial struct ShadowBrainSystem : ISystem
 }
 
 [BurstCompile]
-public partial struct ShadowBrainJob : IJobEntity
+public partial struct ShadowBehaviorJob : IJobEntity
 {
     public float3 PlayerPos;
     public float3 PlayerForward;
     public bool IsPlayerMoving;
     public float LeashDistSq;
-    public float ReturnDistSq;
-    [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
+    [ReadOnly] public ComponentLookup<LocalToWorld> TransformLookup;
+    public float DeltaTime;
 
-    private void Execute(ref CShadowData shadow, ref TargetPositionData targetPos, in LocalTransform transform, in TargetingData targetingData)
+    private void Execute(Entity entity, ref LocalTransform transform, ref CShadowData shadow, ref TargetPositionData targetPos, in TargetingData targetingData, in ShadowCombatData shadowCombatData)
     {
+        if (!shadowCombatData.IsAlive) return;
+
         float3 currentPos = transform.Position;
+        float3 targetDest = currentPos;
         
-        // 동적 Formation 편대 오프셋 위치 계산
-        float3 right = math.cross(math.up(), PlayerForward);
-        float distance = 3f;
-        float3 offsetPos = PlayerPos;
+        bool hasValidTarget = targetingData.CurrentTarget != Entity.Null && TransformLookup.HasComponent(targetingData.CurrentTarget);
+        float distToPlayerSq = math.distancesq(new float3(PlayerPos.x, 0, PlayerPos.z), new float3(currentPos.x, 0, currentPos.z));
+
+        // 기획 의도: 다중 원형 진형 (Multi-Ring Formation) 계산
         int index = shadow.Index;
+        float3 right = math.cross(math.up(), PlayerForward);
         
-        if (!IsPlayerMoving)
+        int ring = 0;
+        float angle = 0f;
+        float radius = 0f;
+        
+        if (index < 8) { ring = 0; radius = 2.5f; angle = (index / 8f) * math.PI * 2f; }
+        else if (index < 20) { ring = 1; radius = 4.5f; angle = ((index - 8) / 12f) * math.PI * 2f; }
+        else { ring = 2; radius = 6.5f; angle = ((index - 20) / 16f) * math.PI * 2f; }
+        
+        float3 formationOffset = right * math.cos(angle) * radius + PlayerForward * math.sin(angle) * radius;
+        
+        // 이동 중일 땐 그림자들이 플레이어 뒤쪽으로 약간 쏠리는 시각적 효과 (Trailing)
+        if (IsPlayerMoving)
         {
-            if (index < 8)
-            {
-                float angle = (index / 8f) * math.PI * 2f;
-                offsetPos += right * math.cos(angle) * distance + PlayerForward * math.sin(angle) * distance + new float3(0, 1f, 0);
-            }
-            else
-            {
-                float angle = ((index - 8) / 12f) * math.PI * 2f;
-                offsetPos += right * math.cos(angle) * distance * 2f + PlayerForward * math.sin(angle) * distance * 2f + new float3(0, 1f, 0);
-            }
+            formationOffset -= PlayerForward * (1.5f + ring * 1.5f);
         }
-        else
-        {
-            if (index < 8)
-            {
-                float angle = (index / 8f) * math.PI * 2f;
-                offsetPos += right * math.cos(angle) * distance + PlayerForward * math.sin(angle) * distance + new float3(0, 1f, 0);
-            }
-            else
-            {
-                int rIdx = index - 8;
-                int row = rIdx < 5 ? 0 : (rIdx < 9 ? 1 : 2);
-                int col = rIdx < 5 ? rIdx : (rIdx < 9 ? rIdx - 5 : rIdx - 9);
-                int colsInRow = row == 0 ? 5 : (row == 1 ? 4 : 3);
+        formationOffset += new float3(0, 1f, 0); // Y축 기본 오프셋
+        
+        float3 idleDest = PlayerPos + formationOffset;
 
-                float xOffset = (col - (colsInRow - 1) / 2f) * distance * 1.5f;
-                float zOffset = distance * 1.5f + (row * distance * 1.5f);
-                // 이동 중일 땐 뒤로 배열되도록 보정
-                offsetPos += PlayerForward * zOffset + right * xOffset + new float3(0, 1f, 0);
-            }
-        }
-
-        float distToPlayerSq = math.lengthsq(PlayerPos - currentPos);
-
-        // 강제 복귀 (리쉬 거리 이탈)
+        // 즉각 상태 결정
         if (distToPlayerSq > LeashDistSq)
         {
             shadow.CurrentState = ShadowAIState.ReturnToPlayer;
+            shadow.TargetEnemy = Entity.Null;
+            targetDest = idleDest;
         }
-
-        if (shadow.CurrentState == ShadowAIState.ReturnToPlayer)
+        else if (hasValidTarget)
         {
-            // 오프셋에 도달하면 대기로 전환
-            float distToOffsetSq = math.lengthsq(offsetPos - currentPos);
-            if (distToOffsetSq < ReturnDistSq)
-            {
-                shadow.CurrentState = ShadowAIState.Idle;
-            }
-            targetPos.Value = offsetPos;
+            shadow.CurrentState = ShadowAIState.Engage;
+            shadow.TargetEnemy = targetingData.CurrentTarget;
+            targetDest = TransformLookup[targetingData.CurrentTarget].Position;
         }
         else
         {
-            if (targetingData.CurrentTarget != Entity.Null && TransformLookup.HasComponent(targetingData.CurrentTarget))
-            {
-                shadow.CurrentState = ShadowAIState.Engage;
-                targetPos.Value = TransformLookup[targetingData.CurrentTarget].Position;
-                shadow.TargetEnemy = targetingData.CurrentTarget;
-            }
-            else
-            {
-                shadow.CurrentState = ShadowAIState.Idle;
-                targetPos.Value = offsetPos;
-                shadow.TargetEnemy = Entity.Null;
-            }
+            shadow.CurrentState = ShadowAIState.Idle;
+            shadow.TargetEnemy = Entity.Null;
+            targetDest = idleDest;
         }
-    }
-}
-#endregion
-#region MovementSystem
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateAfter(typeof(PhysicsSystemGroup))]
-[BurstCompile]
-public partial struct ShadowMovementSystem : ISystem
-{
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
-    {
-        float deltaTime = SystemAPI.Time.DeltaTime;
 
-        // 주석 복구됨
-        if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld)) return;
-        var collisionWorld = physicsWorld.CollisionWorld;
+        // 시각 및 다른 시스템 디버깅을 위해 보존
+        targetPos.Value = targetDest;
 
-        // 주석 복구됨
-        float separationRadius = 0.8f;
-        float separationWeight = 1.0f;
+        // 즉각 이동 로직
+        float3 toTarget = targetDest - currentPos;
+        toTarget.y = 0; 
+        float distance = math.length(toTarget);
 
-        foreach (var (transform, physicsVelocity, physicsMass, targetPos, shadow, shadowCombatData, entity) in
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<TargetPositionData>, RefRO<CShadowData>, RefRO<ShadowCombatData>>().WithEntityAccess())
+        bool shouldStop = false;
+        if (shadow.CurrentState == ShadowAIState.Engage)
         {
-            if (entity.Index < 0) continue; // 주석 복구됨
-            if (!shadowCombatData.ValueRO.IsAlive) continue;
-
-            // 회전 및 물리 충돌로 방해받지 않도록 고정
-            physicsMass.ValueRW.InverseInertia = new float3(0, 0, 0);
-
-            float3 currentPos = transform.ValueRO.Position;
-            float3 toTarget = targetPos.ValueRO.Value - currentPos;
-            toTarget.y = 0;
-            float distance = math.length(toTarget);
-
-            bool shouldStopForAttack = false;
-            // 공격 사거리에 0.5f 여유를 두어 사거리 끝에서 버벅이며 계속 다가가는 현상 방지
-            // 원거리/근거리 상관 없이 사거리 내에 들어오면 정지
-            float effectiveRange = shadowCombatData.ValueRO.AttackRange + 0.5f;
-            if (shadow.ValueRO.CurrentState == ShadowAIState.Engage)
-            {
-                if (distance <= effectiveRange)
-                {
-                    shouldStopForAttack = true;
-                }
-            }
-
-            if (distance > 0.1f && !shouldStopForAttack)
-            {
-                float3 moveDir = toTarget / distance;
-                float3 lookDir = moveDir; // 회전 처리를 위한 순수 방향
-
-                float speedMultiplier = math.clamp(distance, 1f, 3f);
-                float finalSpeed = shadow.ValueRO.MoveSpeed * speedMultiplier;
-
-                // --- [Separation 로직 추�?] ---
-                float3 separationVec = float3.zero;
-                CollisionFilter filter = CollisionFilter.Default;
-                
-                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
-
-                if (collisionWorld.CalculateDistance(new PointDistanceInput()
-                {
-                    Position = currentPos,
-                    MaxDistance = separationRadius,
-                    Filter = filter
-                }, ref hits))
-                {
-                    int neighborCount = 0;
-                    for (int i = 0; i < hits.Length; i++)
-                    {
-                        float3 neighborPos = hits[i].Position;
-                        float3 diff = currentPos - neighborPos;
-                        diff.y = 0;
-                        float sqrMag = math.lengthsq(diff);
-
-                        if (sqrMag > 0.001f && sqrMag < separationRadius * separationRadius)
-                        {
-                            float dist = math.sqrt(sqrMag);
-                            separationVec += (diff / dist) * (1.0f - (dist / separationRadius));
-                            neighborCount++;
-                        }
-                    }
-
-                    if (neighborCount > 0)
-                    {
-                        separationVec /= neighborCount;
-
-                        // 주석 복구됨
-                        // 주석 복구됨
-                        moveDir = math.normalize(lookDir + separationVec * separationWeight);
-                    }
-                }
-                hits.Dispose();
-                // -----------------------------
-
-                // 주석 복구됨
-                physicsVelocity.ValueRW.Linear = new float3(
-                    moveDir.x * finalSpeed,
-                    physicsVelocity.ValueRO.Linear.y, // 기존 Y 중력 유지 (하단에서 강제 고정)
-                    moveDir.z * finalSpeed
-                );
-
-                // 회전 처리를 위한 순수 방향
-                quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
-                transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
-            }
-            else
-            {
-                // 타겟에 도착했을 때도 회전을 유지하게 설정
-                physicsVelocity.ValueRW.Linear = new float3(0, physicsVelocity.ValueRO.Linear.y, 0);
-                
-                if (distance > 0.001f)
-                {
-                    float3 lookDir = math.normalize(toTarget);
-                    quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
-                    transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
-                }
-            }
-
-            // [수정] 상태와 무관하게 모든 그림자가 절대 땅 속으로 들어가거나 솟아오르지 않게 강제 고정
-            float3 fixedPos = transform.ValueRO.Position;
-            fixedPos.y = 1f; // 그림자 기본 Y 높이
-            transform.ValueRW.Position = fixedPos;
-
-            transform.ValueRW.Rotation.value.x = 0;
-            transform.ValueRW.Rotation.value.z = 0;
-            transform.ValueRW.Rotation = math.normalize(transform.ValueRW.Rotation);
+            // 공격 사거리 90% 이내면 정지 후 공격 대기
+            if (distance <= shadowCombatData.AttackRange * 0.9f)
+                shouldStop = true;
         }
+        else if (shadow.CurrentState == ShadowAIState.Idle || shadow.CurrentState == ShadowAIState.ReturnToPlayer)
+        {
+            if (distance < 0.5f) // 진형 도착 시 미세 떨림 방지 (Deadzone)
+                shouldStop = true;
+        }
+
+        if (!shouldStop && distance > 0.05f)
+        {
+            float3 moveDir = toTarget / distance;
+            
+            // 추격 혹은 복귀 장거리 이동일수록 빨라짐
+            float speedMultiplier = math.clamp(distance, 1f, shadow.CurrentState == ShadowAIState.ReturnToPlayer ? 4f : 2.5f);
+            float finalSpeed = shadow.MoveSpeed * speedMultiplier;
+
+            currentPos += moveDir * finalSpeed * DeltaTime;
+
+            quaternion targetRot = quaternion.LookRotationSafe(moveDir, math.up());
+            transform.Rotation = math.slerp(transform.Rotation, targetRot, DeltaTime * 15f);
+        }
+        else if (distance > 0.001f) // 멈췄더라도 목표 방향 스무스하게 응시
+        {
+            float3 lookDir = shadow.CurrentState == ShadowAIState.Idle && !IsPlayerMoving ? PlayerForward : math.normalize(toTarget);
+            quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
+            transform.Rotation = math.slerp(transform.Rotation, targetRot, DeltaTime * 10f);
+        }
+
+        currentPos.y = 1f; // 고정된 Y 높이 유지
+        transform.Position = currentPos;
     }
 }
 #endregion
@@ -277,12 +168,12 @@ public partial struct ShadowMovementSystem : ISystem
 [BurstCompile]
 public partial struct ShadowCombatSystem : ISystem
 {
-    private ComponentLookup<LocalTransform> _transformLookup;
+    private ComponentLookup<LocalToWorld> _transformLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+        _transformLookup = state.GetComponentLookup<LocalToWorld>(true);
     }
 
     [BurstCompile]
@@ -293,7 +184,7 @@ public partial struct ShadowCombatSystem : ISystem
 
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
-        foreach (var (combatData, targetingData, transform, entity) in SystemAPI.Query<RefRW<ShadowCombatData>, RefRO<TargetingData>, RefRO<LocalTransform>>().WithEntityAccess())
+        foreach (var (combatData, targetingData, transform, entity) in SystemAPI.Query<RefRW<ShadowCombatData>, RefRO<TargetingData>, RefRO<LocalToWorld>>().WithEntityAccess())
         {
             if (entity.Index < 0) continue;
             if (!combatData.ValueRO.IsAlive) continue;
@@ -363,28 +254,34 @@ public partial struct ShadowCombatSystem : ISystem
                     }
                     else
                     {
+                        // 원거리 발사 시 높이 차이로 엉뚱한 방향(위/아래)을 바라보지 않도록 2D 평면 보정
+                        float3 myPos2D = transform.ValueRO.Position;
+                        myPos2D.y = 0;
+                        float3 targetPos2D = tPosForAttack;
+                        targetPos2D.y = 0;
+                        float3 dir2D = targetPos2D - myPos2D;
+                        if (math.lengthsq(dir2D) > 0.001f) dir2D = math.normalize(dir2D);
+                        else dir2D = math.forward();
+
                         // 원거리 투사체 스폰
                         ecb.SetComponent(hitbox, new LocalTransform
                         {
                             Position = transform.ValueRO.Position + new float3(0, 0.5f, 0), // 그림자 살짝 위에서 발사
                             Scale = 1f,
-                            Rotation = quaternion.LookRotationSafe(tPosForAttack - transform.ValueRO.Position, math.up())
+                            Rotation = quaternion.LookRotationSafe(dir2D, math.up())
                         });
 
                         if (SystemAPI.HasComponent<ProjectileData>(combatData.ValueRO.AttackPrefab))
                         {
                             var projData = SystemAPI.GetComponent<ProjectileData>(combatData.ValueRO.AttackPrefab);
-                            projData.Direction = math.normalize(tPosForAttack - transform.ValueRO.Position);
-                            projData.Direction.y = 0;
+                            projData.Direction = dir2D;
                             projData.MaxDistance = combatData.ValueRO.AttackRange;
                             ecb.SetComponent(hitbox, projData);
                         }
                         else
                         {
                             // 프리팹에 ProjectileData가 누락된 경우 동적 추가
-                            float3 direction = math.normalize(tPosForAttack - transform.ValueRO.Position);
-                            direction.y = 0;
-                            ecb.AddComponent(hitbox, new ProjectileData { Direction = direction, Speed = 15f, MaxDistance = combatData.ValueRO.AttackRange });
+                            ecb.AddComponent(hitbox, new ProjectileData { Direction = dir2D, Speed = 15f, MaxDistance = combatData.ValueRO.AttackRange });
                         }
                     }
 
@@ -434,8 +331,8 @@ public partial struct ShadowDeathSystem : ISystem
     {
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
-        foreach (var (combatData, transform, velocity, entity) in
-                 SystemAPI.Query<RefRW<ShadowCombatData>, RefRW<LocalTransform>, RefRW<PhysicsVelocity>>()
+        foreach (var (combatData, transform, entity) in
+                 SystemAPI.Query<RefRW<ShadowCombatData>, RefRW<LocalTransform>>()
                  .WithAll<DeathTag>()
                  .WithEntityAccess())
         {
@@ -444,7 +341,7 @@ public partial struct ShadowDeathSystem : ISystem
             if (combatData.ValueRO.IsAlive)
             {
                 combatData.ValueRW.IsAlive = false;
-                ecb.RemoveComponent<Unity.Physics.PhysicsCollider>(entity); // 충돌 끄기
+                 // 충돌 끄기
             }
 
             // 충돌체가 없어져서 PhysicsVelocity가 작동하지 않을 수 있으므로 수동으로도 y를 내립니다.
@@ -454,11 +351,11 @@ public partial struct ShadowDeathSystem : ISystem
 
             if (pos.y > -10f)
             {
-                velocity.ValueRW.Linear = new float3(0, -10f, 0); // 아래로 빠르게 떨어뜨려 시각적으로 사라지게 함
+                
             }
             else
             {
-                velocity.ValueRW.Linear = new float3(0, 0, 0);
+                
                 ecb.AddComponent<DestroyEntityTag>(entity); // 완전 사망 처리 (CleanupSystem에서 Visual 처리 후 Entity 자동 파괴됨)
             }
         }
@@ -468,6 +365,8 @@ public partial struct ShadowDeathSystem : ISystem
     }
 }
 #endregion
+
+
 
 
 

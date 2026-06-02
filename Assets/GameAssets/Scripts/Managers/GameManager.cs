@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     private EntityQuery _levelUpQuery;
     private EntityQuery _goldLootQuery;
     private EntityQuery _elementAscensionQuery;
+    private World _myWorld;
 
     private int _pendingLevelUps = 0;
     private EntityQuery _playerDeathQuery;
@@ -41,7 +42,8 @@ public class GameManager : MonoBehaviour
         _baseMoveSpeed = -1f;
         _baseMaxShadow = -1f;
 
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        _myWorld = World.DefaultGameObjectInjectionWorld;
+        _entityManager = _myWorld.EntityManager;
         _levelUpQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<LevelUpEventTag>());
         _goldLootQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<GoldEventTag>());
         _elementAscensionQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<ElementAscensionEventTag>());
@@ -241,7 +243,7 @@ public class GameManager : MonoBehaviour
         }
 #endif
 
-        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+        if (_myWorld == null || !_myWorld.IsCreated) return;
 
         if (!_levelUpQuery.IsEmptyIgnoreFilter)
         {

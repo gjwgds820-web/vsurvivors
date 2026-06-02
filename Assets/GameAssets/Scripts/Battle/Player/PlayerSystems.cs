@@ -18,12 +18,9 @@ public partial struct PlayerMovementSystem : ISystem
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (var (transform, physicsVelocity, physicsMass, input, movement) in 
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRO<PlayerInput>, RefRO<PlayerMovementData>>())
+        foreach (var (transform, input, movement) in 
+                 SystemAPI.Query<RefRW<LocalTransform>, RefRO<PlayerInput>, RefRO<PlayerMovementData>>())
         {
-            // 역관성 0으로 강제 세팅 (넘어짐 방지)
-            physicsMass.ValueRW.InverseInertia = new float3(0f, 0f, 0f);
-
             float2 inputMove = input.ValueRO.Move;
             float3 moveDirection = new float3(inputMove.x, 0f, inputMove.y);
 
@@ -31,16 +28,11 @@ public partial struct PlayerMovementSystem : ISystem
             {
                 moveDirection = math.normalize(moveDirection);
 
-                // 위치 이동 적용
-                float3 currentVelocity = physicsVelocity.ValueRO.Linear;
-                physicsVelocity.ValueRW.Linear = new float3(
-                    moveDirection.x * movement.ValueRO.MoveSpeed,
-                    currentVelocity.y, 
-                    moveDirection.z * movement.ValueRO.MoveSpeed
-                );
+                float3 currentPos = transform.ValueRO.Position;
+                currentPos += moveDirection * movement.ValueRO.MoveSpeed * deltaTime;
+                currentPos.y = 0.5f; // 바닥 유지
+                transform.ValueRW.Position = currentPos;
                 
-                // 💡 회전 제어 (이 부분에서 직접 Y축 방향을 LookRotation으로 보정합니다)
-                // Y축 값이 완전히 0인 완벽한 평면 벡터를 생성
                 float3 flatForward = new float3(moveDirection.x, 0f, moveDirection.z);
                 
                 if (math.lengthsq(flatForward) > 0.001f)
@@ -48,10 +40,8 @@ public partial struct PlayerMovementSystem : ISystem
                     flatForward = math.normalize(flatForward);
                     quaternion targetRotation = quaternion.LookRotationSafe(flatForward, math.up());
                     
-                    // Slerp를 통해 부드럽게 회전
                     quaternion newRotation = math.slerp(transform.ValueRO.Rotation, targetRotation, movement.ValueRO.RotationSpeed * deltaTime);
                     
-
                     newRotation.value.x = 0f;
                     newRotation.value.z = 0f;
                     newRotation = math.normalize(newRotation);
@@ -61,12 +51,6 @@ public partial struct PlayerMovementSystem : ISystem
             }
             else
             {
-                // 입력이 없을 때
-                float3 currentVelocity = physicsVelocity.ValueRO.Linear;
-                physicsVelocity.ValueRW.Linear = new float3(0f, currentVelocity.y, 0f);
-                physicsVelocity.ValueRW.Angular = float3.zero;
-
-                // 멈춰있을 때도 현재 각도에서 X, Z의 기울어짐을 방지
                 quaternion currentRot = transform.ValueRO.Rotation;
                 currentRot.value.x = 0f;
                 currentRot.value.z = 0f;
@@ -341,6 +325,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                         float totalRange = shadowDef.Recognize + shadowDef.AttackRange;
                         targetingData.MaxSearchRangeSq = totalRange * totalRange;
                         if (targetingData.MaxSearchRangeSq <= 0.1f) targetingData.MaxSearchRangeSq = 144f; // fallback
+                        targetingData.MaxFollowRangeSq = targetingData.MaxSearchRangeSq; // [FIX] 유지 반경을 탐색 반경과 일치시켜 추적 해제 방지
                         ecb.SetComponent(targetShadow, targetingData);
 
                         var healthData = SystemAPI.GetComponent<HealthData>(spawnerData.ValueRO.ShadowPrefab);
@@ -562,4 +547,6 @@ public partial struct PlayerLevelUpSystem : ISystem
     }
 }
 #endregion
+
+
 

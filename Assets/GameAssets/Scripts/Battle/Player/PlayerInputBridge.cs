@@ -9,10 +9,12 @@ public class PlayerInputBridge : MonoBehaviour
     private EntityManager _em;
     private EntityQuery _playerInputQuery;
     private bool _isLinked = false;
+    private World _myWorld;
 
     private void Start()
     {
-        _em = World.DefaultGameObjectInjectionWorld.EntityManager;
+        _myWorld = World.DefaultGameObjectInjectionWorld;
+        _em = _myWorld.EntityManager;
         _playerInputQuery = _em.CreateEntityQuery(typeof(PlayerInput));
         if (visualModel == null)
         {
@@ -22,7 +24,7 @@ public class PlayerInputBridge : MonoBehaviour
 
     private void Update()
     {
-        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+        if (_myWorld == null || !_myWorld.IsCreated) return;
 
         if (joystick == null) return;
 

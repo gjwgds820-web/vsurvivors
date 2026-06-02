@@ -7,8 +7,8 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 
 #region Movement System
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateAfter(typeof(PhysicsSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(TransformSystemGroup))]
 [BurstCompile]
 public partial struct EnemyMovementSystem : ISystem
 {
@@ -23,19 +23,12 @@ public partial struct EnemyMovementSystem : ISystem
             isIsolatedPhase = director.CurrentPhase == GamePhase.IsolatedBossFight;
         }
 
-        foreach (var (transform, velocity, physicsMass, enemyData, targetData, entity) in
-                SystemAPI.Query<RefRW<LocalTransform>, RefRW<PhysicsVelocity>, RefRW<PhysicsMass>, RefRW<CEnemyData>, RefRO<TargetingData>>().WithEntityAccess())
+        foreach (var (transform, enemyData, targetData, entity) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<CEnemyData>, RefRO<TargetingData>>().WithEntityAccess())
         {
-            if (isIsolatedPhase && !SystemAPI.HasComponent<IsolatedBossTag>(entity))
-            {
-                velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
-                continue;
-            }
-
-            physicsMass.ValueRW.InverseInertia = float3.zero;
+            if (isIsolatedPhase && !SystemAPI.HasComponent<IsolatedBossTag>(entity)) continue;
 
             float3 fixedPos = transform.ValueRO.Position;
-            fixedPos.y = 0f;
+            fixedPos.y = 0.5f;
             transform.ValueRW.Position = fixedPos;
 
             transform.ValueRW.Rotation.value.x = 0;
@@ -44,11 +37,7 @@ public partial struct EnemyMovementSystem : ISystem
 
             if (enemyData.ValueRO.IsAttacking) continue;
 
-            if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget))
-            {
-                velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
-                continue;
-            }
+            if (targetData.ValueRO.CurrentTarget == Entity.Null || !SystemAPI.Exists(targetData.ValueRO.CurrentTarget)) continue;
 
             float3 currentPos = transform.ValueRO.Position;
             float3 targetPos = SystemAPI.GetComponent<LocalTransform>(targetData.ValueRO.CurrentTarget).Position;
@@ -62,11 +51,7 @@ public partial struct EnemyMovementSystem : ISystem
                 enemyData.ValueRW.CurrentState = EnemyState.Move;
                 float3 moveDir = toTarget / distance;
 
-                velocity.ValueRW.Linear = new float3(
-                    moveDir.x * enemyData.ValueRO.MoveSpeed,
-                    velocity.ValueRO.Linear.y,
-                    moveDir.z * enemyData.ValueRO.MoveSpeed
-                );
+                transform.ValueRW.Position += moveDir * enemyData.ValueRO.MoveSpeed * deltaTime;
 
                 quaternion targetRot = quaternion.LookRotationSafe(moveDir, math.up());
                 transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, targetRot, deltaTime * 10f);
@@ -74,7 +59,6 @@ public partial struct EnemyMovementSystem : ISystem
             else
             {
                 enemyData.ValueRW.CurrentState = EnemyState.Attack;
-                velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
             }
         }
     }
@@ -131,22 +115,55 @@ public partial struct EnemyCombatSystem : ISystem
                         UnityEngine.Debug.LogError("Attack Prefab is not assigned in EnemyData!");
                         continue;
                     }
+                    float3 myPos = transform.ValueRO.Position;
                     float3 targetPos = targetTransform.Position;
+                    
+                    float3 dir2D = targetPos - myPos;
+                    dir2D.y = 0;
+                    if (math.lengthsq(dir2D) > 0.001f) dir2D = math.normalize(dir2D);
+                    else dir2D = math.forward();
+
                     Entity hitbox = ecb.Instantiate(enemyData.ValueRO.AttackPrefab);
 
                     if (_hitBoxLookup.TryGetComponent(enemyData.ValueRO.AttackPrefab, out var prefabHitBox))
                     {
                         prefabHitBox.Damage = enemyData.ValueRO.AttackPower;
                         prefabHitBox.TargetFaction = 1;
+                        
+                        // 물리 반경 확대 복원
+                        if (prefabHitBox.Shape == HitBoxShape.Circle || prefabHitBox.Shape == HitBoxShape.Cone)
+                        {
+                            prefabHitBox.Radius = math.max(prefabHitBox.Radius, enemyData.ValueRO.AttackRange + 0.2f);
+                        }
+                        
                         ecb.SetComponent(hitbox, prefabHitBox);
                     }
 
+                    // [FIX] 물리 판정 도달 실패 문제를 해결하기 위해, 적중 중심 좌표를 위치시킴 (Melee 타격은 투사체 연산 거리를 약간 전진)
+                    float3 spawnPos = myPos + (dir2D * (enemyData.ValueRO.AttackRange * 0.5f));
+                    spawnPos.y = myPos.y + 0.5f;
+
                     ecb.SetComponent(hitbox, new LocalTransform
                     {
-                        Position = transform.ValueRO.Position,
+                        Position = spawnPos,
                         Scale = 1f,
-                        Rotation = quaternion.LookRotationSafe(targetPos - transform.ValueRO.Position, math.up())
+                        Rotation = quaternion.LookRotationSafe(dir2D, math.up())
                     });
+
+                    if (enemyData.ValueRO.Type == EnemyType.Ranged)
+                    {
+                        if (SystemAPI.HasComponent<ProjectileData>(enemyData.ValueRO.AttackPrefab))
+                        {
+                            var projData = SystemAPI.GetComponent<ProjectileData>(enemyData.ValueRO.AttackPrefab);
+                            projData.Direction = dir2D;
+                            projData.MaxDistance = enemyData.ValueRO.AttackRange;
+                            ecb.SetComponent(hitbox, projData);
+                        }
+                        else
+                        {
+                            ecb.AddComponent(hitbox, new ProjectileData { Direction = dir2D, Speed = 10f, MaxDistance = enemyData.ValueRO.AttackRange });
+                        }
+                    }
 
                     enemyData.ValueRW.CurrentCooldown = enemyData.ValueRO.AttackCooldown;
                 }
@@ -294,6 +311,11 @@ public partial struct EnemyDeathSystem : ISystem
     }
 }
 #endregion
+
+
+
+
+
 
 
 

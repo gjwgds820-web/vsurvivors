@@ -17,6 +17,7 @@ public class UI_BottomUI : UI_Base
 
     private EntityManager _entityManager;
     private EntityQuery _playerQuery;
+    private World _myWorld;
 
     // 슬라이더 보간을 위한 변수
     private float _targetExpRatio = 0f;
@@ -31,7 +32,8 @@ public class UI_BottomUI : UI_Base
         BindText(typeof(Texts));
         BindSlider(typeof(Sliders));
 
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        _myWorld = World.DefaultGameObjectInjectionWorld;
+        _entityManager = _myWorld.EntityManager;
         _playerQuery = _entityManager.CreateEntityQuery(typeof(PlayerData));
 
         // 슬라이더 초기값 0 세팅
@@ -50,7 +52,7 @@ public class UI_BottomUI : UI_Base
     {
         if (!_init) return;
 
-        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+        if (_myWorld == null || !_myWorld.IsCreated) return;
 
         UpdateExpData();
         AnimateSliders();

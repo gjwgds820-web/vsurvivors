@@ -457,16 +457,12 @@ public partial class VisualCleanupSystem : SystemBase
 
 public partial class VisualAnimationSyncSystem : SystemBase
 {
-    private ComponentLookup<Unity.Physics.PhysicsVelocity> _physicsVelocityLookup;
-
     protected override void OnCreate()
     {
-        _physicsVelocityLookup = SystemAPI.GetComponentLookup<Unity.Physics.PhysicsVelocity>(true);
     }
 
     protected override void OnUpdate()
     {
-        _physicsVelocityLookup.Update(this);
         float dt = SystemAPI.Time.DeltaTime;
 
         foreach (var (animModel, animState, entity) in SystemAPI.Query<AnimatorModel, RefRW<VisualAnimationState>>().WithEntityAccess())
@@ -474,14 +470,29 @@ public partial class VisualAnimationSyncSystem : SystemBase
             if (animModel.Animators == null || animModel.Animators.Length == 0) continue;
 
             float currentSpeed = 0f;
-            if (_physicsVelocityLookup.HasComponent(entity))
+            if (SystemAPI.HasComponent<Unity.Transforms.LocalTransform>(entity))
             {
-                var vel = _physicsVelocityLookup[entity].Linear;
-                vel.y = 0f;
-                currentSpeed = math.length(vel);
+                var currentPos = SystemAPI.GetComponent<Unity.Transforms.LocalTransform>(entity).Position;
+                var prevPos = animState.ValueRO.PrevPosition;
+                
+                // y축(높이) 변동 무시: 2D 평면 거리만 계산
+                float3 currentPos2D = new float3(currentPos.x, 0, currentPos.z);
+                float3 prevPos2D = new float3(prevPos.x, 0, prevPos.z);
+                
+                var dist = math.distance(currentPos2D, prevPos2D);
+                // 1프레임당 이동거리 기반 등속도 추산
+                if (dt > 0.0001f) currentSpeed = (dist / dt);
+                
+                // 미세한 떨림(Deadzone) 필터링
+                if (currentSpeed < 0.1f) currentSpeed = 0f;
+                
+                var newState = animState.ValueRO;
+                newState.PrevPosition = currentPos;
+                animState.ValueRW = newState;
             }
 
             animState.ValueRW.Speed = math.lerp(animState.ValueRO.Speed, currentSpeed, dt * 15f);
+            if (animState.ValueRW.Speed < 0.05f) animState.ValueRW.Speed = 0f;
 
             bool triggerHit = animState.ValueRW.TriggerHit;
             bool triggerSummon = animState.ValueRW.TriggerSummon;
@@ -585,6 +596,7 @@ public static class AnimatorParameterExtensions
         if (animator.SafeHasParameter(name)) animator.SetInteger(name, value);
     }
 }
+
 
 
 

@@ -12,6 +12,12 @@ public class MapColliderConverter : MonoBehaviour
     public static void ConvertColliders(GameObject root)
     {
         var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        var filter = new CollisionFilter
+        {
+            BelongsTo = VSurvivors.Battle.Physics.GamePhysicsLayers.Structure,
+            CollidesWith = VSurvivors.Battle.Physics.GamePhysicsLayers.StructureMask,
+            GroupIndex = 0
+        };
 
         // 1. Convert Box Colliders
         var boxColliders = root.GetComponentsInChildren<BoxCollider>();
@@ -24,12 +30,19 @@ public class MapColliderConverter : MonoBehaviour
             float3 center = bc.center;
             float3 size = bc.size;
 
+            if (size.y < 0.05f)
+            {
+                size.y = 1.0f;
+                center.y -= 0.5f; // 바닥 높이를 초과하지 않도록 아래로 시프트
+            }
+            size = math.max(size, new float3(0.1f, 0.1f, 0.1f));
+
             BlobAssetReference<Unity.Physics.Collider> physicsCollider = Unity.Physics.BoxCollider.Create(new BoxGeometry
             {
                 Center = center,
                 Size = size,
                 Orientation = quaternion.identity
-            });
+            }, filter);
 
             entityManager.AddComponentData(entity, new PhysicsCollider { Value = physicsCollider });
             
@@ -46,13 +59,13 @@ public class MapColliderConverter : MonoBehaviour
             CreateStaticPhysicsEntity(entityManager, sc.transform, out Entity entity);
 
             float3 center = sc.center;
-            float radius = sc.radius;
+            float radius = math.max(0.1f, sc.radius);
 
             BlobAssetReference<Unity.Physics.Collider> physicsCollider = Unity.Physics.SphereCollider.Create(new SphereGeometry
             {
                 Center = center,
                 Radius = radius
-            });
+            }, filter);
 
             entityManager.AddComponentData(entity, new PhysicsCollider { Value = physicsCollider });
 
@@ -74,14 +87,21 @@ public class MapColliderConverter : MonoBehaviour
             
             // Inflate scale by the transform's local scale so the bounding box matches visuals perfectly
             float3 localScale = mc.transform.localScale;
-            float3 size = bounds.size;
+            float3 size = new float3(bounds.size.x * localScale.x, bounds.size.y * localScale.y, bounds.size.z * localScale.z);
+
+            if (size.y < 0.05f)
+            {
+                size.y = 1.0f;
+                center.y -= 0.5f; // 바닥 높이를 초과하지 않도록 아래로 시프트
+            }
+            size = math.max(size, new float3(0.1f, 0.1f, 0.1f));
 
             BlobAssetReference<Unity.Physics.Collider> physicsCollider = Unity.Physics.BoxCollider.Create(new BoxGeometry
             {
                 Center = center,
                 Size = size,
                 Orientation = quaternion.identity
-            });
+            }, filter);
 
             entityManager.AddComponentData(entity, new PhysicsCollider { Value = physicsCollider });
 

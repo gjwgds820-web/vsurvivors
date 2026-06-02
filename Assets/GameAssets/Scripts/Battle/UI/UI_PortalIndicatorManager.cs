@@ -14,6 +14,7 @@ public class UI_PortalIndicatorManager : MonoBehaviour
     private Camera _mainCamera;
     private EntityManager _entityManager;
     private EntityQuery _portalQuery;
+    private World _myWorld;
     
     private List<GameObject> _indicatorPool = new List<GameObject>();
     private Dictionary<Entity, float> _portalProgress = new Dictionary<Entity, float>();
@@ -22,7 +23,8 @@ public class UI_PortalIndicatorManager : MonoBehaviour
     private void Start()
     {
         _mainCamera = Camera.main;
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        _myWorld = World.DefaultGameObjectInjectionWorld;
+        _entityManager = _myWorld.EntityManager;
         
         _portalQuery = _entityManager.CreateEntityQuery(
             ComponentType.ReadOnly<CPortalData>(),
@@ -32,7 +34,7 @@ public class UI_PortalIndicatorManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+        if (_myWorld == null || !_myWorld.IsCreated) return;
 
         if (_entityManager == default || _portalQuery.IsEmptyIgnoreFilter || _mainCamera == null)
         {

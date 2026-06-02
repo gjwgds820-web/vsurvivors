@@ -1,4 +1,4 @@
-using Unity.Entities;
+﻿using Unity.Entities;
 using UnityEngine;
 
 public class VisualInstanceObject : IComponentData
@@ -27,16 +27,15 @@ public class VisualRendererModel : IComponentData
     public float FlashTimer;
 }
 
-public struct VisualAnimationState : IComponentData
-{
+public struct VisualAnimationState : IComponentData { public Unity.Mathematics.float3 PrevPosition;
     public float Speed;
     public bool TriggerSummon;
     public bool TriggerHit;
-    public bool TriggerAttack; // 섀도우, 적 등 공격 트리거용
-    public int AttackIndex;    // 공격 종류 인덱스 (0: 기본, 1: 돌진, 2: 투척 등)
+    public bool TriggerAttack; // ??꾩슦, ????怨듦꺽 ?몃━嫄곗슜
+    public int AttackIndex;    // 怨듦꺽 醫낅쪟 ?몃뜳??(0: 湲곕낯, 1: ?뚯쭊, 2: ?ъ쿃 ??
     public bool IsDead;
     
-    // 유니티 애니메이션 이벤트를 위한 동기화 필드
-    public bool EventAttackHit; // 공격 타격 타이밍
-    public bool EventAttackEnd; // 공격 종료 타이밍
+    // ?좊땲???좊땲硫붿씠???대깽?몃? ?꾪븳 ?숆린???꾨뱶
+    public bool EventAttackHit; // 怨듦꺽 ?寃???대컢
+    public bool EventAttackEnd; // 怨듦꺽 醫낅즺 ??대컢
 }

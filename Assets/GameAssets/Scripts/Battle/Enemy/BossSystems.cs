@@ -25,8 +25,8 @@ public partial struct BossCombatSystem : ISystem
         float deltaTime = SystemAPI.Time.DeltaTime;
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
-        foreach (var (bossData, bossPrefabs, enemyData, targetingData, transform, velocity, entity) in
-                 SystemAPI.Query<RefRW<BossCombatData>, RefRO<BossAttackPrefabs>, RefRW<CEnemyData>, RefRO<TargetingData>, RefRW<LocalTransform>, RefRW<Unity.Physics.PhysicsVelocity>>()
+        foreach (var (bossData, bossPrefabs, enemyData, targetingData, transform, entity) in
+                 SystemAPI.Query<RefRW<BossCombatData>, RefRO<BossAttackPrefabs>, RefRW<CEnemyData>, RefRO<TargetingData>, RefRW<LocalTransform>>()
                  .WithAll<BossTag>()
                  .WithEntityAccess())
         {
@@ -39,7 +39,7 @@ public partial struct BossCombatSystem : ISystem
                 {
                     enemyData.ValueRW.CurrentState = EnemyState.Move;
                     bossData.ValueRW.DashTimer = 0f;  // DeathTimer 용도
-                    velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0); // 멈춤
+                     // 멈춤
                 }
 
                 if (bossData.ValueRO.DashTimer >= 0f)
@@ -82,7 +82,7 @@ public partial struct BossCombatSystem : ISystem
                         bossData.ValueRW.StateTimer = 6.0f; // 최대 Prep 대기 (페일세이프용)
                         
                         enemyData.ValueRW.IsAttacking = true; // 이동 멈춤
-                        velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
+                        
 
                         // 타겟 방향 바라보고 좌표 고정 (Telegraph와 히트박스 일치 용도)
                         float3 dir = math.normalize(targetPos - myPos);
@@ -118,7 +118,7 @@ public partial struct BossCombatSystem : ISystem
 
                 case BossState.Prep:
                     bossData.ValueRW.StateTimer -= deltaTime;
-                    velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0); // 멈춤 유지
+                     // 멈춤 유지
 
                     if (_animStateLookup.HasComponent(entity))
                     {
@@ -212,15 +212,11 @@ public partial struct BossCombatSystem : ISystem
                     // 대시는 물리 이동 수행, 그 외엔 정지
                     if (bossData.ValueRO.CurrentPattern == BossAttackPattern.Dash)
                     {
-                        velocity.ValueRW.Linear = new float3(
-                            bossData.ValueRO.DashDirection.x * bossData.ValueRO.DashSpeed, 
-                            velocity.ValueRO.Linear.y, 
-                            bossData.ValueRO.DashDirection.z * bossData.ValueRO.DashSpeed
-                        );
+                        transform.ValueRW.Position += new float3(bossData.ValueRO.DashDirection.x, 0, bossData.ValueRO.DashDirection.z) * bossData.ValueRO.DashSpeed * SystemAPI.Time.DeltaTime;
                     }
                     else
                     {
-                        velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0);
+                        
                     }
 
                     if (_animStateLookup.HasComponent(entity))
@@ -241,7 +237,7 @@ public partial struct BossCombatSystem : ISystem
 
                 case BossState.Cooldown:
                     bossData.ValueRW.StateTimer -= deltaTime;
-                    velocity.ValueRW.Linear = new float3(0, velocity.ValueRO.Linear.y, 0); // 잠깐 멈칫
+                     // 잠깐 멈칫
                     
                     if (bossData.ValueRO.StateTimer <= 0.0f)
                     {
@@ -256,3 +252,5 @@ public partial struct BossCombatSystem : ISystem
         ecb.Dispose();
     }
 }
+
+

@@ -20,6 +20,7 @@ public class UI_TopUI : UI_Base
     private EntityQuery _enemyQuery;
     private EntityQuery _shadowQuery;
     private EntityQuery _gameDirectorQuery;
+    private World _myWorld;
 
     private float _updateTimer = 0f;
     private const float UPDATE_INTERVAL = 0.1f;
@@ -33,7 +34,8 @@ public class UI_TopUI : UI_Base
         BindButton(typeof(Buttons));
 
         // ECS 환경 세팅
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        _myWorld = World.DefaultGameObjectInjectionWorld;
+        _entityManager = _myWorld.EntityManager;
         
         // 쿼리 생성 (DeathTag가 없는 살아있는 개체만 카운트)
         _enemyQuery = _entityManager.CreateEntityQuery(new EntityQueryDesc 
@@ -65,7 +67,7 @@ public class UI_TopUI : UI_Base
     {
         if (!_init) return;
 
-        if (World.DefaultGameObjectInjectionWorld == null || !World.DefaultGameObjectInjectionWorld.IsCreated) return;
+        if (_myWorld == null || !_myWorld.IsCreated) return;
 
         // 0.1초마다 UI 업데이트 갱신 (성능 최적화)
         _updateTimer += Time.unscaledDeltaTime;
@@ -89,9 +91,16 @@ public class UI_TopUI : UI_Base
         // 타임 업데이트
         if (_gameDirectorQuery.HasSingleton<GameDirectorData>())
         {
-            var dirData = _gameDirectorQuery.GetSingleton<GameDirectorData>(); float timeToShow = dirData.CurrentPhase == GamePhase.BossFight ? dirData.BossTimer : dirData.GlobalTimer;
+            var dirData = _gameDirectorQuery.GetSingleton<GameDirectorData>(); 
+            float timeToShow = dirData.CurrentPhase == GamePhase.BossFight ? dirData.BossTimer : dirData.GlobalTimer;
+            
+            // 시간 초과 시 음수 표기 방지
+            timeToShow = Mathf.Max(0f, timeToShow);
+
             int minutes = Mathf.FloorToInt(timeToShow / 60f);
-            int seconds = Mathf.FloorToInt(timeToShow % 60f); GetText((int)Texts.TimerText).color = dirData.CurrentPhase == GamePhase.BossFight ? Color.red : Color.white;
+            int seconds = Mathf.FloorToInt(timeToShow % 60f); 
+            
+            GetText((int)Texts.TimerText).color = dirData.CurrentPhase == GamePhase.BossFight ? Color.red : Color.white;
             GetText((int)Texts.TimerText).text = $"{minutes:00}:{seconds:00}";
         }
     }

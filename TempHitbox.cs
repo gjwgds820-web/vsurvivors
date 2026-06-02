@@ -6,49 +6,6 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Collections;
 
-#region ProjectileMovement
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateBefore(typeof(HitBoxCollisionSystem))]
-[BurstCompile]
-public partial struct ProjectileMovementSystem : ISystem
-{
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
-    {
-        float dt = SystemAPI.Time.DeltaTime;
-        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
-
-        foreach (var (transform, projData, entity) in
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<ProjectileData>>().WithNone<Prefab>().WithEntityAccess())
-        {
-            float3 dir = math.lengthsq(projData.ValueRO.Direction) > 0f ? math.normalize(projData.ValueRO.Direction) : math.forward(transform.ValueRO.Rotation);
-            
-            float moveDist = projData.ValueRO.Speed * dt;
-            transform.ValueRW.Position += dir * moveDist;
-            
-            transform.ValueRW.Position.y = 0.5f;
-
-            projData.ValueRW.TravelledDistance += moveDist;
-
-            if (SystemAPI.HasComponent<SpinningProjectileData>(entity))
-            {
-                var spinData = SystemAPI.GetComponent<SpinningProjectileData>(entity);
-                transform.ValueRW.Rotation = math.mul(transform.ValueRW.Rotation, quaternion.AxisAngle(spinData.SpinAxis, spinData.SpinSpeed * dt));
-            }
-
-            if (projData.ValueRO.MaxDistance > 0f && projData.ValueRO.TravelledDistance >= projData.ValueRO.MaxDistance)
-            {
-                ecb.AddComponent(entity, default(DestroyEntityTag));
-            }
-        }
-        
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
-    }
-}
-#endregion
-
-#region HitBoxCollision
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(TransformSystemGroup))]
 [BurstCompile]
@@ -124,7 +81,7 @@ public partial struct HitBoxCollisionJob : IJobEntity
     [ReadOnly] public ComponentLookup<PlayerData> Players;
     [ReadOnly] public ComponentLookup<ShadowCombatData> Shadows;
     [ReadOnly] public ComponentLookup<ShadowTag> ShadowTags;
-    [ReadOnly] public BufferLookup<DamageBufferElement> DamageBuffers;
+    public BufferLookup<DamageBufferElement> DamageBuffers;
     [ReadOnly] public NativeArray<Entity> Targets;
     public EntityCommandBuffer.ParallelWriter Ecb;
 
@@ -218,7 +175,7 @@ public partial struct HitBoxCollisionJob : IJobEntity
             if (!canHit) continue;
             if (!DamageBuffers.HasBuffer(targetEnt)) continue;
 
-            Ecb.AppendToBuffer(chunkIndex, targetEnt, new DamageBufferElement { Damage = hitbox.Damage });
+            DamageBuffers[targetEnt].Add(new DamageBufferElement { Damage = hitbox.Damage });
 
             if (bufferIndex == -1) hitBuffer.Add(new HitRecordElement { Target = targetEnt, LastHitTime = CurrentTime });
             else
@@ -245,25 +202,3 @@ public partial struct HitBoxCollisionJob : IJobEntity
         }
     }
 }
-#endregion
-
-#region Cleanup
-[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
-[UpdateAfter(typeof(VisualCleanupSystem))]
-[BurstCompile]
-public partial struct CleanupDestroyedEntitySystem : ISystem
-{
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
-    {
-        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
-        foreach (var (tag, entity) in SystemAPI.Query<RefRO<DestroyEntityTag>>().WithEntityAccess())
-        {
-            ecb.DestroyEntity(entity);
-        }
-
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
-    }
-}
-#endregion

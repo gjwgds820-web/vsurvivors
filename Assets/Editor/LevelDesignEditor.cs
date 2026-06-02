@@ -510,14 +510,17 @@ public class LevelDesignEditor : EditorWindow
         
         // Ensure chunk root relationship if a chunk root is selected
         if (chunkRoot != null && !hitObject.transform.IsChildOf(chunkRoot) && hitObject.transform != chunkRoot)
+        {
+            Debug.LogWarning($"[Vertex Paint] Cannot paint on {hitObject.name} because it is not a child of the selected Chunk Root ({chunkRoot.name}).");
             return;
+        }
 
         // Clone mesh if it's not our custom generated dynamic mesh instance yet
         Mesh mesh = mf.sharedMesh;
         if (!mesh.name.Contains("ChunkPlaneMesh_Instance"))
         {
             if (!mesh.isReadable) {
-                Debug.LogWarning($"Mesh {mesh.name} is not readable. Cannot paint vertices.");
+                Debug.LogWarning($"[Vertex Paint] '{mesh.name}' is not readable! If this is an FBX (like Polyart base mesh), check 'Read/Write Enabled' in its Import Settings. Or create a custom plane via 'Create New Chunk'.");
                 return;
             }
             mesh = Instantiate(mf.sharedMesh);

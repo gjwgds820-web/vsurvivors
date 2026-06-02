@@ -17,6 +17,7 @@ public class ShadowAuthoring : MonoBehaviour
     [SerializeField] private float attackDamage = 10f;
     [SerializeField] private float attackRange = 2f;
     [SerializeField] private float attackCooldown = 1f;
+    [SerializeField] private float searchRange = 15f;
 
     class Baker : Baker<ShadowAuthoring>
     {
@@ -51,8 +52,8 @@ public class ShadowAuthoring : MonoBehaviour
                 Priority = authoring.targetingType,
                 ScanTimer = 0f,
                 ScanInterval = 0.2f, // 스캔 주기
-                MaxSearchRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f),
-                MaxFollowRangeSq = (authoring.attackRange + 0.5f) * (authoring.attackRange + 0.5f),
+                MaxSearchRangeSq = authoring.searchRange * authoring.searchRange,
+                MaxFollowRangeSq = (authoring.searchRange + 2f) * (authoring.searchRange + 2f),
                 UseCrowdControl = true
             });
 
