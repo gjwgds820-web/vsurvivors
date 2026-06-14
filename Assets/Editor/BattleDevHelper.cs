@@ -9,15 +9,32 @@ using VSurvivors.Managers;
 [InitializeOnLoad]
 public class BattleDevHelper : EditorWindow
 {
+    private const string EnableShadowTargetDebugKey = "EnableShadowTargetDebug";
+    private const string EnableEnemyMovementDebugKey = "EnableEnemyMovementDebug";
+
     static BattleDevHelper()
     {
+        EditorApplication.delayCall += EnsureDebugPrefsOff;
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+    }
+
+    private static void EnsureDebugPrefsOff()
+    {
+        EditorPrefs.SetBool(EnableShadowTargetDebugKey, false);
+        EditorPrefs.SetBool(EnableEnemyMovementDebugKey, false);
     }
 
     private static void OnPlayModeStateChanged(PlayModeStateChange state)
     {
+        if (state == PlayModeStateChange.EnteredEditMode)
+        {
+            EnsureDebugPrefsOff();
+        }
+
         if (state == PlayModeStateChange.EnteredPlayMode)
         {
+            EnsureDebugPrefsOff();
+
             if (EditorPrefs.GetBool("FastStartBattle", false))
             {
                 EditorPrefs.SetBool("FastStartBattle", false);
@@ -72,10 +89,30 @@ public class BattleDevHelper : EditorWindow
         GetWindow<BattleDevHelper>("Battle Dev Helper");
     }
 
+    private void OnEnable()
+    {
+        EnsureDebugPrefsOff();
+    }
+
     private void Update()
     {
         if (Application.isPlaying)
         {
+            if (World.DefaultGameObjectInjectionWorld != null && World.DefaultGameObjectInjectionWorld.IsCreated)
+            {
+                var shadowDebugSys = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<ShadowTargetDebugSystem>();
+                if (shadowDebugSys != null)
+                {
+                    shadowDebugSys.Enabled = EditorPrefs.GetBool(EnableShadowTargetDebugKey, false);
+                }
+
+                var enemyDebugSys = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<EnemyMovementDebugSystem>();
+                if (enemyDebugSys != null)
+                {
+                    enemyDebugSys.Enabled = EditorPrefs.GetBool(EnableEnemyMovementDebugKey, false);
+                }
+            }
+
             // 배틀 씬에서 동적으로 생성되는 데이터(GameDirector 등)를 즉각 갱신하기 위해 프레임마다 UI 업데이트
             Repaint();
         }
@@ -195,16 +232,23 @@ public class BattleDevHelper : EditorWindow
         bool showPlayerLeash = EditorPrefs.GetBool("ShowPlayerLeash", false);
         bool showShadowRange = EditorPrefs.GetBool("ShowShadowRange", false);
         bool showEnemyRange = EditorPrefs.GetBool("ShowEnemyRange", false);
+        bool enableShadowTargetDebug = EditorPrefs.GetBool(EnableShadowTargetDebugKey, false);
+        bool enableEnemyMovementDebug = EditorPrefs.GetBool(EnableEnemyMovementDebugKey, false);
 
         EditorGUI.BeginChangeCheck();
         showPlayerLeash = EditorGUILayout.Toggle("플레이어 그림자 리쉬 범위 (초록)", showPlayerLeash);
         showShadowRange = EditorGUILayout.Toggle("그림자 탐지 범위 (파랑)", showShadowRange);
         showEnemyRange = EditorGUILayout.Toggle("적 탐지 범위 (빨강)", showEnemyRange);
+        GUILayout.Space(5);
+        enableShadowTargetDebug = EditorGUILayout.Toggle("그림자 타겟 디버그 로그", enableShadowTargetDebug);
+        enableEnemyMovementDebug = EditorGUILayout.Toggle("적 이동 상세 디버그 로그", enableEnemyMovementDebug);
         if (EditorGUI.EndChangeCheck())
         {
             EditorPrefs.SetBool("ShowPlayerLeash", showPlayerLeash);
             EditorPrefs.SetBool("ShowShadowRange", showShadowRange);
             EditorPrefs.SetBool("ShowEnemyRange", showEnemyRange);
+            EditorPrefs.SetBool(EnableShadowTargetDebugKey, enableShadowTargetDebug);
+            EditorPrefs.SetBool(EnableEnemyMovementDebugKey, enableEnemyMovementDebug);
         }
 
         GUILayout.Space(20);

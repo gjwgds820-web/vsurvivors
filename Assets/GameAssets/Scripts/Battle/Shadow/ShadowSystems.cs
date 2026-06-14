@@ -4,6 +4,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Collections;
@@ -14,26 +15,28 @@ using UnityEngine.UIElements;
 #region BehaviorSystem (Brain + Movement)
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(TransformSystemGroup))]
+[UpdateAfter(typeof(UnitSpatialSystem))]
 [BurstCompile]
 public partial struct ShadowBehaviorSystem : ISystem
 {
     private EntityQuery _playerQuery;
-    private ComponentLookup<LocalToWorld> _transformLookup;
+    private ComponentLookup<LocalTransform> _transformLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerInput, LocalToWorld>().Build();
-        _transformLookup = SystemAPI.GetComponentLookup<LocalToWorld>(true);
+        _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerInput, LocalTransform>().Build();
+        _transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         if (_playerQuery.IsEmpty) return;
+        if (!SystemAPI.TryGetSingleton<SpatialGridData>(out var gridData)) return;
         
         var playerEntity = _playerQuery.GetSingletonEntity();
-        var playerTransform = SystemAPI.GetComponent<LocalToWorld>(playerEntity);
+        var playerTransform = SystemAPI.GetComponent<LocalTransform>(playerEntity);
         var playerInput = SystemAPI.GetComponent<PlayerInput>(playerEntity);
         
         bool isPlayerMoving = math.length(playerInput.Move) > 0.01f;
@@ -48,6 +51,8 @@ public partial struct ShadowBehaviorSystem : ISystem
             IsPlayerMoving = isPlayerMoving,
             LeashDistSq = 20f * 20f,
             TransformLookup = _transformLookup,
+            EnemyGrid = gridData.EnemyGrid,
+            ShadowGrid = gridData.ShadowGrid,
             DeltaTime = SystemAPI.Time.DeltaTime
         };
 
@@ -62,43 +67,88 @@ public partial struct ShadowBehaviorJob : IJobEntity
     public float3 PlayerForward;
     public bool IsPlayerMoving;
     public float LeashDistSq;
-    [ReadOnly] public ComponentLookup<LocalToWorld> TransformLookup;
+    [NativeDisableContainerSafetyRestriction]
+    [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
+    [ReadOnly] public NativeParallelMultiHashMap<int2, Entity> EnemyGrid;
+    [ReadOnly] public NativeParallelMultiHashMap<int2, Entity> ShadowGrid;
     public float DeltaTime;
-
-    private void Execute(Entity entity, ref LocalTransform transform, ref CShadowData shadow, ref TargetPositionData targetPos, in TargetingData targetingData, in ShadowCombatData shadowCombatData)
+    
+    private void Execute(Entity entity, ref LocalTransform transform, ref CShadowData shadow, ref TargetPositionData targetPos, ref TargetingData targetingData, in ShadowCombatData shadowCombatData)
     {
         if (!shadowCombatData.IsAlive) return;
 
+        if (!shadow.Initialized)
+        {
+            float3 right = math.cross(math.up(), PlayerForward);
+            int index = shadow.Index;
+            int ring = 0;
+            float angle = 0f;
+            float radius = 0f;
+            if (index < 8) { ring = 0; radius = 2.5f; angle = (index / 8f) * math.PI * 2f; }
+            else if (index < 20) { ring = 1; radius = 4.5f; angle = ((index - 8) / 12f) * math.PI * 2f; }
+            else { ring = 2; radius = 6.5f; angle = ((index - 20) / 16f) * math.PI * 2f; }
+            
+            float3 formationOffset = right * math.cos(angle) * radius + PlayerForward * math.sin(angle) * radius;
+            shadow.InitialOffset = formationOffset;
+            shadow.Initialized = true;
+        }
+
         float3 currentPos = transform.Position;
         float3 targetDest = currentPos;
-        
-        bool hasValidTarget = targetingData.CurrentTarget != Entity.Null && TransformLookup.HasComponent(targetingData.CurrentTarget);
         float distToPlayerSq = math.distancesq(new float3(PlayerPos.x, 0, PlayerPos.z), new float3(currentPos.x, 0, currentPos.z));
 
-        // 기획 의도: 다중 원형 진형 (Multi-Ring Formation) 계산
-        int index = shadow.Index;
-        float3 right = math.cross(math.up(), PlayerForward);
-        
-        int ring = 0;
-        float angle = 0f;
-        float radius = 0f;
-        
-        if (index < 8) { ring = 0; radius = 2.5f; angle = (index / 8f) * math.PI * 2f; }
-        else if (index < 20) { ring = 1; radius = 4.5f; angle = ((index - 8) / 12f) * math.PI * 2f; }
-        else { ring = 2; radius = 6.5f; angle = ((index - 20) / 16f) * math.PI * 2f; }
-        
-        float3 formationOffset = right * math.cos(angle) * radius + PlayerForward * math.sin(angle) * radius;
-        
-        // 이동 중일 땐 그림자들이 플레이어 뒤쪽으로 약간 쏠리는 시각적 효과 (Trailing)
-        if (IsPlayerMoving)
-        {
-            formationOffset -= PlayerForward * (1.5f + ring * 1.5f);
-        }
-        formationOffset += new float3(0, 1f, 0); // Y축 기본 오프셋
-        
-        float3 idleDest = PlayerPos + formationOffset;
+        float searchRadius = shadowCombatData.AttackRange * 1.5f; 
+        if (searchRadius < 5f) searchRadius = 5f;
+        float searchRadiusSq = searchRadius * searchRadius;
 
-        // 즉각 상태 결정
+        bool hasValidTarget = shadow.TargetEnemy != Entity.Null && TransformLookup.HasComponent(shadow.TargetEnemy);
+        if (hasValidTarget)
+        {
+            float dSq = math.distancesq(currentPos, TransformLookup[shadow.TargetEnemy].Position);
+            if (dSq > searchRadiusSq * 1.5f) 
+            {
+                shadow.TargetEnemy = Entity.Null;
+                hasValidTarget = false;
+            }
+        }
+
+        if (!hasValidTarget)
+        {
+            Entity bestEnemy = Entity.Null;
+            float bestEnemyDistSq = float.MaxValue;
+            int2 cell = SpatialHashConfig.GetCell(currentPos);
+            for (int dx = -2; dx <= 2; dx++)
+            {
+                for (int dy = -2; dy <= 2; dy++)
+                {
+                    int2 nCell = cell + new int2(dx, dy);
+                    if (EnemyGrid.TryGetFirstValue(nCell, out Entity enEnt, out var enIter))
+                    {
+                        do
+                        {
+                            if (!TransformLookup.HasComponent(enEnt)) continue;
+                            float dSq = math.distancesq(currentPos, TransformLookup[enEnt].Position);
+                            if (dSq < searchRadiusSq && dSq < bestEnemyDistSq)
+                            {
+                                bestEnemyDistSq = dSq;
+                                bestEnemy = enEnt;
+                            }
+                        } while (EnemyGrid.TryGetNextValue(out enEnt, ref enIter));
+                    }
+                }
+            }
+            if (bestEnemy != Entity.Null)
+            {
+                shadow.TargetEnemy = bestEnemy;
+                hasValidTarget = true;
+            }
+        }
+
+        float3 formationRotatedOffset = shadow.InitialOffset;
+        if (IsPlayerMoving) formationRotatedOffset -= PlayerForward * 1.5f;
+        float3 idleDest = PlayerPos + formationRotatedOffset;
+        idleDest.y = 1f;
+
         if (distToPlayerSq > LeashDistSq)
         {
             shadow.CurrentState = ShadowAIState.ReturnToPlayer;
@@ -108,42 +158,124 @@ public partial struct ShadowBehaviorJob : IJobEntity
         else if (hasValidTarget)
         {
             shadow.CurrentState = ShadowAIState.Engage;
-            shadow.TargetEnemy = targetingData.CurrentTarget;
-            targetDest = TransformLookup[targetingData.CurrentTarget].Position;
+            targetDest = TransformLookup[shadow.TargetEnemy].Position;
         }
         else
         {
             shadow.CurrentState = ShadowAIState.Idle;
-            shadow.TargetEnemy = Entity.Null;
             targetDest = idleDest;
         }
 
-        // 시각 및 다른 시스템 디버깅을 위해 보존
+        targetingData.CurrentTarget = shadow.TargetEnemy;
+
         targetPos.Value = targetDest;
 
-        // 즉각 이동 로직
         float3 toTarget = targetDest - currentPos;
         toTarget.y = 0; 
         float distance = math.length(toTarget);
 
+        float3 positionResolution = float3.zero;
+        float3 separation = float3.zero;
+        int separationCount = 0;
+        float separationRadius = 1.3f;
+        float separationRadiusSq = separationRadius * separationRadius;
+        float hardRadius = 0.5f;
+        float enemySeparationRadius = 1.1f;
+        float enemySeparationRadiusSq = enemySeparationRadius * enemySeparationRadius;
+        float enemyHardRadius = 0.45f;
+        float enemySeparationWeight = 1.0f;
+        
+        int2 myCell = SpatialHashConfig.GetCell(currentPos);
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                int2 neighborCell = myCell + new int2(dx, dy);
+                if (ShadowGrid.TryGetFirstValue(neighborCell, out Entity otherSh, out var shIter))
+                {
+                    do
+                    {
+                        if (otherSh == entity) continue;
+                        if (!TransformLookup.HasComponent(otherSh)) continue;
+
+                        float3 otherPos = TransformLookup[otherSh].Position;
+                        float3 diff = currentPos - otherPos;
+                        diff.y = 0;
+                        float distSq = math.lengthsq(diff);
+
+                        if (distSq > 0.001f && distSq < separationRadiusSq)
+                        {
+                            float dist = math.sqrt(distSq);
+                            if (dist < hardRadius)
+                            {
+                                float overlap = hardRadius - dist;
+                                positionResolution += (diff / dist) * (overlap * 0.5f);
+                            }
+
+                            float pushForce = (separationRadius - dist) / separationRadius;
+                            separation += (diff / dist) * pushForce;
+                            separationCount++;
+                        }
+                    } while (ShadowGrid.TryGetNextValue(out otherSh, ref shIter));
+                }
+
+                if (EnemyGrid.TryGetFirstValue(neighborCell, out Entity otherEnemy, out var enemyIter))
+                {
+                    do
+                    {
+                        if (!TransformLookup.HasComponent(otherEnemy)) continue;
+
+                        float3 otherPos = TransformLookup[otherEnemy].Position;
+                        float3 diff = currentPos - otherPos;
+                        diff.y = 0;
+                        float distSq = math.lengthsq(diff);
+
+                        if (distSq > 0.001f && distSq < enemySeparationRadiusSq)
+                        {
+                            float dist = math.sqrt(distSq);
+                            if (dist < enemyHardRadius)
+                            {
+                                float overlap = enemyHardRadius - dist;
+                                positionResolution += (diff / dist) * (overlap * 0.5f * enemySeparationWeight);
+                            }
+
+                            float pushForce = (enemySeparationRadius - dist) / enemySeparationRadius;
+                            separation += (diff / dist) * (pushForce * enemySeparationWeight);
+                            separationCount++;
+                        }
+                    } while (EnemyGrid.TryGetNextValue(out otherEnemy, ref enemyIter));
+                }
+            }
+        }
+
+        float resLength = math.length(positionResolution);
+        if (resLength > 0.1f) positionResolution = (positionResolution / resLength) * 0.1f;
+
+        transform.Position += positionResolution;
+        currentPos = transform.Position;
+
         bool shouldStop = false;
         if (shadow.CurrentState == ShadowAIState.Engage)
         {
-            // 공격 사거리 90% 이내면 정지 후 공격 대기
-            if (distance <= shadowCombatData.AttackRange * 0.9f)
-                shouldStop = true;
+            if (distance <= shadowCombatData.AttackRange * 0.9f) shouldStop = true;
         }
         else if (shadow.CurrentState == ShadowAIState.Idle || shadow.CurrentState == ShadowAIState.ReturnToPlayer)
         {
-            if (distance < 0.5f) // 진형 도착 시 미세 떨림 방지 (Deadzone)
-                shouldStop = true;
+            if (distance < 0.5f) shouldStop = true;
         }
 
         if (!shouldStop && distance > 0.05f)
         {
             float3 moveDir = toTarget / distance;
             
-            // 추격 혹은 복귀 장거리 이동일수록 빨라짐
+            if (separationCount > 0)
+            {
+                separation /= separationCount;
+                float3 combinedDir = moveDir + separation * 2.5f;
+                if (math.lengthsq(combinedDir) > 0.001f) moveDir = math.normalize(combinedDir); 
+                else moveDir = math.forward();
+            }
+            
             float speedMultiplier = math.clamp(distance, 1f, shadow.CurrentState == ShadowAIState.ReturnToPlayer ? 4f : 2.5f);
             float finalSpeed = shadow.MoveSpeed * speedMultiplier;
 
@@ -152,14 +284,14 @@ public partial struct ShadowBehaviorJob : IJobEntity
             quaternion targetRot = quaternion.LookRotationSafe(moveDir, math.up());
             transform.Rotation = math.slerp(transform.Rotation, targetRot, DeltaTime * 15f);
         }
-        else if (distance > 0.001f) // 멈췄더라도 목표 방향 스무스하게 응시
+        else if (distance > 0.001f)
         {
             float3 lookDir = shadow.CurrentState == ShadowAIState.Idle && !IsPlayerMoving ? PlayerForward : math.normalize(toTarget);
             quaternion targetRot = quaternion.LookRotationSafe(lookDir, math.up());
             transform.Rotation = math.slerp(transform.Rotation, targetRot, DeltaTime * 10f);
         }
 
-        currentPos.y = 1f; // 고정된 Y 높이 유지
+        currentPos.y = 1f; 
         transform.Position = currentPos;
     }
 }
@@ -334,6 +466,7 @@ public partial struct ShadowDeathSystem : ISystem
         foreach (var (combatData, transform, entity) in
                  SystemAPI.Query<RefRW<ShadowCombatData>, RefRW<LocalTransform>>()
                  .WithAll<DeathTag>()
+                 .WithNone<DestroyEntityTag>()
                  .WithEntityAccess())
         {
             if (entity.Index < 0) continue;
@@ -341,23 +474,9 @@ public partial struct ShadowDeathSystem : ISystem
             if (combatData.ValueRO.IsAlive)
             {
                 combatData.ValueRW.IsAlive = false;
-                 // 충돌 끄기
             }
 
-            // 충돌체가 없어져서 PhysicsVelocity가 작동하지 않을 수 있으므로 수동으로도 y를 내립니다.
-            float3 pos = transform.ValueRO.Position;
-            pos.y -= 10f * SystemAPI.Time.DeltaTime;
-            transform.ValueRW.Position = pos;
-
-            if (pos.y > -10f)
-            {
-                
-            }
-            else
-            {
-                
-                ecb.AddComponent<DestroyEntityTag>(entity); // 완전 사망 처리 (CleanupSystem에서 Visual 처리 후 Entity 자동 파괴됨)
-            }
+            ecb.AddComponent<DestroyEntityTag>(entity); 
         }
 
         ecb.Playback(state.EntityManager);
@@ -365,6 +484,9 @@ public partial struct ShadowDeathSystem : ISystem
     }
 }
 #endregion
+
+
+
 
 
 

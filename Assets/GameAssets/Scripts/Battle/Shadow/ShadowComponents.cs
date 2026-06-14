@@ -22,6 +22,8 @@ public struct CShadowData : IComponentData
     public ShadowAIState CurrentState;
     public float StateChangeTimer;
     public Entity TargetEnemy; // 교전 중인 적
+    public float3 InitialOffset; // 스폰 시의 상대 오프셋 (캐싱)
+    public bool Initialized;
 }
 
 public struct TargetPositionData : IComponentData

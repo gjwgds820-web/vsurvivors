@@ -105,6 +105,7 @@ InitTestScene*.unity*
 .github/agents/
 .github/instructions/
 .github/prompts/
+.github/Docs/
 
 # Large Fonts
 Assets/BMJUA_ttf SDF.asset

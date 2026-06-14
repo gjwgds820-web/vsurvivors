@@ -122,10 +122,10 @@ public class UI_ElementAscensionPopup : UI_Base
         // 슬롯 1번 돌리기
         // Ease.OutBack: 목표지점을 살짝 지나친 후 뒤로 튕기는(브레이크 걸리는) 연출
         // 팝업이 뜰 때 Time.timeScale = 0 상태일 수 있으므로 SetUpdate(true)를 추가해 타임스케일을 무시하도록 설정합니다.
-        slot1Reel.DOAnchorPosY(targetY1, duration).SetEase(Ease.OutBack).SetUpdate(true);
+        DOTween.To(() => slot1Reel.anchoredPosition, x => slot1Reel.anchoredPosition = x, new Vector2(slot1Reel.anchoredPosition.x, targetY1), duration).SetEase(Ease.OutBack).SetUpdate(true);
 
         // 슬롯 2번 돌리기 & 끝난 후(OnComplete) 결과 반영
-        slot2Reel.DOAnchorPosY(targetY2, duration + 0.3f).SetEase(Ease.OutBack).SetUpdate(true).OnComplete(() =>
+        DOTween.To(() => slot2Reel.anchoredPosition, x => slot2Reel.anchoredPosition = x, new Vector2(slot2Reel.anchoredPosition.x, targetY2), duration + 0.3f).SetEase(Ease.OutBack).SetUpdate(true).OnComplete(() =>
         {
             // 애니메이션이 끝나면 원래 만들어두신 UpdateElementPanel 함수 실행!
             UpdateElementPanel(0, _element1ID);

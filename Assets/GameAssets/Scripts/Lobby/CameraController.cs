@@ -57,6 +57,16 @@ public class CameraController : MonoBehaviour
         inputAction.Disable();
     }
 
+    [Header("Dynamic Layout")]
+    [Tooltip("체크 시 해상도에 맞춰 섹션 간격과 배경 너비를 동적으로 조정합니다.")]
+    [SerializeField] private bool useDynamicLayout = true;
+    [Tooltip("로비의 실제 UI 캔버스")]
+    [SerializeField] private Canvas lobbyCanvas;
+    [Tooltip("8640 등으로 고정된 로비 배경화면의 RectTransform")]
+    [SerializeField] private RectTransform lobbyBackground;
+    [Tooltip("섹션의 갯수 (기본 5개)")]
+    [SerializeField] private int sectionCount = 5;
+
     private void Start()
     {
         if (mainCamera == null)
@@ -66,8 +76,64 @@ public class CameraController : MonoBehaviour
 
         _screenWidth = Screen.width;
 
+        if (useDynamicLayout)
+        {
+            ApplyDynamicLayout();
+        }
+
         // 초기 위치 설정
         MoveToSection(currentSection, true);
+    }
+
+    private void ApplyDynamicLayout()
+    {
+        if (lobbyCanvas == null)
+        {
+            lobbyCanvas = FindAnyObjectByType<Canvas>();
+        }
+
+        if (lobbyCanvas != null)
+        {
+            float worldWidth;
+            // 1. 월드 스페이스 캔버스의 경우, 화면 비율(Aspect Ratio)에 따른 실제 월드 너비를 계산해야 합니다.
+            if (mainCamera.orthographic)
+            {
+                worldWidth = mainCamera.orthographicSize * 2f * mainCamera.aspect;
+            }
+            else
+            {
+                // 투시(Perspective) 카메라일 경우 캔버스와의 거리를 기반으로 절두체 너비 계산
+                float distance = Vector3.Dot(lobbyCanvas.transform.position - mainCamera.transform.position, mainCamera.transform.forward);
+                float worldHeight = 2.0f * distance * Mathf.Tan(mainCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+                worldWidth = worldHeight * mainCamera.aspect;
+            }
+
+            // 2. 월드 너비를 캔버스의 로컬(RectTransform) 너비로 변환
+            float sectionCanvasWidth = worldWidth / lobbyCanvas.transform.localScale.x;
+
+            // 3. 배경 너비를 1화면 너비의 sectionCount 배수로 정확히 재조정 (현재 기획: 5배)
+            if (lobbyBackground != null)
+            {
+                lobbyBackground.sizeDelta = new Vector2(sectionCanvasWidth * sectionCount, lobbyBackground.sizeDelta.y);
+                
+                // 자식UI들이 앵커 기반으로 정렬된 경우, 혹여나 HorizontalLayoutGroup을 쓰는 경우를 위해 강제 업데이트
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(lobbyBackground);
+            }
+
+            // 4. 카메라 섹션 좌표 배열을 실제 카메라 월드 너비(worldWidth)에 맞춰 동적 재생성
+            // 5개 기준, 가운데(인덱스 2)를 중심으로 배치
+            sectionPositions = new float[sectionCount];
+            int centerIndex = sectionCount / 2; // 홀수(5)인 경우 인덱스 2
+            
+            // 기존 고정값 보정 (-2160, -720 등) 
+            // 원본 코드는 -2160, -720, 720, 2160, 3600 (간격 1440, 중심은 720) 
+            // 이를 동적 worldWidth/2 로 오프셋 보정하여 완벽히 일치시킵니다.
+            float baseOffset = worldWidth / 2f; 
+            for (int i = 0; i < sectionCount; i++)
+            {
+                sectionPositions[i] = (i - centerIndex) * worldWidth + baseOffset;
+            }
+        }
     }
 
     private void Update()

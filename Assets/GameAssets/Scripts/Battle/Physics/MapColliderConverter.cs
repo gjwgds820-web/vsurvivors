@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -18,6 +19,8 @@ public class MapColliderConverter : MonoBehaviour
             CollidesWith = VSurvivors.Battle.Physics.GamePhysicsLayers.StructureMask,
             GroupIndex = 0
         };
+
+        var cleanupTracker = root.AddComponent<MapPhysicsCleanupTracker>();
 
         // 1. Convert Box Colliders
         var boxColliders = root.GetComponentsInChildren<BoxCollider>();
@@ -45,6 +48,7 @@ public class MapColliderConverter : MonoBehaviour
             }, filter);
 
             entityManager.AddComponentData(entity, new PhysicsCollider { Value = physicsCollider });
+            cleanupTracker.Track(entity, physicsCollider);
             
             // Cleanup
             Destroy(bc);
@@ -68,6 +72,7 @@ public class MapColliderConverter : MonoBehaviour
             }, filter);
 
             entityManager.AddComponentData(entity, new PhysicsCollider { Value = physicsCollider });
+            cleanupTracker.Track(entity, physicsCollider);
 
             // Cleanup
             Destroy(sc);
@@ -104,6 +109,7 @@ public class MapColliderConverter : MonoBehaviour
             }, filter);
 
             entityManager.AddComponentData(entity, new PhysicsCollider { Value = physicsCollider });
+            cleanupTracker.Track(entity, physicsCollider);
 
             // Cleanup heavy mesh physics component
             Destroy(mc);
@@ -115,8 +121,13 @@ public class MapColliderConverter : MonoBehaviour
         entity = entityManager.CreateEntity(
             typeof(LocalToWorld),
             typeof(LocalTransform),
-            typeof(PhysicsCollider)
+            typeof(PhysicsCollider),
+            typeof(PhysicsWorldIndex)
         );
+
+#if UNITY_EDITOR
+        entityManager.SetName(entity, sourceTransform.name + "_PhysicsCollider");
+#endif
 
         entityManager.SetComponentData(entity, new LocalTransform
         {
@@ -124,5 +135,45 @@ public class MapColliderConverter : MonoBehaviour
             Rotation = sourceTransform.rotation,
             Scale = sourceTransform.localScale.x // Note: Uniform scale assumed for simple conversion
         });
+        
+        entityManager.SetSharedComponent(entity, new PhysicsWorldIndex { Value = 0 });
+    }
+}
+
+public class MapPhysicsCleanupTracker : MonoBehaviour
+{
+    private List<Entity> _entities = new List<Entity>();
+    private List<BlobAssetReference<Unity.Physics.Collider>> _blobs = new List<BlobAssetReference<Unity.Physics.Collider>>();
+
+    public void Track(Entity entity, BlobAssetReference<Unity.Physics.Collider> blob)
+    {
+        _entities.Add(entity);
+        _blobs.Add(blob);
+    }
+
+    private void OnDestroy()
+    {
+        if (World.DefaultGameObjectInjectionWorld != null && World.DefaultGameObjectInjectionWorld.IsCreated)
+        {
+            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
+            foreach (var e in _entities)
+            {
+                if (em.Exists(e))
+                {
+                    em.DestroyEntity(e);
+                }
+            }
+        }
+
+        foreach (var blob in _blobs)
+        {
+            if (blob.IsCreated)
+            {
+                blob.Dispose();
+            }
+        }
+
+        _entities.Clear();
+        _blobs.Clear();
     }
 }

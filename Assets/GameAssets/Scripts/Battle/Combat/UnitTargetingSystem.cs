@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿/* 구형 타겟팅 시스템 (사용 안 함: Enemy/Shadow의 격자 탐색으로 대체됨)
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Collections;
@@ -35,7 +36,7 @@ public partial struct UnitTargetingSystem : ISystem
             .WithNone<DeathTag>()
             .Build();
 
-        _targetingQuery = SystemAPI.QueryBuilder().WithAllRW<TargetingData>().WithAll<LocalToWorld>().Build();
+        _targetingQuery = SystemAPI.QueryBuilder().WithAllRW<TargetingData>().WithAll<LocalToWorld>().WithNone<CEnemyData, CShadowData>().Build();
         state.RequireForUpdate(_targetingQuery);
     }
 
@@ -200,3 +201,6 @@ public partial struct TargetingJob : IJobEntity
 }
 
 
+
+
+*/

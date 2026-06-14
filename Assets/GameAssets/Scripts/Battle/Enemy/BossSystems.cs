@@ -4,7 +4,6 @@ using Unity.Transforms;
 using Unity.Burst;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(UnitTargetingSystem))]
 public partial struct BossCombatSystem : ISystem
 {
     private ComponentLookup<LocalTransform> _transformLookup;
@@ -35,9 +34,9 @@ public partial struct BossCombatSystem : ISystem
             // --- 보스 사망 처리 ---
             if (SystemAPI.HasComponent<DeathTag>(entity))
             {
-                if (enemyData.ValueRW.CurrentState != EnemyState.Move)
+                if (enemyData.ValueRW.CurrentState != EnemyState.Chase)
                 {
-                    enemyData.ValueRW.CurrentState = EnemyState.Move;
+                    enemyData.ValueRW.CurrentState = EnemyState.Chase;
                     bossData.ValueRW.DashTimer = 0f;  // DeathTimer 용도
                      // 멈춤
                 }
@@ -58,7 +57,7 @@ public partial struct BossCombatSystem : ISystem
                 continue; // 상태 머신 스킵
             }
 
-            if (enemyData.ValueRO.CurrentState != EnemyState.Attack && enemyData.ValueRO.CurrentState != EnemyState.Move) continue;
+            if (enemyData.ValueRO.CurrentState != EnemyState.Attack && enemyData.ValueRO.CurrentState != EnemyState.Chase) continue;
 
             Entity target = targetingData.ValueRO.CurrentTarget;
             bool hasTarget = target != Entity.Null && _transformLookup.HasComponent(target);
@@ -252,5 +251,7 @@ public partial struct BossCombatSystem : ISystem
         ecb.Dispose();
     }
 }
+
+
 
 

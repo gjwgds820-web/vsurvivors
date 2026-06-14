@@ -13,6 +13,10 @@ public partial class DataManagerBridgeSystem : SystemBase
         // 추가: 전역 비동기 매니저(DataManager 등)의 데이터 로딩이 끝날 때까지 ECS 로직 보류
         if (!VSurvivors.Managers.AppManager.IsInitialized) return;
 
+        // 추가: 로비 씬 등에서 게임을 시작하기도 전에 Config가 구워지는 것을 방지.
+        // 배틀씬에 진입했을 때만 초기화되도록 씬을 검사합니다.
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "BattleScene") return;
+
         var entity = EntityManager.CreateEntity();
         var config = new CurrentStageConfig();
         var buffer = EntityManager.AddBuffer<PortalConfigElement>(entity);

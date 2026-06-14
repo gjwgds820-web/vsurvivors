@@ -4,7 +4,6 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(UnitTargetingSystem))]
 public partial class ShadowTargetDebugSystem : SystemBase
 {
     private float _logTimer;
@@ -76,3 +75,4 @@ public partial class ShadowTargetDebugSystem : SystemBase
         targetables.Dispose();
     }
 }
+

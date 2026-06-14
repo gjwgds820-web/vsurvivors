@@ -25,7 +25,7 @@ public partial class ShadowMovementDebugSystem : SystemBase
             queryMatchCount++;
         }
 
-        Debug.Log($"<color=red>[Shadow Movement Check]</color> Has PhysicsWorld: {hasPhysicsWorld} | Shadows with LocalTransform: {queryMatchCount}");
+        //Debug.Log($"<color=red>[Shadow Movement Check]</color> Has PhysicsWorld: {hasPhysicsWorld} | Shadows with LocalTransform: {queryMatchCount}");
     }
 }
 

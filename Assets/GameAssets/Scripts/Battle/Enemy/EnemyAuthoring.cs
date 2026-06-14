@@ -24,7 +24,7 @@ public class EnemyAuthoring : MonoBehaviour
             {
                 ID = 0, // ID는 나중에 데이터베이스에서 할당
                 Type = authoring.type,
-                CurrentState = EnemyState.Move,
+                CurrentState = EnemyState.Scan,
                 AttackPrefab = GetEntity(authoring.attackPrefab, TransformUsageFlags.Dynamic),
                 AttackPower = authoring.attackPower,
                 AttackRange = authoring.attackRange,
@@ -61,3 +61,4 @@ public class EnemyAuthoring : MonoBehaviour
         }
     }
 }
+

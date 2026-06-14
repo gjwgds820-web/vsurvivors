@@ -76,11 +76,13 @@ public partial struct PlayerDeathSystem : ISystem
         foreach (var (playerData, entity) in
                  SystemAPI.Query<RefRO<PlayerData>>()
                  .WithAll<DeathTag>()
+                 .WithNone<DeathProcessedTag>()
                  .WithEntityAccess())
         {
             // 사망 처리 (예: 게임 오버 이벤트 생성)
             var gameOverEvent = ecb.CreateEntity();
             ecb.AddComponent<PlayerDeathEventTag>(gameOverEvent);
+            ecb.AddComponent<DeathProcessedTag>(entity);
 
             // 플레이어 엔티티는 삭제하지 않고, 필요한 경우 리스폰 시스템에서 재활용할 수 있도록 함
         }

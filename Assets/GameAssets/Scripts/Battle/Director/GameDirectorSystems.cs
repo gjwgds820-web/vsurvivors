@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Physics.GraphicsIntegration;
 using UnityEngine;
 using Unity.Collections;
@@ -10,6 +11,29 @@ using Unity.Collections;
 public partial struct GameDirectorSystem : ISystem
 {
     private Unity.Mathematics.Random _random;
+
+    private static void RemoveDynamicPhysicsBody(ref EntityCommandBuffer ecb, Entity entity, Entity prefab, ref SystemState state)
+    {
+        if (state.EntityManager.HasComponent<PhysicsVelocity>(prefab))
+        {
+            ecb.RemoveComponent<PhysicsVelocity>(entity);
+        }
+
+        if (state.EntityManager.HasComponent<PhysicsMass>(prefab))
+        {
+            ecb.RemoveComponent<PhysicsMass>(entity);
+        }
+
+        if (state.EntityManager.HasComponent<PhysicsDamping>(prefab))
+        {
+            ecb.RemoveComponent<PhysicsDamping>(entity);
+        }
+
+        if (state.EntityManager.HasComponent<PhysicsGravityFactor>(prefab))
+        {
+            ecb.RemoveComponent<PhysicsGravityFactor>(entity);
+        }
+    }
 
     public void OnCreate(ref SystemState state)
     {
@@ -31,6 +55,7 @@ public partial struct GameDirectorSystem : ISystem
         float deltaTime = SystemAPI.Time.DeltaTime;
 
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
+        var newPortalPositions = new NativeList<float3>(16, Allocator.Temp);
 
         foreach (var (clearTag, entity) in SystemAPI.Query<RefRO<ClearNormalEnemiesEventTag>>().WithEntityAccess())
         {
@@ -44,7 +69,7 @@ public partial struct GameDirectorSystem : ISystem
         switch (directorData.ValueRO.CurrentPhase)
         {
             case GamePhase.NormalWave:
-                ProcessNormalWave(ref state, directorData, constData, deltaTime, ref ecb);
+                ProcessNormalWave(ref state, directorData, constData, deltaTime, ref ecb, ref newPortalPositions);
                 break;
             case GamePhase.BossFight:
                 ProcessBossFight(ref state, directorData, constData, deltaTime, ref ecb);
@@ -58,9 +83,10 @@ public partial struct GameDirectorSystem : ISystem
 
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
+        newPortalPositions.Dispose();
     }
 
-    private void ProcessNormalWave(ref SystemState state, RefRW<GameDirectorData> data, ConstConfigData constData, float deltaTime, ref EntityCommandBuffer ecb)
+    private void ProcessNormalWave(ref SystemState state, RefRW<GameDirectorData> data, ConstConfigData constData, float deltaTime, ref EntityCommandBuffer ecb, ref NativeList<float3> newPortalPositions)
     {
         data.ValueRW.GlobalTimer += deltaTime;
         float globalMinutes = data.ValueRO.GlobalTimer / 60f;
@@ -93,7 +119,7 @@ public partial struct GameDirectorSystem : ISystem
         {
             for (int i = currentPortalCount; i < 3; i++)
             {
-                SpawnPortal(ref state, data.ValueRO, ref ecb);
+                SpawnPortal(ref state, data.ValueRO, ref ecb, ref newPortalPositions);
             }
             currentPortalCount = 3;
             data.ValueRW.WaveTimer = createPhase;
@@ -105,7 +131,7 @@ public partial struct GameDirectorSystem : ISystem
             data.ValueRW.WaveTimer = createPhase > 0 ? createPhase : 60f;
             if (currentPortalCount < maxPhase)
             {
-                SpawnPortal(ref state, data.ValueRO, ref ecb);
+                SpawnPortal(ref state, data.ValueRO, ref ecb, ref newPortalPositions);
             }
         }
 
@@ -138,6 +164,7 @@ public partial struct GameDirectorSystem : ISystem
                     if (currentEnemyCount >= 200) break;
 
                     var enemyEntity = ecb.Instantiate(data.ValueRO.EnemyPrefab);
+                    RemoveDynamicPhysicsBody(ref ecb, enemyEntity, data.ValueRO.EnemyPrefab, ref state);
                     float2 randomOffset = _random.NextFloat2Direction() * _random.NextFloat(0.5f, 2f);
                     float3 spawnPos = portalTransform.ValueRO.Position + new float3(randomOffset.x, 0.5f, randomOffset.y);
 
@@ -189,6 +216,7 @@ public partial struct GameDirectorSystem : ISystem
             {
                 ref var bossDef = ref enemyDB.DatabaseRef.Value.Enemies[bossIndexToSpawn];
                 var bossEntity = ecb.Instantiate(data.ValueRO.BossPrefab);
+                RemoveDynamicPhysicsBody(ref ecb, bossEntity, data.ValueRO.BossPrefab, ref state);
 
                 float3 spawnPos = float3.zero;
                 foreach (var (playerTrans, playerData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<PlayerData>>())
@@ -294,6 +322,7 @@ public partial struct GameDirectorSystem : ISystem
                     if (currentEnemyCount >= 200) break;
 
                     var enemyEntity = ecb.Instantiate(data.ValueRO.EnemyPrefab);
+                    RemoveDynamicPhysicsBody(ref ecb, enemyEntity, data.ValueRO.EnemyPrefab, ref state);
                     float2 randomOffset = _random.NextFloat2Direction() * _random.NextFloat(0.5f, 2f);
                     float3 spawnPos = portalTransform.ValueRO.Position + new float3(randomOffset.x, 0.5f, randomOffset.y);
 
@@ -345,6 +374,7 @@ public partial struct GameDirectorSystem : ISystem
             {
                 ref var bossDef = ref enemyDB.DatabaseRef.Value.Enemies[bossIndexToSpawn];
                 var bossEntity = ecb.Instantiate(data.ValueRO.BossPrefab);
+                RemoveDynamicPhysicsBody(ref ecb, bossEntity, data.ValueRO.BossPrefab, ref state);
 
                 float3 spawnPos = new float3(10000, 0.5f, 10000);
 
@@ -436,7 +466,7 @@ public partial struct GameDirectorSystem : ISystem
         // During Isolated Boss Fight, DO NOT spawn regular enemies from portals
     }
 
-    private void SpawnPortal(ref SystemState state, GameDirectorData directorData, ref EntityCommandBuffer ecb)
+    private void SpawnPortal(ref SystemState state, GameDirectorData directorData, ref EntityCommandBuffer ecb, ref NativeList<float3> newPortalPositions)
     {
         if (directorData.PortalPrefab == Entity.Null) return;
         if (!SystemAPI.HasSingleton<CurrentStageConfig>()) return;
@@ -469,7 +499,20 @@ public partial struct GameDirectorSystem : ISystem
 
             if (!tooClose)
             {
+                for (int j = 0; j < newPortalPositions.Length; j++)
+                {
+                    if (math.distancesq(spawnPos, newPortalPositions[j]) < 225f)
+                    {
+                        tooClose = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!tooClose)
+            {
                 validPosFound = true;
+                newPortalPositions.Add(spawnPos);
                 break;
             }
         }

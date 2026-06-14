@@ -11,8 +11,10 @@ public enum EnemyType
 
 public enum EnemyState
 {
-    Move,
+    Scan,
+    Chase,
     Attack,
+    Blocked
 }
 #endregion
 
@@ -42,6 +44,7 @@ public struct CEnemyData : IComponentData
 
     public bool IsBoss;
     public float BlockedTimer;
+    public float3 PreviousPosition;
 }
 
 public struct EnemyDefBlob
@@ -69,3 +72,4 @@ public struct EnemyDatabaseComponent : IComponentData
 
 public struct EnemyTag : IComponentData { }
 public struct BossTag : IComponentData { }
+
