@@ -19,6 +19,7 @@ public class PlayerAuthoring : MonoBehaviour
     [SerializeField] private float magnetismRadius = 3f;
     [SerializeField] private float collectRadius = 0.5f;
     [SerializeField] private GameObject shadowPrefab;
+    [SerializeField] private bool usePlayerRotationBasisForShadowSpawn = false;
 
     class Baker : Baker<PlayerAuthoring>
     {
@@ -58,7 +59,8 @@ public class PlayerAuthoring : MonoBehaviour
 
             AddComponent(entity, new ShadowSpawnData
             {
-                ShadowPrefab = GetEntity(authoring.shadowPrefab, TransformUsageFlags.Dynamic)
+                ShadowPrefab = GetEntity(authoring.shadowPrefab, TransformUsageFlags.Dynamic),
+                UsePlayerRotationBasis = authoring.usePlayerRotationBasisForShadowSpawn
             });
             AddBuffer<ShadowSlotElement>(entity);
             AddBuffer<ActiveShadowSkillElement>(entity);

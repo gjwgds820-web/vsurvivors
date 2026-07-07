@@ -11,6 +11,7 @@ public class BattleDevHelper : EditorWindow
 {
     private const string EnableShadowTargetDebugKey = "EnableShadowTargetDebug";
     private const string EnableEnemyMovementDebugKey = "EnableEnemyMovementDebug";
+    private const string ShadowSpawnUsePlayerRotationKey = "ShadowSpawnUsePlayerRotationBasis";
 
     static BattleDevHelper()
     {
@@ -253,6 +254,30 @@ public class BattleDevHelper : EditorWindow
 
         GUILayout.Space(20);
         GUILayout.Label("Player Action Testing", EditorStyles.boldLabel);
+
+        GUILayout.Space(10);
+        GUILayout.Label("Shadow Spawn Formation", EditorStyles.boldLabel);
+        var playerSpawnQuery = em.CreateEntityQuery(typeof(PlayerData), typeof(ShadowSpawnData));
+        if (playerSpawnQuery.HasSingleton<ShadowSpawnData>())
+        {
+            Entity playerEntity = playerSpawnQuery.GetSingletonEntity();
+            ShadowSpawnData spawnData = em.GetComponentData<ShadowSpawnData>(playerEntity);
+            bool usePlayerRotationBasis = spawnData.UsePlayerRotationBasis;
+
+            EditorGUI.BeginChangeCheck();
+            usePlayerRotationBasis = EditorGUILayout.Toggle("스폰 기준: 플레이어 회전(상대)", usePlayerRotationBasis);
+            if (EditorGUI.EndChangeCheck())
+            {
+                spawnData.UsePlayerRotationBasis = usePlayerRotationBasis;
+                em.SetComponentData(playerEntity, spawnData);
+                EditorPrefs.SetBool(ShadowSpawnUsePlayerRotationKey, usePlayerRotationBasis);
+                Debug.Log($"[Battle Dev Helper] 그림자 스폰 기준을 {(usePlayerRotationBasis ? "상대 방위(플레이어 기준)" : "절대 방위(월드 기준)")}로 변경했습니다.");
+            }
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("플레이어 또는 ShadowSpawnData를 찾을 수 없어 스폰 기준 토글을 표시할 수 없습니다.", MessageType.Warning);
+        }
 
         if (GUILayout.Button("플레이어 피격 애니메이션 테스트 (10 데미지)"))
         {

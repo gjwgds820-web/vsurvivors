@@ -46,6 +46,7 @@ public struct ProjectileData : IComponentData
 }
 
 public struct DeathTag : IComponentData { }
+public struct NoDropOnDeathTag : IComponentData { }
 
 public struct EffectVisualInfo : IComponentData
 {

@@ -144,9 +144,7 @@ public partial struct ShadowBehaviorJob : IJobEntity
             }
         }
 
-        float3 formationRotatedOffset = shadow.InitialOffset;
-        if (IsPlayerMoving) formationRotatedOffset -= PlayerForward * 1.5f;
-        float3 idleDest = PlayerPos + formationRotatedOffset;
+        float3 idleDest = PlayerPos + shadow.InitialOffset;
         idleDest.y = 1f;
 
         if (distToPlayerSq > LeashDistSq)

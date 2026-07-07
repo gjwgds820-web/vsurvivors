@@ -61,6 +61,74 @@ public partial struct PlayerMovementSystem : ISystem
 }
 #endregion
 
+#region BossArenaBoundaryClampSystem
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+[BurstCompile]
+public partial struct BossArenaBoundaryClampSystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        if (!SystemAPI.TryGetSingleton<GameDirectorData>(out var director)) return;
+        if (!director.BossArenaActive || director.BossArenaRadius <= 0.1f) return;
+
+        bool isBossPhase = director.CurrentPhase == GamePhase.BossFight || director.CurrentPhase == GamePhase.IsolatedBossFight;
+        if (!isBossPhase) return;
+
+        float2 center2D = new float2(director.BossArenaCenter.x, director.BossArenaCenter.z);
+        float clampRadius = math.max(1f, director.BossArenaRadius - 0.6f);
+
+        foreach (var transform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PlayerData>().WithNone<DeathTag>())
+        {
+            float3 pos = transform.ValueRO.Position;
+            float2 pos2D = new float2(pos.x, pos.z);
+            float2 delta = pos2D - center2D;
+            float distSq = math.lengthsq(delta);
+            float radiusSq = clampRadius * clampRadius;
+
+            if (distSq > radiusSq)
+            {
+                float2 dir = math.normalizesafe(delta, new float2(1f, 0f));
+                float2 clamped2D = center2D + dir * clampRadius;
+                transform.ValueRW.Position = new float3(clamped2D.x, pos.y, clamped2D.y);
+            }
+        }
+
+        foreach (var transform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<CEnemyData>().WithNone<DeathTag>())
+        {
+            float3 pos = transform.ValueRO.Position;
+            float2 pos2D = new float2(pos.x, pos.z);
+            float2 delta = pos2D - center2D;
+            float distSq = math.lengthsq(delta);
+            float radiusSq = clampRadius * clampRadius;
+
+            if (distSq > radiusSq)
+            {
+                float2 dir = math.normalizesafe(delta, new float2(1f, 0f));
+                float2 clamped2D = center2D + dir * clampRadius;
+                transform.ValueRW.Position = new float3(clamped2D.x, pos.y, clamped2D.y);
+            }
+        }
+
+        foreach (var transform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<CShadowData>().WithNone<DeathTag>())
+        {
+            float3 pos = transform.ValueRO.Position;
+            float2 pos2D = new float2(pos.x, pos.z);
+            float2 delta = pos2D - center2D;
+            float distSq = math.lengthsq(delta);
+            float radiusSq = clampRadius * clampRadius;
+
+            if (distSq > radiusSq)
+            {
+                float2 dir = math.normalizesafe(delta, new float2(1f, 0f));
+                float2 clamped2D = center2D + dir * clampRadius;
+                transform.ValueRW.Position = new float3(clamped2D.x, pos.y, clamped2D.y);
+            }
+        }
+    }
+}
+#endregion
+
 #region Death System
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(UnitHealthSystem))]
@@ -111,8 +179,13 @@ public partial struct ShadowSpawnerSystem : ISystem
         {
             var shadowSlots = SystemAPI.GetBuffer<ShadowSlotElement>(entity);
             var activeSkills = SystemAPI.GetBuffer<ActiveShadowSkillElement>(entity);
+            int maxShadowSlots = math.min((int)playerData.ValueRO.MaxShadow, 20);
+            float3 basisForwardForSlots = spawnerData.ValueRO.UsePlayerRotationBasis
+                ? math.normalizesafe(new float3(math.forward(playerTransform.ValueRO.Rotation).x, 0f, math.forward(playerTransform.ValueRO.Rotation).z), new float3(0f, 0f, 1f))
+                : new float3(0f, 0f, 1f);
+            float3 basisRightForSlots = math.cross(math.up(), basisForwardForSlots);
 
-            // 현재 살아있는 그림자 수 확인 및 죽은 그림자 동기화 (제거)
+            // 현재 살아있는 그림자 수 확인 및 죽은 그림자 동기화 (앞쪽 빈 슬롯 유지)
             int aliveCount = 0;
             for (int i = shadowSlots.Length - 1; i >= 0; i--)
             {
@@ -138,20 +211,21 @@ public partial struct ShadowSpawnerSystem : ISystem
                 }
                 else
                 {
-                    // 죽은 슬롯은 배열에서 제거하여 빈자리 및 순서 압축
-                    shadowSlots.RemoveAt(i);
+                    // 죽은 슬롯은 비워두고, 다음 스폰이 가장 앞 빈 슬롯을 우선 점유합니다.
+                    slot.ShadowEntity = Entity.Null;
+                    slot.IsAlive = false;
+                    shadowSlots[i] = slot;
                 }
             }
 
             // 최대치를 넘어가는 오래된 잉여 슬롯이 있다면 강제 제거
-            while (shadowSlots.Length > playerData.ValueRO.MaxShadow)
+            while (shadowSlots.Length > maxShadowSlots)
             {
                 if (SystemAPI.Exists(shadowSlots[shadowSlots.Length - 1].ShadowEntity))
                 {
                     ecb.AddComponent<DestroyEntityTag>(shadowSlots[shadowSlots.Length - 1].ShadowEntity);
                 }
                 shadowSlots.RemoveAt(shadowSlots.Length - 1);
-                aliveCount--;
             }
 
             // 인덱스 동기화 및 기존 그림자 스탯/외형 업데이트
@@ -163,9 +237,32 @@ public partial struct ShadowSpawnerSystem : ISystem
                     if (SystemAPI.HasComponent<CShadowData>(slot.ShadowEntity))
                     {
                         var cData = SystemAPI.GetComponent<CShadowData>(slot.ShadowEntity);
-                        if (cData.Index != i)
+                        if (cData.Index != i || !cData.Initialized)
                         {
                             cData.Index = i;
+                            const float innerRadius = 3f;
+                            const float outerRadius = 6f;
+                            float3 slotOffset = float3.zero;
+                            if (i >= 0 && i < 20)
+                            {
+                                if (i < 8)
+                                {
+                                    float angleStep = (math.PI * 2f) / 8f;
+                                    float angle = i * angleStep;
+                                    float3 dir = math.normalizesafe(basisForwardForSlots * math.cos(angle) + basisRightForSlots * math.sin(angle), basisForwardForSlots);
+                                    slotOffset = dir * innerRadius;
+                                }
+                                else
+                                {
+                                    int outerIndex = i - 8;
+                                    float angleStep = (math.PI * 2f) / 12f;
+                                    float angle = outerIndex * angleStep;
+                                    float3 dir = math.normalizesafe(basisForwardForSlots * math.cos(angle) + basisRightForSlots * math.sin(angle), basisForwardForSlots);
+                                    slotOffset = dir * outerRadius;
+                                }
+                            }
+                            cData.InitialOffset = slotOffset;
+                            cData.Initialized = true;
                             ecb.SetComponent(slot.ShadowEntity, cData);
                         }
                     }
@@ -227,12 +324,12 @@ public partial struct ShadowSpawnerSystem : ISystem
             if (!playerData.ValueRO.InitialShadowsSpawned)
             {
                 playerData.ValueRW.InitialShadowsSpawned = true;
-                int initialSpawnCount = math.min(3, (int)playerData.ValueRO.MaxShadow);
+                int initialSpawnCount = math.min(3, maxShadowSlots);
                 playerData.ValueRW.ShadowRegenTimer = -playerData.ValueRO.ShadowRegenCooldown * (initialSpawnCount - 1);
             }
 
             // 살아있는 그림자가 최대치보다 적을때 타이머 감소
-            if (playerData.ValueRO.CurrentShadow < playerData.ValueRO.MaxShadow)
+            if (playerData.ValueRO.CurrentShadow < maxShadowSlots)
             {
                 playerData.ValueRW.ShadowRegenTimer -= deltaTime;
 
@@ -241,8 +338,24 @@ public partial struct ShadowSpawnerSystem : ISystem
                     // 타이머 연장 (연속 스폰 지원)
                     playerData.ValueRW.ShadowRegenTimer += playerData.ValueRO.ShadowRegenCooldown;
 
-                    // 빈자리 찾기 (이제 항상 뒤에 추가됨)
-                    int targetIndex = shadowSlots.Length;
+                    // 앞에서부터 첫 번째 빈 슬롯을 찾고, 없으면 뒤에 새 슬롯을 추가합니다.
+                    int targetIndex = -1;
+                    int slotSearchLength = math.min(shadowSlots.Length, maxShadowSlots);
+                    for (int i = 0; i < slotSearchLength; i++)
+                    {
+                        var slot = shadowSlots[i];
+                        if (!slot.IsAlive || slot.ShadowEntity == Entity.Null)
+                        {
+                            targetIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (targetIndex == -1 && shadowSlots.Length < maxShadowSlots)
+                    {
+                        targetIndex = shadowSlots.Length;
+                    }
+
                     Entity targetShadow = Entity.Null;
 
                     if (activeSkills.Length == 0) continue; // No shadows equipped
@@ -250,7 +363,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                     int skillIndex = random.NextInt(0, activeSkills.Length);
                     int shadowID = activeSkills[skillIndex].ShadowID;
 
-                    if (targetIndex < playerData.ValueRO.MaxShadow)
+                    if (targetIndex < maxShadowSlots)
                     {
                         // 실제 소환 대상 찾기
                         ref var shadows = ref shadowDB.DatabaseRef.Value.Shadows;
@@ -271,22 +384,31 @@ public partial struct ShadowSpawnerSystem : ISystem
 
                         // 스폰 위치 계산
                         float3 playerPos = playerTransform.ValueRO.Position;
-                        float3 playerForward = math.forward(playerTransform.ValueRO.Rotation);
-                        float3 right = math.cross(math.up(), playerForward);
-                        float distance = 3f;
+                        float3 basisForward = basisForwardForSlots;
+                        float3 right = basisRightForSlots;
                         float3 spawnPos = playerPos;
-
-                        // Idle 기준 위치 계산
-                        if (targetIndex < 8)
+                        const float innerRadius = 3f;
+                        const float outerRadius = 6f;
+                        float3 slotOffset = float3.zero;
+                        if (targetIndex >= 0 && targetIndex < 20)
                         {
-                            float angle = (targetIndex / 8f) * math.PI * 2f;
-                            spawnPos += right * math.cos(angle) * distance + playerForward * math.sin(angle) * distance + new float3(0, 1f, 0);
+                            if (targetIndex < 8)
+                            {
+                                float angleStep = (math.PI * 2f) / 8f;
+                                float angle = targetIndex * angleStep;
+                                float3 dir = math.normalizesafe(basisForward * math.cos(angle) + right * math.sin(angle), basisForward);
+                                slotOffset = dir * innerRadius;
+                            }
+                            else
+                            {
+                                int outerIndex = targetIndex - 8;
+                                float angleStep = (math.PI * 2f) / 12f;
+                                float angle = outerIndex * angleStep;
+                                float3 dir = math.normalizesafe(basisForward * math.cos(angle) + right * math.sin(angle), basisForward);
+                                slotOffset = dir * outerRadius;
+                            }
                         }
-                        else
-                        {
-                            float angle = ((targetIndex - 8) / 12f) * math.PI * 2f;
-                            spawnPos += right * math.cos(angle) * distance * 2f + playerForward * math.sin(angle) * distance * 2f + new float3(0, 1f, 0);
-                        }
+                        spawnPos += slotOffset + new float3(0, 1f, 0);
 
                         // 스폰 위치 로직 끝
 
@@ -312,6 +434,8 @@ public partial struct ShadowSpawnerSystem : ISystem
                         baseShadowData.Index = targetIndex;
                         baseShadowData.CurrentState = ShadowAIState.Idle;
                         baseShadowData.StateChangeTimer = 0f;
+                        baseShadowData.InitialOffset = slotOffset;
+                        baseShadowData.Initialized = true;
                         ecb.SetComponent(targetShadow, baseShadowData);
                         // 스탯 주입
                         var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
@@ -335,8 +459,28 @@ public partial struct ShadowSpawnerSystem : ISystem
                         healthData.CurrentHealth = shadowDef.MaxHealth;
                         ecb.SetComponent(targetShadow, healthData);
 
-                        // 죽은 자리를 전부 비우고 뒤로 밀어넣었으므로, SetBuffer 대신 안전하게 AppendToBuffer만 사용
-                        ecb.AppendToBuffer(entity, new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
+                        // 가장 앞 빈 슬롯을 채우거나, 빈 슬롯이 없으면 뒤에 추가합니다.
+                        var updatedSlots = new NativeList<ShadowSlotElement>(math.max(shadowSlots.Length + 1, maxShadowSlots), Allocator.Temp);
+                        for (int i = 0; i < shadowSlots.Length; i++)
+                        {
+                            updatedSlots.Add(shadowSlots[i]);
+                        }
+
+                        if (targetIndex < updatedSlots.Length)
+                        {
+                            updatedSlots[targetIndex] = new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true };
+                        }
+                        else
+                        {
+                            updatedSlots.Add(new ShadowSlotElement { ShadowEntity = targetShadow, IsAlive = true });
+                        }
+
+                        var slotBuffer = ecb.SetBuffer<ShadowSlotElement>(entity);
+                        for (int i = 0; i < updatedSlots.Length; i++)
+                        {
+                            slotBuffer.Add(updatedSlots[i]);
+                        }
+                        updatedSlots.Dispose();
 
                         // 스폰 완료에 따른 플레이어 데이터 업데이트
                         playerData.ValueRW.CurrentShadow++;

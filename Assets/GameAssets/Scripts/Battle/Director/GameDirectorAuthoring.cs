@@ -1,4 +1,5 @@
 ﻿using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
@@ -33,7 +34,10 @@ public class GameDirectorAuthoring : MonoBehaviour
                 GlobalTimer = 0f,
                 BossTimer = 180f,
                 BossSpawnInterval = authoring.bossSpawnInterval,
-                ExpRequirementBase = authoring.expRequirementBase
+                ExpRequirementBase = authoring.expRequirementBase,
+                BossArenaActive = false,
+                BossArenaCenter = float3.zero,
+                BossArenaRadius = 0f
             });
             AddComponent<SubSceneVisualModel>(entity);
 

@@ -13,6 +13,7 @@ public partial class VisualSyncSystem : SystemBase
     private EntityQuery _enemyMissingVisualQuery;
     private EntityQuery _bossMissingVisualQuery;
     private EntityQuery _portalMissingVisualQuery;
+    private EntityQuery _bossArenaFenceMissingVisualQuery;
     private EntityQuery _shadowMissingVisualQuery;
     private EntityQuery _itemMissingVisualQuery;
     private EntityQuery _playerMissingVisualQuery;
@@ -24,6 +25,7 @@ public partial class VisualSyncSystem : SystemBase
         _enemyMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag>().WithNone<SubSceneVisualModel, Prefab, BossTag>().Build();
         _bossMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, EnemyTag, BossTag>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _portalMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CPortalData>().WithNone<SubSceneVisualModel, Prefab>().Build();
+        _bossArenaFenceMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, BossArenaFenceTag>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _shadowMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, CShadowData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _itemMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, DroppedItemData>().WithNone<SubSceneVisualModel, Prefab>().Build();
         _playerMissingVisualQuery = SystemAPI.QueryBuilder().WithAll<LocalTransform, PlayerData>().WithNone<SubSceneVisualModel, Prefab>().Build();
@@ -203,6 +205,60 @@ public partial class VisualSyncSystem : SystemBase
             entities.Dispose();
         }
 
+        if (!_bossArenaFenceMissingVisualQuery.IsEmpty)
+        {
+            var entities = _bossArenaFenceMissingVisualQuery.ToEntityArray(Allocator.TempJob);
+            foreach (var entity in entities)
+            {
+                var tr = EntityManager.GetComponentData<LocalTransform>(entity);
+                GameObject go = null;
+
+                if (VisualManager.Instance.BossArenaFenceVisualPrefab != null)
+                {
+                    go = Object.Instantiate(VisualManager.Instance.BossArenaFenceVisualPrefab, tr.Position, tr.Rotation);
+
+                    var renderers = go.GetComponentsInChildren<Renderer>(true);
+                    foreach (var renderer in renderers)
+                    {
+                        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        renderer.receiveShadows = false;
+                    }
+                }
+                else
+                {
+                    // Fallback visual when no prefab is assigned in VisualManager.
+                    go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    var collider = go.GetComponent<Collider>();
+                    if (collider != null)
+                    {
+                        Object.Destroy(collider);
+                    }
+
+                    go.transform.SetPositionAndRotation(tr.Position, tr.Rotation);
+                    go.transform.localScale = new Vector3(0.8f, 3f, 3f);
+
+                    var renderer = go.GetComponent<Renderer>();
+                    if (renderer != null)
+                    {
+                        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        renderer.receiveShadows = false;
+                        var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                        if (mat != null)
+                        {
+                            var c = new Color(1f, 0.35f, 0.15f, 0.65f);
+                            mat.SetColor("_BaseColor", c);
+                            renderer.sharedMaterial = mat;
+                        }
+                    }
+
+                    go.name = "BossArenaFenceVisual";
+                }
+
+                EntityManager.AddComponentObject(entity, new SubSceneVisualModel { Value = go.transform });
+            }
+            entities.Dispose();
+        }
+
         if (!_shadowMissingVisualQuery.IsEmpty)
         {
             var entities = _shadowMissingVisualQuery.ToEntityArray(Allocator.TempJob);
@@ -352,8 +408,9 @@ public partial class VisualSyncSystem : SystemBase
             {
                 Vector3 targetPos = transform.ValueRO.Position;
 
-                // 아이템이 아닌 전투 개체(적, 보스, 그림자 등)의 비주얼은 모두 바닥(y=0)에 붙이도록 y값을 고정합니다.
-                if (!SystemAPI.HasComponent<DroppedItemData>(entity))
+                // 아이템이 아닌 전투 개체(적, 보스, 그림자 등)의 비주얼은 바닥(y=0)에 붙입니다.
+                // 단, 보스 울타리 비주얼은 실제 ECS 높이를 유지합니다.
+                if (!SystemAPI.HasComponent<DroppedItemData>(entity) && !SystemAPI.HasComponent<BossArenaFenceTag>(entity))
                 {
                     targetPos.y = 0f;
                 }

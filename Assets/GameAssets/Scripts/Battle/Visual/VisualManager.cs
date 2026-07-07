@@ -9,6 +9,7 @@ public class VisualManager : MonoBehaviour
     public GameObject PortalVisualPrefab;
     public GameObject EnemyVisualPrefab;
     public GameObject BossVisualPrefab;
+    public GameObject BossArenaFenceVisualPrefab;
     public GameObject ShadowVisualPrefab;
 
     public GameObject ExpVisualPrefab;

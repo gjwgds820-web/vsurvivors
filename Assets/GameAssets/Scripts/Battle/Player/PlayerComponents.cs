@@ -38,6 +38,7 @@ public struct PlayerData : IComponentData
 public struct ShadowSpawnData : IComponentData
 {
     public Entity ShadowPrefab;
+    public bool UsePlayerRotationBasis;
 }
 
 public struct ShadowSlotElement : IBufferElementData

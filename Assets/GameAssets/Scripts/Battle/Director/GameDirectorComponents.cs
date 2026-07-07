@@ -35,6 +35,11 @@ public struct GameDirectorData : IComponentData
     // For Isolated Boss Fight
     public float3 SavedPlayerPosition;
     public Entity ActiveIsolatedPortal;
+
+    // Runtime boss arena boundary for movement clamp.
+    public bool BossArenaActive;
+    public float3 BossArenaCenter;
+    public float BossArenaRadius;
 }
 
 public struct SpawnBossEventTag : IComponentData
@@ -49,6 +54,8 @@ public struct GameClearEventTag : IComponentData
 {
     public int ClearanceLevel;
 }
+
+public struct BossArenaFenceTag : IComponentData { }
 
 
 public struct ConstConfigData : IComponentData

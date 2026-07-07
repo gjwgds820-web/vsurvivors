@@ -256,6 +256,7 @@ public partial struct EnemyMovementJob : IJobEntity
             case EnemyState.Scan: // Re-Scan or Idle checking
             {
                 enemyData.BlockedTimer = 0f;
+                enemyData.TargetOutOfRangeTimer = 0f;
 
                 if (IsTargetInvalid(targetData.CurrentTarget))
                     targetData.CurrentTarget = Entity.Null;
@@ -291,6 +292,7 @@ public partial struct EnemyMovementJob : IJobEntity
 
                 if (IsTargetInvalid(targetData.CurrentTarget))
                 {
+                    enemyData.TargetOutOfRangeTimer = 0f;
                     targetData.CurrentTarget = hasValidPlayer ? PlayerEntity : Entity.Null;
                     if (targetData.CurrentTarget == Entity.Null)
                     {
@@ -299,23 +301,44 @@ public partial struct EnemyMovementJob : IJobEntity
                     }
                 }
 
+                bool allowRetargetThisFrame = true;
+
                 if (targetData.CurrentTarget != PlayerEntity)
                 {
                     float currentTargetDistSq = math.distancesq(currentPos, TransformLookup[targetData.CurrentTarget].Position);
-                    if (currentTargetDistSq > searchRadiusSq * 1.5f || DeathLookup.HasComponent(targetData.CurrentTarget))
+                    bool isOutOfRecognitionRange = currentTargetDistSq > searchRadiusSq * 1.5f || DeathLookup.HasComponent(targetData.CurrentTarget);
+                    if (isOutOfRecognitionRange)
                     {
-                        targetData.CurrentTarget = hasValidPlayer ? PlayerEntity : Entity.Null;
+                        enemyData.TargetOutOfRangeTimer += DeltaTime;
+                        allowRetargetThisFrame = enemyData.TargetOutOfRangeTimer >= 1f;
+
+                        if (allowRetargetThisFrame)
+                        {
+                            enemyData.TargetOutOfRangeTimer = 0f;
+                            targetData.CurrentTarget = hasValidPlayer ? PlayerEntity : Entity.Null;
+                        }
+                    }
+                    else
+                    {
+                        enemyData.TargetOutOfRangeTimer = 0f;
                     }
                 }
-
-                Entity nearbyShadow = FindBestShadowTarget(currentPos, searchRadiusSq, cell);
-                if (nearbyShadow != Entity.Null)
+                else
                 {
-                    targetData.CurrentTarget = nearbyShadow;
+                    enemyData.TargetOutOfRangeTimer = 0f;
                 }
-                else if (targetData.CurrentTarget == Entity.Null && hasValidPlayer)
+
+                if (allowRetargetThisFrame)
                 {
-                    targetData.CurrentTarget = PlayerEntity;
+                    Entity nearbyShadow = FindBestShadowTarget(currentPos, searchRadiusSq, cell);
+                    if (nearbyShadow != Entity.Null)
+                    {
+                        targetData.CurrentTarget = nearbyShadow;
+                    }
+                    else if (targetData.CurrentTarget == Entity.Null && hasValidPlayer)
+                    {
+                        targetData.CurrentTarget = PlayerEntity;
+                    }
                 }
 
                 if (targetData.CurrentTarget == Entity.Null)
@@ -392,6 +415,7 @@ public partial struct EnemyMovementJob : IJobEntity
             case EnemyState.Attack:
             {
                 enemyData.BlockedTimer = 0f;
+                enemyData.TargetOutOfRangeTimer = 0f;
 
                 if (targetData.CurrentTarget == Entity.Null || !TransformLookup.HasComponent(targetData.CurrentTarget))
                 {
@@ -950,6 +974,8 @@ public partial struct EnemyDeathSystem : ISystem
                  .WithNone<DestroyEntityTag>()
                  .WithEntityAccess())
         {
+            bool noDrop = SystemAPI.HasComponent<NoDropOnDeathTag>(entity);
+
             if (enemyData.ValueRO.IsBoss)
             {
                 if (!SystemAPI.HasComponent<IsolatedBossTag>(entity))
@@ -981,7 +1007,7 @@ public partial struct EnemyDeathSystem : ISystem
             if (seed == 0) seed = 1; // 0이 되면 Unity.Mathematics.Random 생성 시 예외 발생
             var random = Unity.Mathematics.Random.CreateFromIndex(seed);
 
-            if (hasDropBank)
+            if (hasDropBank && !noDrop)
             {
                 if (dropBank.ExpPrefab != Entity.Null)
                 {

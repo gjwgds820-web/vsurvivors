@@ -51,6 +51,13 @@ public partial struct PortalInteractionSystem : ISystem
                 continue;
             }
 
+            // 격리 보스 포탈은 NormalWave에서만 진입을 허용합니다.
+            if (portalType == 42020103 && directorDataData.ValueRO.CurrentPhase != GamePhase.NormalWave)
+            {
+                cPortalData.ValueRW.AbsorbtionTimer = 0f;
+                continue;
+            }
+
             if (cPortalData.ValueRO.RequiredShadows <= 0) continue;
 
             if (cPortalData.ValueRO.AbsorbedShadows >= cPortalData.ValueRO.RequiredShadows)
@@ -100,7 +107,10 @@ public partial struct PortalInteractionSystem : ISystem
                     if (portalType == 42020103)
                     {
                         directorDataData.ValueRW.CurrentWave++;
-                        directorDataData.ValueRW.PreviousPhase = directorDataData.ValueRO.CurrentPhase;
+                        if (directorDataData.ValueRO.CurrentPhase != GamePhase.IsolatedBossFight)
+                        {
+                            directorDataData.ValueRW.PreviousPhase = directorDataData.ValueRO.CurrentPhase;
+                        }
                         directorDataData.ValueRW.CurrentPhase = GamePhase.IsolatedBossFight;
                         directorDataData.ValueRW.BossTimer = constData.PortalBossTimer > 0f ? constData.PortalBossTimer : 180f;
 

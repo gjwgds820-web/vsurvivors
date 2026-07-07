@@ -6,11 +6,58 @@ using Unity.Physics;
 using Unity.Physics.GraphicsIntegration;
 using UnityEngine;
 using Unity.Collections;
+using VSurvivors.Battle.Physics;
 
 [BurstCompile]
 public partial struct GameDirectorSystem : ISystem
 {
     private Unity.Mathematics.Random _random;
+
+    private static void CreateBossArenaFence(float3 playerPos, float3 bossPos, ref EntityCommandBuffer ecb)
+    {
+        float3 center = (playerPos + bossPos) * 0.5f;
+        center.y = 1.5f;
+
+        float horizontalDistance = math.distance(new float2(playerPos.x, playerPos.z), new float2(bossPos.x, bossPos.z));
+        float radius = math.max(12f, (horizontalDistance * 0.5f) + 6f);
+
+        const int segmentCount = 20;
+        const float segmentThickness = 0.8f;
+        const float segmentHeight = 3f;
+        float arcLength = (2f * math.PI * radius) / segmentCount;
+
+        for (int i = 0; i < segmentCount; i++)
+        {
+            float angle = (math.PI * 2f * i) / segmentCount;
+            float3 outward = new float3(math.cos(angle), 0f, math.sin(angle));
+            float3 segPos = center + outward * radius;
+
+            quaternion segRot = quaternion.LookRotationSafe(outward, math.up());
+            float3 halfExtents = new float3(segmentThickness * 0.5f, segmentHeight * 0.5f, arcLength * 0.5f);
+
+            var collider = Unity.Physics.BoxCollider.Create(new BoxGeometry
+            {
+                Center = float3.zero,
+                Orientation = quaternion.identity,
+                Size = halfExtents * 2f,
+                BevelRadius = 0f
+            });
+
+            Entity segEntity = ecb.CreateEntity();
+            ecb.AddComponent(segEntity, LocalTransform.FromPositionRotationScale(segPos, segRot, 1f));
+            ecb.AddComponent(segEntity, new PhysicsCollider { Value = collider });
+            ecb.AddComponent(segEntity, new CustomCollisionFilter
+            {
+                Value = new CollisionFilter
+                {
+                    BelongsTo = GamePhysicsLayers.Structure,
+                    CollidesWith = GamePhysicsLayers.StructureMask,
+                    GroupIndex = 0
+                }
+            });
+            ecb.AddComponent<BossArenaFenceTag>(segEntity);
+        }
+    }
 
     private static void RemoveDynamicPhysicsBody(ref EntityCommandBuffer ecb, Entity entity, Entity prefab, ref SystemState state)
     {
@@ -62,7 +109,14 @@ public partial struct GameDirectorSystem : ISystem
             ecb.DestroyEntity(entity);
             foreach (var (health, enemyEntity) in SystemAPI.Query<RefRW<HealthData>>().WithAll<EnemyTag, CEnemyData>().WithNone<BossTag>().WithEntityAccess())
             {
+                ecb.AddComponent<NoDropOnDeathTag>(enemyEntity);
                 health.ValueRW.CurrentHealth = 0f;
+                ecb.AddComponent<DestroyEntityTag>(enemyEntity);
+            }
+
+            foreach (var (_, portalEntity) in SystemAPI.Query<RefRO<CPortalData>>().WithEntityAccess())
+            {
+                ecb.AddComponent<DestroyEntityTag>(portalEntity);
             }
         }
 
@@ -99,6 +153,19 @@ public partial struct GameDirectorSystem : ISystem
             data.ValueRW.CurrentWave = expectedWave;
             data.ValueRW.CurrentPhase = GamePhase.BossFight;
             data.ValueRW.BossTimer = constData.PortalBossTimer > 0f ? constData.PortalBossTimer : 180f;
+
+            // 보스 페이즈 진입 시점에 일반 적/포탈을 즉시 정리합니다.
+            foreach (var (health, enemyEntity) in SystemAPI.Query<RefRW<HealthData>>().WithAll<EnemyTag, CEnemyData>().WithNone<BossTag>().WithEntityAccess())
+            {
+                ecb.AddComponent<NoDropOnDeathTag>(enemyEntity);
+                health.ValueRW.CurrentHealth = 0f;
+                ecb.AddComponent<DestroyEntityTag>(enemyEntity);
+            }
+
+            foreach (var (_, portalEntity) in SystemAPI.Query<RefRO<CPortalData>>().WithEntityAccess())
+            {
+                ecb.AddComponent<DestroyEntityTag>(portalEntity);
+            }
 
             var clearEventEntity = ecb.CreateEntity();
             ecb.AddComponent<ClearNormalEnemiesEventTag>(clearEventEntity);
@@ -209,7 +276,19 @@ public partial struct GameDirectorSystem : ISystem
             int bossIndexToSpawn = -1;
             for (int i = 0; i < enemyDB.DatabaseRef.Value.Enemies.Length; i++)
             {
-                if (enemyDB.DatabaseRef.Value.Enemies[i].IsBoss) { bossIndexToSpawn = i; }
+                ref var candidate = ref enemyDB.DatabaseRef.Value.Enemies[i];
+                if (!candidate.IsBoss) continue;
+
+                if (candidate.ID == bossEvent.ValueRO.BossID)
+                {
+                    bossIndexToSpawn = i;
+                    break;
+                }
+
+                if (bossIndexToSpawn == -1)
+                {
+                    bossIndexToSpawn = i; // fallback: first boss in DB
+                }
             }
 
             if (bossIndexToSpawn != -1)
@@ -219,9 +298,11 @@ public partial struct GameDirectorSystem : ISystem
                 RemoveDynamicPhysicsBody(ref ecb, bossEntity, data.ValueRO.BossPrefab, ref state);
 
                 float3 spawnPos = float3.zero;
+                float3 playerPosForBoss = float3.zero;
                 foreach (var (playerTrans, playerData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<PlayerData>>())
                 {
                     spawnPos = playerTrans.ValueRO.Position;
+                    playerPosForBoss = playerTrans.ValueRO.Position;
                     break;
                 }
 
@@ -258,18 +339,32 @@ public partial struct GameDirectorSystem : ISystem
 
                 ecb.AddComponent<EnemyTag>(bossEntity);
                 ecb.AddComponent<BossTag>(bossEntity);
+
+                foreach (var (_, fenceEntity) in SystemAPI.Query<RefRO<BossArenaFenceTag>>().WithEntityAccess())
+                {
+                    ecb.AddComponent<DestroyEntityTag>(fenceEntity);
+                }
+                CreateBossArenaFence(playerPosForBoss, spawnPos, ref ecb);
+
+                float horizontalDistance = math.distance(new float2(playerPosForBoss.x, playerPosForBoss.z), new float2(spawnPos.x, spawnPos.z));
+                data.ValueRW.BossArenaCenter = (playerPosForBoss + spawnPos) * 0.5f;
+                data.ValueRW.BossArenaCenter.y = 0f;
+                data.ValueRW.BossArenaRadius = math.max(12f, (horizontalDistance * 0.5f) + 6f);
+                data.ValueRW.BossArenaActive = true;
             }
         }
 
-        bool hasBossEntity = false;
-        bool isBossAlive = false;
-        foreach (var enemyData in SystemAPI.Query<RefRO<CEnemyData>>())
+        bool hasAliveBossEntity = false;
+        foreach (var (enemyData, entity) in SystemAPI.Query<RefRO<CEnemyData>>().WithEntityAccess())
         {
             if (enemyData.ValueRO.IsBoss)
             {
-                hasBossEntity = true;
-                if (enemyData.ValueRO.IsAlive) isBossAlive = true;
-                break;
+                bool isDeadTagged = SystemAPI.HasComponent<DeathTag>(entity);
+                if (enemyData.ValueRO.IsAlive && !isDeadTagged)
+                {
+                    hasAliveBossEntity = true;
+                    break;
+                }
             }
         }
         
@@ -279,12 +374,18 @@ public partial struct GameDirectorSystem : ISystem
             if (!evt.ValueRO.IsIsolatedBoss) { hasSpawnEventPending = true; break; }
         }
 
-        if (!hasBossEntity && !hasSpawnEventPending)
+        if (!hasAliveBossEntity && !hasSpawnEventPending)
         {
+            foreach (var (_, fenceEntity) in SystemAPI.Query<RefRO<BossArenaFenceTag>>().WithEntityAccess())
+            {
+                ecb.AddComponent<DestroyEntityTag>(fenceEntity);
+            }
+            data.ValueRW.BossArenaActive = false;
+            data.ValueRW.BossArenaRadius = 0f;
             data.ValueRW.CurrentPhase = GamePhase.NormalWave;
         }
 
-        if (data.ValueRO.BossTimer > 0f && isBossAlive)
+        if (data.ValueRO.BossTimer > 0f && hasAliveBossEntity)
         {
             data.ValueRW.BossTimer -= deltaTime;
             if (data.ValueRO.BossTimer <= 0f)
@@ -317,7 +418,7 @@ public partial struct GameDirectorSystem : ISystem
                 
                 float timeMultiplier = 1f + (float)math.floor(SystemAPI.Time.ElapsedTime / 60f) * 0.2f;
 
-                foreach (var (portalTransform, cPortalData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<CPortalData>>())
+                foreach (var (portalTransform, cPortalData) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<CPortalData>>().WithNone<HiddenIsolatedPortalTag>())
                 {
                     if (currentEnemyCount >= 200) break;
 
@@ -367,7 +468,19 @@ public partial struct GameDirectorSystem : ISystem
             int bossIndexToSpawn = -1;
             for (int i = 0; i < enemyDB.DatabaseRef.Value.Enemies.Length; i++)
             {
-                if (enemyDB.DatabaseRef.Value.Enemies[i].IsBoss) { bossIndexToSpawn = i; }
+                ref var candidate = ref enemyDB.DatabaseRef.Value.Enemies[i];
+                if (!candidate.IsBoss) continue;
+
+                if (candidate.ID == bossEvent.ValueRO.BossID)
+                {
+                    bossIndexToSpawn = i;
+                    break;
+                }
+
+                if (bossIndexToSpawn == -1)
+                {
+                    bossIndexToSpawn = i; // fallback: first boss in DB
+                }
             }
 
             if (bossIndexToSpawn != -1)
@@ -412,18 +525,33 @@ public partial struct GameDirectorSystem : ISystem
                 ecb.AddComponent<EnemyTag>(bossEntity);
                 ecb.AddComponent<BossTag>(bossEntity);
                 ecb.AddComponent<IsolatedBossTag>(bossEntity);
+
+                float3 isolatedPlayerPos = new float3(10000, 1f, 10000);
+                foreach (var (_, fenceEntity) in SystemAPI.Query<RefRO<BossArenaFenceTag>>().WithEntityAccess())
+                {
+                    ecb.AddComponent<DestroyEntityTag>(fenceEntity);
+                }
+                CreateBossArenaFence(isolatedPlayerPos, spawnPos, ref ecb);
+
+                float horizontalDistance = math.distance(new float2(isolatedPlayerPos.x, isolatedPlayerPos.z), new float2(spawnPos.x, spawnPos.z));
+                data.ValueRW.BossArenaCenter = (isolatedPlayerPos + spawnPos) * 0.5f;
+                data.ValueRW.BossArenaCenter.y = 0f;
+                data.ValueRW.BossArenaRadius = math.max(12f, (horizontalDistance * 0.5f) + 6f);
+                data.ValueRW.BossArenaActive = true;
             }
         }
 
-        bool hasBossEntity = false;
-        bool isBossAlive = false;
+        bool hasAliveBossEntity = false;
         foreach (var (enemyData, entity) in SystemAPI.Query<RefRO<CEnemyData>>().WithAll<IsolatedBossTag>().WithEntityAccess())
         {
             if (enemyData.ValueRO.IsBoss)
             {
-                hasBossEntity = true;
-                if (enemyData.ValueRO.IsAlive) isBossAlive = true;
-                break;
+                bool isDeadTagged = SystemAPI.HasComponent<DeathTag>(entity);
+                if (enemyData.ValueRO.IsAlive && !isDeadTagged)
+                {
+                    hasAliveBossEntity = true;
+                    break;
+                }
             }
         }
         
@@ -433,11 +561,18 @@ public partial struct GameDirectorSystem : ISystem
             if (evt.ValueRO.IsIsolatedBoss) { hasSpawnEventPending = true; break; }
         }
 
-        if (!hasBossEntity && !hasSpawnEventPending)
+        if (!hasAliveBossEntity && !hasSpawnEventPending)
         {
             // Boss died! Teleport player back and destroy portal
             var playerEntity = SystemAPI.GetSingletonEntity<PlayerInput>();
             ecb.SetComponent(playerEntity, new LocalTransform { Position = data.ValueRO.SavedPlayerPosition, Rotation = quaternion.identity, Scale = 1f });
+
+            foreach (var (_, fenceEntity) in SystemAPI.Query<RefRO<BossArenaFenceTag>>().WithEntityAccess())
+            {
+                ecb.AddComponent<DestroyEntityTag>(fenceEntity);
+            }
+            data.ValueRW.BossArenaActive = false;
+            data.ValueRW.BossArenaRadius = 0f;
 
             if (data.ValueRO.ActiveIsolatedPortal != Entity.Null && SystemAPI.Exists(data.ValueRO.ActiveIsolatedPortal))
             {
@@ -453,7 +588,7 @@ public partial struct GameDirectorSystem : ISystem
             data.ValueRW.CurrentPhase = data.ValueRO.PreviousPhase;
         }
 
-        if (data.ValueRO.BossTimer > 0f && isBossAlive)
+        if (data.ValueRO.BossTimer > 0f && hasAliveBossEntity)
         {
             data.ValueRW.BossTimer -= deltaTime;
             if (data.ValueRO.BossTimer <= 0f)

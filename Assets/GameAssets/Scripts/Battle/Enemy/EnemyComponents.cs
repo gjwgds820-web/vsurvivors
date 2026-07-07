@@ -45,6 +45,7 @@ public struct CEnemyData : IComponentData
     public bool IsBoss;
     public float BlockedTimer;
     public float3 PreviousPosition;
+    public float TargetOutOfRangeTimer;
 }
 
 public struct EnemyDefBlob
