@@ -37,6 +37,8 @@ public struct ShadowCombatData : IComponentData
     public float AttackRange;
     public float AttackCooldown;
     public float CurrentCooldown;
+    public float CriticalChancePercent;
+    public float CriticalDamagePercent;
 
     // 추가: 딜레이 공격을 위한 내부 상태 저장 관리
     public bool IsAttacking; // 0.5초 선딜레이 중인지

@@ -300,6 +300,25 @@ public partial struct ShadowCombatSystem : ISystem
 {
     private ComponentLookup<LocalToWorld> _transformLookup;
 
+    private static float ApplyCriticalDamage(Entity entity, uint frameTick, float baseDamage, float critChancePercent, float critDamagePercent)
+    {
+        float chance = math.clamp(critChancePercent * 0.01f, 0f, 0.95f);
+        if (chance <= 0f)
+        {
+            return baseDamage;
+        }
+
+        uint hash = math.hash(new uint4((uint)entity.Index, (uint)entity.Version, frameTick, 1337u));
+        float random01 = (hash & 0x00FFFFFFu) / 16777216f;
+        if (random01 >= chance)
+        {
+            return baseDamage;
+        }
+
+        float critMultiplier = math.max(1f, 1f + critDamagePercent * 0.01f);
+        return baseDamage * critMultiplier;
+    }
+
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
@@ -311,6 +330,7 @@ public partial struct ShadowCombatSystem : ISystem
     {
         _transformLookup.Update(ref state);
         float deltaTime = SystemAPI.Time.DeltaTime;
+        uint frameTick = (uint)math.floor((float)(SystemAPI.Time.ElapsedTime * 1000.0));
 
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
 
@@ -422,7 +442,7 @@ public partial struct ShadowCombatSystem : ISystem
                     if (SystemAPI.HasComponent<HitBoxData>(combatData.ValueRO.AttackPrefab))
                     {
                         var dynamicHitbox = SystemAPI.GetComponent<HitBoxData>(combatData.ValueRO.AttackPrefab);
-                        dynamicHitbox.Damage = combatData.ValueRO.AttackPower;
+                        dynamicHitbox.Damage = ApplyCriticalDamage(entity, frameTick, combatData.ValueRO.AttackPower, combatData.ValueRO.CriticalChancePercent, combatData.ValueRO.CriticalDamagePercent);
                         dynamicHitbox.TargetFaction = 0; // 0이 적(몬스터)
                         ecb.SetComponent(hitbox, dynamicHitbox);
                     }
@@ -432,7 +452,7 @@ public partial struct ShadowCombatSystem : ISystem
                         ecb.AddComponent(hitbox, new HitBoxData
                         {
                             Shape = HitBoxShape.Circle,
-                            Damage = combatData.ValueRO.AttackPower,
+                            Damage = ApplyCriticalDamage(entity, frameTick, combatData.ValueRO.AttackPower, combatData.ValueRO.CriticalChancePercent, combatData.ValueRO.CriticalDamagePercent),
                             Radius = 3f,
                             Duration = combatData.ValueRO.AttackType == AttackType.Melee ? 0.5f : 10f,
                             TargetFaction = 0,

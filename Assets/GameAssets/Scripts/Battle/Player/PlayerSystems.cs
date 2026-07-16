@@ -165,6 +165,19 @@ public partial struct PlayerDeathSystem : ISystem
 [BurstCompile]
 public partial struct ShadowSpawnerSystem : ISystem
 {
+    private static void ApplyShadowUpgradeBonuses(in PlayerData playerData, in ShadowDefBlob shadowDef, ref ShadowCombatData combatData)
+    {
+        float attackPowerMultiplier = math.max(0f, 1f + playerData.ShadowAttackPowerPercentBonus * 0.01f);
+        float attackSpeedMultiplier = math.max(0.1f, 1f + playerData.ShadowAttackSpeedPercentBonus * 0.01f);
+
+        combatData.AttackPower = shadowDef.AttackPower * attackPowerMultiplier;
+        combatData.AttackRange = shadowDef.AttackRange;
+        combatData.AttackCooldown = math.max(0.05f, shadowDef.AttackCooldown / attackSpeedMultiplier);
+        combatData.CurrentCooldown = math.min(combatData.CurrentCooldown, combatData.AttackCooldown);
+        combatData.CriticalChancePercent = math.clamp(playerData.ShadowCriticalChancePercent, 0f, 95f);
+        combatData.CriticalDamagePercent = math.max(0f, playerData.ShadowCriticalDamagePercent);
+    }
+
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
@@ -303,9 +316,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                                 ref var shadowDef = ref shadows[dbIndex];
                                 
                                 var combatData = SystemAPI.GetComponent<ShadowCombatData>(slot.ShadowEntity);
-                                combatData.AttackPower = shadowDef.AttackPower;
-                                combatData.AttackRange = shadowDef.AttackRange;
-                                combatData.AttackCooldown = shadowDef.AttackCooldown;
+                                ApplyShadowUpgradeBonuses(playerData.ValueRO, shadowDef, ref combatData);
                                 
                                 ecb.SetComponent(slot.ShadowEntity, combatData);
 
@@ -323,17 +334,28 @@ public partial struct ShadowSpawnerSystem : ISystem
 
             if (!playerData.ValueRO.InitialShadowsSpawned)
             {
+                if (activeSkills.Length == 0)
+                {
+                    // 스킬 버퍼 동기화 전에는 초기 소환 타이머를 소비하지 않는다.
+                    continue;
+                }
+
                 playerData.ValueRW.InitialShadowsSpawned = true;
-                int initialSpawnCount = math.min(3, maxShadowSlots);
+                int initialSpawnCount = math.clamp(playerData.ValueRO.InitialShadowSpawnCount, 1, maxShadowSlots);
                 playerData.ValueRW.ShadowRegenTimer = -playerData.ValueRO.ShadowRegenCooldown * (initialSpawnCount - 1);
             }
 
-            // 살아있는 그림자가 최대치보다 적을때 타이머 감소
-            if (playerData.ValueRO.CurrentShadow < maxShadowSlots)
+            if (activeSkills.Length == 0)
+            {
+                continue;
+            }
+
+            // 살아있는 슬롯 기준으로 재소환 판단 (외부 CurrentShadow 덮어쓰기 영향 차단)
+            if (aliveCount < maxShadowSlots)
             {
                 playerData.ValueRW.ShadowRegenTimer -= deltaTime;
 
-                if (playerData.ValueRO.ShadowRegenTimer <= 0f)
+                if (playerData.ValueRW.ShadowRegenTimer <= 0f)
                 {
                     // 타이머 연장 (연속 스폰 지원)
                     playerData.ValueRW.ShadowRegenTimer += playerData.ValueRO.ShadowRegenCooldown;
@@ -358,8 +380,6 @@ public partial struct ShadowSpawnerSystem : ISystem
 
                     Entity targetShadow = Entity.Null;
 
-                    if (activeSkills.Length == 0) continue; // No shadows equipped
-                    
                     int skillIndex = random.NextInt(0, activeSkills.Length);
                     int shadowID = activeSkills[skillIndex].ShadowID;
 
@@ -439,9 +459,7 @@ public partial struct ShadowSpawnerSystem : ISystem
                         ecb.SetComponent(targetShadow, baseShadowData);
                         // 스탯 주입
                         var combatData = SystemAPI.GetComponent<ShadowCombatData>(spawnerData.ValueRO.ShadowPrefab);
-                        combatData.AttackPower = shadowDef.AttackPower;
-                        combatData.AttackRange = shadowDef.AttackRange;
-                        combatData.AttackCooldown = shadowDef.AttackCooldown;
+                        ApplyShadowUpgradeBonuses(playerData.ValueRO, shadowDef, ref combatData);
                         combatData.AttackType = (AttackType)(shadowDef.AttackType - 1);
                         combatData.IsAlive = true;
                         ecb.SetComponent(targetShadow, combatData);
@@ -549,7 +567,7 @@ public partial struct ItemLootSystem : ISystem
                 switch (itemData.ValueRO.Type)
                 {
                     case DropItemType.Exp:
-                        playerData.EXP += itemData.ValueRO.Amount;
+                        playerData.EXP += itemData.ValueRO.Amount * playerData.ExpGainMultiplier;
                         break;
                     case DropItemType.Gold:
                         var goldEvent = ecb.CreateEntity();

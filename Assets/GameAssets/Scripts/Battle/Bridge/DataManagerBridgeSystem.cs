@@ -2,6 +2,7 @@
 using Unity.Collections;
 using UnityEngine;
 using System.Linq;
+using Unity.Mathematics;
 
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public partial class DataManagerBridgeSystem : SystemBase
@@ -19,6 +20,7 @@ public partial class DataManagerBridgeSystem : SystemBase
 
         var entity = EntityManager.CreateEntity();
         var config = new CurrentStageConfig();
+        var upgradeModifiers = new BattleUpgradeModifiers();
         var buffer = EntityManager.AddBuffer<PortalConfigElement>(entity);
 
         bool hasData = DataManager.Instance != null && DataManager.Instance.StageDict != null && DataManager.Instance.StageDict.Count > 0;
@@ -52,6 +54,8 @@ public partial class DataManagerBridgeSystem : SystemBase
                     Monster1 = kvp.Value.Monster1
                 });
             }
+
+            upgradeModifiers = BuildBattleUpgradeModifiers(DataManager.Instance.currentUserData);
         }
         else
         {
@@ -67,5 +71,170 @@ public partial class DataManagerBridgeSystem : SystemBase
         }
 
         EntityManager.AddComponentData(entity, config);
+        EntityManager.AddComponentData(entity, upgradeModifiers);
+    }
+
+    private static BattleUpgradeModifiers BuildBattleUpgradeModifiers(UserData userData)
+    {
+        var modifiers = new BattleUpgradeModifiers();
+        if (userData == null || DataManager.Instance == null)
+        {
+            return modifiers;
+        }
+
+        var totals = userData.GetTotalUpgradeEffectsByType(DataManager.Instance.UpgradeGroupDict);
+        foreach (var total in totals)
+        {
+            ApplyUpgradeEffect(ref modifiers, total.Key, total.Value);
+        }
+
+        return modifiers;
+    }
+
+    private static void ApplyUpgradeEffect(ref BattleUpgradeModifiers modifiers, string effectType, float value)
+    {
+        if (string.IsNullOrWhiteSpace(effectType))
+        {
+            return;
+        }
+
+        string normalized = effectType.Replace(" ", string.Empty).Trim().ToLowerInvariant();
+        switch (normalized)
+        {
+            case "최대체력":
+            case "maxhealth":
+            case "health":
+                modifiers.MaxHealthBonus += value;
+                break;
+            case "체력재생":
+            case "healthregen":
+            case "regen":
+                modifiers.HealthRegenPerSecondBonus += value;
+                break;
+            case "회피확률":
+            case "dodgechance":
+                modifiers.DodgeChanceBonus += value;
+                break;
+            case "이동속도":
+            case "movespeed":
+            case "speed":
+                modifiers.MoveSpeedBonus += value;
+                break;
+            case "아이템획득범위증가":
+            case "collectradius":
+            case "itemrange":
+                modifiers.ItemPickupRangeBonus += value;
+                break;
+            case "경험치획득량증가":
+            case "expgain":
+                modifiers.ExpGainPercentBonus += value;
+                break;
+            case "시작그림자수":
+                modifiers.StartShadowCountBonus += value;
+                break;
+            case "최대그림자":
+                modifiers.MaxShadowBonus += value;
+                break;
+            case "그림자소환쿨타임":
+                modifiers.ShadowRegenCooldownReduction += value;
+                break;
+            case "그림자공격력증가":
+                modifiers.ShadowAttackPowerBonus += value;
+                break;
+            case "그림자공격속도증가":
+                modifiers.ShadowAttackSpeedBonus += value;
+                break;
+            case "그림자치명타확률증가":
+                modifiers.ShadowCriticalChanceBonus += value;
+                break;
+            case "그림자치명타데미지증가":
+                modifiers.ShadowCriticalDamageBonus += value;
+                break;
+        }
+    }
+}
+
+[UpdateInGroup(typeof(InitializationSystemGroup))]
+[UpdateAfter(typeof(DataManagerBridgeSystem))]
+public partial class PlayerUpgradeApplySystem : SystemBase
+{
+    private EntityQuery _playerApplyQuery;
+
+    protected override void OnCreate()
+    {
+        _playerApplyQuery = GetEntityQuery(new EntityQueryDesc
+        {
+            All = new ComponentType[]
+            {
+                ComponentType.ReadWrite<PlayerData>(),
+                ComponentType.ReadWrite<PlayerMovementData>(),
+                ComponentType.ReadWrite<HealthData>()
+            },
+            None = new ComponentType[]
+            {
+                ComponentType.ReadOnly<BattleUpgradeAppliedTag>()
+            }
+        });
+    }
+
+    protected override void OnUpdate()
+    {
+        if (!SystemAPI.HasSingleton<BattleUpgradeModifiers>())
+        {
+            return;
+        }
+
+        if (_playerApplyQuery.IsEmptyIgnoreFilter)
+        {
+            return;
+        }
+
+        BattleUpgradeModifiers modifiers = SystemAPI.GetSingleton<BattleUpgradeModifiers>();
+
+        using var entities = _playerApplyQuery.ToEntityArray(Allocator.Temp);
+        for (int i = 0; i < entities.Length; i++)
+        {
+            Entity entity = entities[i];
+
+            PlayerData playerData = EntityManager.GetComponentData<PlayerData>(entity);
+            PlayerMovementData movementData = EntityManager.GetComponentData<PlayerMovementData>(entity);
+            HealthData healthData = EntityManager.GetComponentData<HealthData>(entity);
+
+            healthData.MaxHealth += modifiers.MaxHealthBonus;
+            healthData.CurrentHealth = math.min(healthData.CurrentHealth + modifiers.MaxHealthBonus, healthData.MaxHealth);
+
+            playerData.HealthRegenPerSecond += modifiers.HealthRegenPerSecondBonus;
+            movementData.MoveSpeed += modifiers.MoveSpeedBonus;
+
+            playerData.MagnetismRadius += modifiers.ItemPickupRangeBonus;
+            playerData.CollectRadius += modifiers.ItemPickupRangeBonus;
+
+            playerData.ExpGainMultiplier = math.max(0f, playerData.ExpGainMultiplier * (1f + modifiers.ExpGainPercentBonus * 0.01f));
+            playerData.DodgeChancePercent = math.clamp(playerData.DodgeChancePercent + modifiers.DodgeChanceBonus, 0f, 95f);
+
+            playerData.ShadowAttackPowerPercentBonus += modifiers.ShadowAttackPowerBonus;
+            playerData.ShadowAttackSpeedPercentBonus += modifiers.ShadowAttackSpeedBonus;
+            playerData.ShadowCriticalChancePercent = math.clamp(playerData.ShadowCriticalChancePercent + modifiers.ShadowCriticalChanceBonus, 0f, 95f);
+            playerData.ShadowCriticalDamagePercent += modifiers.ShadowCriticalDamageBonus;
+
+            int startShadowBonus = (int)math.round(modifiers.StartShadowCountBonus);
+            playerData.InitialShadowSpawnCount = math.max(1, playerData.InitialShadowSpawnCount + startShadowBonus);
+
+            playerData.MaxShadow += modifiers.MaxShadowBonus;
+            playerData.CurrentShadow = math.clamp(playerData.CurrentShadow, 0f, playerData.MaxShadow);
+
+            playerData.ShadowRegenCooldown = math.max(0.1f, playerData.ShadowRegenCooldown - modifiers.ShadowRegenCooldownReduction);
+            playerData.ShadowRegenTimer = math.min(playerData.ShadowRegenTimer, playerData.ShadowRegenCooldown);
+
+            EntityManager.SetComponentData(entity, playerData);
+            EntityManager.SetComponentData(entity, movementData);
+            EntityManager.SetComponentData(entity, healthData);
+            EntityManager.AddComponent<BattleUpgradeAppliedTag>(entity);
+        }
+
+        if (entities.Length > 0)
+        {
+            Enabled = false;
+        }
     }
 }

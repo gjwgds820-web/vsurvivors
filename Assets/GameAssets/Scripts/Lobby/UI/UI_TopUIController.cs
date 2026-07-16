@@ -67,6 +67,27 @@ public class UI_TopUIController : UI_Base
         HandleEnergyRecharge();
     }
 
+    private void OnEnable()
+    {
+        UI_UpgradeSection.OnUpgradeCompleted += HandleUpgradeCompleted;
+    }
+
+    private void OnDisable()
+    {
+        UI_UpgradeSection.OnUpgradeCompleted -= HandleUpgradeCompleted;
+    }
+
+    private void HandleUpgradeCompleted()
+    {
+        if (!_init)
+        {
+            return;
+        }
+
+        UpdateGoldUI();
+        UpdateDiamondUI();
+    }
+
     private void ProcessOfflineEnergy()
     {
         UserData data = DataManager.Instance.currentUserData;

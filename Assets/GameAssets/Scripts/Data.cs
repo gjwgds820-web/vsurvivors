@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -96,7 +97,10 @@ public class LevelStat
 public class UpgradeData
 {
     public int ID;
+    public int GroupID;
+    public int Level;
     public int Type;
+    public string Group;
     public string Name;
     public string Description;
     public int MaxLevel;
@@ -106,6 +110,18 @@ public class UpgradeData
     public string EffectType;
     public float EffectAmount;
     public Sprite Icon;
+}
+
+[System.Serializable]
+public class UpgradeGroupData
+{
+    public int GroupID;
+    public int Type;
+    public string Group;
+    public string Name;
+    public string Description;
+    public int MaxLevel;
+    public List<UpgradeData> Levels = new List<UpgradeData>();
 }
 
 [System.Serializable]

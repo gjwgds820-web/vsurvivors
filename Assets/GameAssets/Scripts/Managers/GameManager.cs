@@ -113,11 +113,19 @@ public class GameManager : MonoBehaviour
         var moveData = _entityManager.GetComponentData<PlayerMovementData>(playerEntity);
         var healthData = _entityManager.GetComponentData<HealthData>(playerEntity);
 
+        float upgradeShadowBonus = 0f;
+        EntityQuery upgradeQuery = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<BattleUpgradeModifiers>());
+        if (!upgradeQuery.IsEmptyIgnoreFilter)
+        {
+            upgradeShadowBonus = upgradeQuery.GetSingleton<BattleUpgradeModifiers>().MaxShadowBonus;
+        }
+
         if (_baseMaxHealth < 0f)
         {
             _baseMaxHealth = healthData.MaxHealth;
             _baseMoveSpeed = moveData.MoveSpeed;
-            _baseMaxShadow = playerData.MaxShadow; // QA: 인스펙터 베이킹 값을 초기값으로 보존
+            // QA: 인스펙터 베이킹 값을 기준으로 보존 (업그레이드 보너스는 분리)
+            _baseMaxShadow = playerData.MaxShadow - upgradeShadowBonus;
         }
 
         float hpAdd = 0f;
@@ -131,7 +139,8 @@ public class GameManager : MonoBehaviour
             if (passive.Stats == "shadow_max" && float.TryParse(passive.Value, out float shdVal)) shadowAdd += shdVal;
         }
 
-        playerData.MaxShadow = _baseMaxShadow + shadowAdd;
+        playerData.MaxShadow = Unity.Mathematics.math.max(1f, _baseMaxShadow + shadowAdd + upgradeShadowBonus);
+        playerData.CurrentShadow = Unity.Mathematics.math.clamp(playerData.CurrentShadow, 0f, playerData.MaxShadow);
         moveData.MoveSpeed = _baseMoveSpeed * (1f + speedMult);
         
         float oldMax = healthData.MaxHealth;

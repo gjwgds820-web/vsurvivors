@@ -17,14 +17,22 @@ public struct PlayerData : IComponentData
 {
     public int Level;
     public float EXP;
+    public float ExpGainMultiplier;
+    public float DodgeChancePercent;
 
     public float HealthRegenPerSecond;
+
+    public float ShadowAttackPowerPercentBonus;
+    public float ShadowAttackSpeedPercentBonus;
+    public float ShadowCriticalChancePercent;
+    public float ShadowCriticalDamagePercent;
 
     public float MaxShadow;
     public float CurrentShadow;
     public float ShadowRegenCooldown;
     public float ShadowRegenTimer;
     public float SummonAnimationDelay;
+    public int InitialShadowSpawnCount;
 
     public float MagnetismRadius;
     public float CollectRadius;

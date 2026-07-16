@@ -4,6 +4,7 @@ using Unity.Entities;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using Cysharp.Threading.Tasks;
+using System.IO;
 using VSurvivors.Managers;
 
 [InitializeOnLoad]
@@ -12,6 +13,9 @@ public class BattleDevHelper : EditorWindow
     private const string EnableShadowTargetDebugKey = "EnableShadowTargetDebug";
     private const string EnableEnemyMovementDebugKey = "EnableEnemyMovementDebug";
     private const string ShadowSpawnUsePlayerRotationKey = "ShadowSpawnUsePlayerRotationBasis";
+    private const string LobbyScenePath = "Assets/GameAssets/Scenes/LobbyScene.unity";
+    private const string BattleScenePath = "Assets/GameAssets/Scenes/BattleScene.unity";
+    private const string SaveFileName = "UserData.json";
 
     static BattleDevHelper()
     {
@@ -131,11 +135,27 @@ public class BattleDevHelper : EditorWindow
             if (GUILayout.Button("▶ 로비 거쳐서 배틀 씬 즉시 시작", GUILayout.Height(40)))
             {
                 EditorPrefs.SetBool("FastStartBattle", true);
-                if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                if (TryOpenSceneInEditMode(LobbyScenePath))
                 {
-                    EditorSceneManager.OpenScene("Assets/GameAssets/Scenes/LobbyScene.unity");
                     EditorApplication.isPlaying = true;
                 }
+            }
+
+            GUILayout.Space(8);
+            if (GUILayout.Button("▶ LobbyScene 열기", GUILayout.Height(32)))
+            {
+                TryOpenSceneInEditMode(LobbyScenePath);
+            }
+
+            if (GUILayout.Button("▶ BattleScene 열기", GUILayout.Height(32)))
+            {
+                TryOpenSceneInEditMode(BattleScenePath);
+            }
+
+            GUILayout.Space(8);
+            if (GUILayout.Button("▶ 세이브 파일 초기화", GUILayout.Height(32)))
+            {
+                ResetSaveFile();
             }
             return;
         }
@@ -312,6 +332,32 @@ public class BattleDevHelper : EditorWindow
 
         EditorGUILayout.Space();
         EditorGUILayout.HelpBox("동적 변경사항이 즉시 반영됩니다. \nGameDirectorAuthoring의 기본값을 변경하려면 인스펙터에서 수정하세요.", MessageType.None);
+    }
+
+    private static bool TryOpenSceneInEditMode(string scenePath)
+    {
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        {
+            return false;
+        }
+
+        EditorSceneManager.OpenScene(scenePath);
+        return true;
+    }
+
+    private static void ResetSaveFile()
+    {
+        string saveFilePath = Path.Combine(Application.persistentDataPath, SaveFileName);
+
+        if (File.Exists(saveFilePath))
+        {
+            File.Delete(saveFilePath);
+            Debug.Log($"[Battle Dev Helper] 세이브 파일을 삭제했습니다: {saveFilePath}");
+        }
+        else
+        {
+            Debug.Log($"[Battle Dev Helper] 삭제할 세이브 파일이 없습니다: {saveFilePath}");
+        }
     }
 
     private void SpawnPortal(EntityManager em, GameDirectorData directorData, int portalId)

@@ -4,6 +4,8 @@ using System.IO;
 using System;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using System.Collections.Generic;
+using System.Globalization;
 
 public class DataImporter
 {
@@ -16,7 +18,7 @@ public class DataImporter
         ImportCharacterDataFromJson();
         ImportRelicDataFromJson();
         ImportShadowDataFromCSV();
-        ImportUpgradeDataFromJson();
+        ImportUpgradeDataFromCSV();
         ImportEnemyDataFromCSV();
         ImportStageDataFromJson();
         Debug.Log("All data imported successfully.");
@@ -241,17 +243,17 @@ public class DataImporter
     #endregion
 
     #region Upgrade
-    [MenuItem("Tools/Import Upgrade Data(JSON)")]
-    public static void ImportUpgradeDataFromJson()
+    [MenuItem("Tools/Import Upgrade Data(CSV)")]
+    public static void ImportUpgradeDataFromCSV()
     {
-        string path = Application.dataPath + "/GameAssets/Data/UpgradeData.json";
+        string path = Application.dataPath + "/GameAssets/Data/upgrade.csv";
         if (!File.Exists(path))
         {
-            Debug.LogError("UpgradeData.json file not found at: " + path);
+            Debug.LogError("upgrade.csv file not found at: " + path);
             return;
         }
 
-        string jsonContent = File.ReadAllText(path);
+        string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
         string assetPath = "Assets/GameAssets/Data/UpgradeDatabase.asset";
 
         UpgradeDatabase database = AssetDatabase.LoadAssetAtPath<UpgradeDatabase>(assetPath);
@@ -263,17 +265,85 @@ public class DataImporter
             Debug.Log("Created new UpgradeDatabase asset at: " + assetPath);
         }
 
-        JsonUtility.FromJsonOverwrite(jsonContent, database);
-        foreach (UpgradeData upgrade in database.upgrades)
+        if (database.upgrades == null)
         {
-            upgrade.Icon = LoadIconSprite("Assets/GameAssets/Icons/Upgrades", upgrade.Name);
+            database.upgrades = new List<UpgradeData>();
+        }
+
+        database.upgrades.Clear();
+
+        Dictionary<int, List<UpgradeData>> groupedUpgrades = new Dictionary<int, List<UpgradeData>>();
+
+        for (int i = 1; i < lines.Length; i++)
+        {
+            if (string.IsNullOrWhiteSpace(lines[i]))
+            {
+                continue;
+            }
+
+            string[] row = lines[i].Split(',');
+            if (row.Length < 8)
+            {
+                continue;
+            }
+
+            string groupName = row[1].Trim();
+            int level = int.Parse(row[4], CultureInfo.InvariantCulture);
+            int baseId = int.Parse(row[0], CultureInfo.InvariantCulture) / 100;
+            int upgradeId = baseId * 100 + level;
+
+            UpgradeData upgrade = new UpgradeData
+            {
+                ID = upgradeId,
+                GroupID = upgradeId / 100,
+                Level = level,
+                Type = GetUpgradeType(groupName),
+                Group = groupName,
+                Name = row[2].Trim(),
+                Description = row[3].Trim(),
+                CurrentLevel = level,
+                CostType = row[6].Trim(),
+                CostAmount = int.Parse(row[7], CultureInfo.InvariantCulture),
+                EffectType = row[2].Trim(),
+                EffectAmount = float.Parse(row[5], CultureInfo.InvariantCulture)
+            };
+
+            if (!groupedUpgrades.TryGetValue(upgrade.GroupID, out List<UpgradeData> levelList))
+            {
+                levelList = new List<UpgradeData>();
+                groupedUpgrades.Add(upgrade.GroupID, levelList);
+            }
+
+            levelList.Add(upgrade);
+        }
+
+        foreach (List<UpgradeData> levelList in groupedUpgrades.Values)
+        {
+            levelList.Sort((left, right) => left.Level.CompareTo(right.Level));
+
+            int maxLevel = levelList.Count;
+            for (int i = 0; i < levelList.Count; i++)
+            {
+                levelList[i].MaxLevel = maxLevel;
+                levelList[i].Icon = LoadIconSprite("Assets/GameAssets/Icons/Upgrades", levelList[i].Name);
+                database.upgrades.Add(levelList[i]);
+            }
         }
 
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
         SetAssetAddressable(assetPath);
-        Debug.Log("Upgrade data imported successfully from JSON.");
+        Debug.Log("Upgrade data imported successfully from CSV.");
         AssetDatabase.Refresh();
+    }
+
+    private static int GetUpgradeType(string groupName)
+    {
+        return groupName.Trim().ToLowerInvariant() switch
+        {
+            "shadow" => 1,
+            _ => 0
+        };
     }
     #endregion
     #region Enemy

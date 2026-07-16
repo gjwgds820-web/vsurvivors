@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using TMPro;
 using Cysharp.Threading.Tasks;
 
 public class ResourceManager : MonoBehaviour, IAsyncInitializable
@@ -84,6 +85,26 @@ public class ResourceManager : MonoBehaviour, IAsyncInitializable
         }
 
         return sprite;
+    }
+
+    public TMP_FontAsset LoadTMPFont(string path)
+    {
+        string addressName = System.IO.Path.GetFileNameWithoutExtension(path);
+
+        try
+        {
+            TMP_FontAsset font = Addressables.LoadAssetAsync<TMP_FontAsset>(addressName).WaitForCompletion();
+            if (font != null)
+            {
+                return font;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to load Addressable TMP Font: {addressName} (original path: {path}) - {e.Message}");
+        }
+
+        return null;
     }
 
     /// <summary>

@@ -20,6 +20,7 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
     public Dictionary<int, RelicData> RelicDict { get; private set; } = new Dictionary<int, RelicData>();
     public Dictionary<int, ShadowData> ShadowDict { get; private set; } = new Dictionary<int, ShadowData>();
     public Dictionary<int, UpgradeData> UpgradeDict { get; private set; } = new Dictionary<int, UpgradeData>();
+    public Dictionary<int, UpgradeGroupData> UpgradeGroupDict { get; private set; } = new Dictionary<int, UpgradeGroupData>();
     public Dictionary<int, StageData> StageDict { get; private set; } = new Dictionary<int, StageData>();
     public Dictionary<int, PortalData> PortalDict { get; private set; } = new Dictionary<int, PortalData>();
 
@@ -157,6 +158,64 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
         currentUserData.FormationData[0] = new List<int>(initialShadows);
     }
 
+    private void InitializeUpgradeUserData()
+    {
+        if (currentUserData == null)
+        {
+            return;
+        }
+
+        if (currentUserData.UpgradeLevels == null)
+        {
+            currentUserData.UpgradeLevels = new Dictionary<int, int>();
+        }
+
+        if (currentUserData.UpgradeGroupIds == null)
+        {
+            currentUserData.UpgradeGroupIds = new List<int>();
+        }
+
+        if (currentUserData.UpgradeLevelIdsByGroup == null)
+        {
+            currentUserData.UpgradeLevelIdsByGroup = new Dictionary<int, List<int>>();
+        }
+
+        currentUserData.UpgradeGroupIds.Clear();
+        currentUserData.UpgradeLevelIdsByGroup.Clear();
+
+        Dictionary<int, int> normalizedLevels = new Dictionary<int, int>();
+        foreach (var upgradeLevel in currentUserData.UpgradeLevels)
+        {
+            int normalizedGroupId = UpgradeGroupDict.ContainsKey(upgradeLevel.Key) ? upgradeLevel.Key : upgradeLevel.Key / 100;
+            if (normalizedLevels.TryGetValue(normalizedGroupId, out int existingLevel))
+            {
+                normalizedLevels[normalizedGroupId] = Mathf.Max(existingLevel, upgradeLevel.Value);
+            }
+            else
+            {
+                normalizedLevels[normalizedGroupId] = upgradeLevel.Value;
+            }
+        }
+
+        foreach (var group in UpgradeGroupDict)
+        {
+            currentUserData.UpgradeGroupIds.Add(group.Key);
+            currentUserData.UpgradeLevelIdsByGroup[group.Key] = new List<int>();
+
+            foreach (UpgradeData upgrade in group.Value.Levels)
+            {
+                currentUserData.UpgradeLevelIdsByGroup[group.Key].Add(upgrade.ID);
+            }
+
+            if (!normalizedLevels.ContainsKey(group.Key))
+            {
+                normalizedLevels[group.Key] = 0;
+            }
+        }
+
+        currentUserData.UpgradeLevels = normalizedLevels;
+    }
+
     public List<int> GetFormation(int formationIndex)
     {
         List<int> formation = currentUserData.FormationData[formationIndex];
@@ -178,9 +237,10 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
         await LoadRelicDataAsync();
         await LoadShadowDataAsync();
         await LoadUpgradeDataAsync();
+        InitializeUpgradeUserData();
         await LoadStageDataAsync();
         await LoadPortalDataAsync();
-        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeDict.Count} Upgrades, {StageDict.Count} Stages, {PortalDict.Count} Portals");
+        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeGroupDict.Count} Upgrade Groups, {StageDict.Count} Stages, {PortalDict.Count} Portals");
     }
 
     private async UniTask LoadSkillDataAsync()
@@ -274,6 +334,9 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
 
         if (upgradeDB != null)
         {
+            UpgradeDict.Clear();
+            UpgradeGroupDict.Clear();
+
             foreach (UpgradeData upgrade in upgradeDB.upgrades)
             {
                 if (!UpgradeDict.ContainsKey(upgrade.ID))
@@ -284,6 +347,32 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
                 {
                     Debug.LogWarning($"Duplicate Upgrade ID found: {upgrade.ID}");
                 }
+
+                if (!UpgradeGroupDict.TryGetValue(upgrade.GroupID, out UpgradeGroupData groupData))
+                {
+                    groupData = new UpgradeGroupData
+                    {
+                        GroupID = upgrade.GroupID,
+                        Type = upgrade.Type,
+                        Group = upgrade.Group,
+                        Name = upgrade.Name,
+                        Description = upgrade.Description,
+                        MaxLevel = upgrade.MaxLevel
+                    };
+                    UpgradeGroupDict.Add(groupData.GroupID, groupData);
+                }
+
+                groupData.Levels.Add(upgrade);
+                if (upgrade.Level > groupData.MaxLevel)
+                {
+                    groupData.MaxLevel = upgrade.Level;
+                }
+            }
+
+            foreach (UpgradeGroupData groupData in UpgradeGroupDict.Values)
+            {
+                groupData.Levels.Sort((left, right) => left.Level.CompareTo(right.Level));
+                groupData.MaxLevel = groupData.Levels.Count;
             }
         }
     }

@@ -42,6 +42,8 @@ public class ShadowAuthoring : MonoBehaviour
                 AttackRange = authoring.attackRange,
                 AttackCooldown = authoring.attackCooldown,
                 CurrentCooldown = 0f,
+                CriticalChancePercent = 0f,
+                CriticalDamagePercent = 0f,
                 IsAlive = true
             });
 

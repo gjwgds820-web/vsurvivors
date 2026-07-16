@@ -17,3 +17,27 @@ public struct PortalConfigElement : IBufferElementData
     public int DelPortal;
     public int Monster1;
 }
+
+public struct BattleUpgradeModifiers : IComponentData
+{
+    public float MaxHealthBonus;
+    public float HealthRegenPerSecondBonus;
+    public float DodgeChanceBonus;
+
+    public float MoveSpeedBonus;
+    public float ItemPickupRangeBonus;
+    public float ExpGainPercentBonus;
+
+    public float StartShadowCountBonus;
+    public float MaxShadowBonus;
+    public float ShadowRegenCooldownReduction;
+
+    public float ShadowAttackPowerBonus;
+    public float ShadowAttackSpeedBonus;
+    public float ShadowCriticalChanceBonus;
+    public float ShadowCriticalDamageBonus;
+}
+
+public struct BattleUpgradeAppliedTag : IComponentData
+{
+}

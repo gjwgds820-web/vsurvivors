@@ -22,6 +22,8 @@ public class UserData
     private List<int> _unlockedCharactersID = new List<int>(); // 기본 캐릭터는 처음부터 잠금 해제
     private Dictionary<int, int> _inventory = new Dictionary<int, int>();
     private Dictionary<int, int> _upgradeLevels = new Dictionary<int, int>();
+    private List<int> _upgradeGroupIds = new List<int>();
+    private Dictionary<int, List<int>> _upgradeLevelIdsByGroup = new Dictionary<int, List<int>>();
     private Dictionary<int, bool> _purchasedItems = new Dictionary<int, bool>();
     private Dictionary<int, List<int>> _formationData = new Dictionary<int, List<int>>();
     private List<int> _selectedShadowsID = new List<int>(10);
@@ -44,10 +46,23 @@ public class UserData
     public List<int> UnlockedCharactersID { get => _unlockedCharactersID; set => _unlockedCharactersID = value; }
     public Dictionary<int, int> Inventory { get => _inventory; set => _inventory = value; }
     public Dictionary<int, int> UpgradeLevels { get => _upgradeLevels; set => _upgradeLevels = value; }
+    public List<int> UpgradeGroupIds { get => _upgradeGroupIds; set => _upgradeGroupIds = value; }
+    public Dictionary<int, List<int>> UpgradeLevelIdsByGroup { get => _upgradeLevelIdsByGroup; set => _upgradeLevelIdsByGroup = value; }
     public Dictionary<int, bool> PurchasedItems { get => _purchasedItems; set => _purchasedItems = value; }
     public Dictionary<int, List<int>> FormationData { get => _formationData; set => _formationData = value; }
     public List<int> SelectedShadowsID { get => _selectedShadowsID; set => _selectedShadowsID = value; }
     public List<int> EquippedRelicsID { get => _equippedRelicsID; set => _equippedRelicsID = value; }
+
+    public int GetUpgradeLevel(int upgradeGroupId)
+    {
+        return _upgradeLevels.TryGetValue(upgradeGroupId, out int currentLevel) ? currentLevel : 0;
+    }
+
+    public void SetUpgradeLevel(int upgradeGroupId, int level)
+    {
+        _upgradeLevels[upgradeGroupId] = level;
+    }
+
     public void AddGold(int amount)
     {
         _gold += amount;
@@ -100,13 +115,66 @@ public class UserData
 
     public void Upgrade(int ID)
     {
-        if (_upgradeLevels.ContainsKey(ID))
+        _upgradeLevels[ID] = GetUpgradeLevel(ID) + 1;
+    }
+
+    public float GetUpgradeGroupTotalEffect(int upgradeGroupId, Dictionary<int, UpgradeGroupData> upgradeGroupDict)
+    {
+        if (upgradeGroupDict == null || !upgradeGroupDict.TryGetValue(upgradeGroupId, out UpgradeGroupData groupData))
         {
-            _upgradeLevels[ID]++;
+            return 0f;
         }
-        else
+
+        if (groupData.Levels == null || groupData.Levels.Count == 0)
         {
-            _upgradeLevels[ID] = 1;
+            return 0f;
         }
+
+        int currentLevel = GetUpgradeLevel(upgradeGroupId);
+        int cappedLevel = currentLevel < groupData.Levels.Count ? currentLevel : groupData.Levels.Count;
+
+        float totalEffect = 0f;
+        for (int i = 0; i < cappedLevel; i++)
+        {
+            totalEffect += groupData.Levels[i].EffectAmount;
+        }
+
+        return totalEffect;
+    }
+
+    public Dictionary<string, float> GetTotalUpgradeEffectsByType(Dictionary<int, UpgradeGroupData> upgradeGroupDict)
+    {
+        Dictionary<string, float> totals = new Dictionary<string, float>();
+        if (upgradeGroupDict == null)
+        {
+            return totals;
+        }
+
+        foreach (var groupEntry in upgradeGroupDict)
+        {
+            UpgradeGroupData groupData = groupEntry.Value;
+            if (groupData == null || groupData.Levels == null || groupData.Levels.Count == 0)
+            {
+                continue;
+            }
+
+            string effectType = groupData.Levels[0].EffectType;
+            if (string.IsNullOrWhiteSpace(effectType))
+            {
+                effectType = groupData.Name;
+            }
+
+            float groupTotal = GetUpgradeGroupTotalEffect(groupEntry.Key, upgradeGroupDict);
+            if (totals.TryGetValue(effectType, out float currentTotal))
+            {
+                totals[effectType] = currentTotal + groupTotal;
+            }
+            else
+            {
+                totals[effectType] = groupTotal;
+            }
+        }
+
+        return totals;
     }
 }
