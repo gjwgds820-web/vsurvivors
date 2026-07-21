@@ -65,12 +65,36 @@ public class UserData
 
     public void AddGold(int amount)
     {
-        _gold += amount;
+        long next = (long)_gold + amount;
+        if (next > int.MaxValue)
+        {
+            _gold = int.MaxValue;
+        }
+        else if (next < 0)
+        {
+            _gold = 0;
+        }
+        else
+        {
+            _gold = (int)next;
+        }
     }
 
     public void AddDiamond(int amount)
     {
-        _diamond += amount;
+        long next = (long)_diamond + amount;
+        if (next > int.MaxValue)
+        {
+            _diamond = int.MaxValue;
+        }
+        else if (next < 0)
+        {
+            _diamond = 0;
+        }
+        else
+        {
+            _diamond = (int)next;
+        }
     }
 
     public void AddEnergy(int amount)

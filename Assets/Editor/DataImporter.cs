@@ -21,6 +21,7 @@ public class DataImporter
         ImportUpgradeDataFromCSV();
         ImportEnemyDataFromCSV();
         ImportStageDataFromJson();
+        ImportShopDataFromCSV();
         Debug.Log("All data imported successfully.");
     }
     #endregion
@@ -82,6 +83,68 @@ public class DataImporter
         AssetDatabase.SaveAssets();
         SetAssetAddressable(assetPath);
         Debug.Log("Skill data imported successfully from CSV.");
+        AssetDatabase.Refresh();
+    }
+    #endregion
+
+    #region Shop
+    [MenuItem("Tools/Import Shop Data(CSV)")]
+    public static void ImportShopDataFromCSV()
+    {
+        string path = Application.dataPath + "/GameAssets/Data/shop.csv";
+        if (!File.Exists(path))
+        {
+            Debug.LogError("shop.csv file not found at: " + path);
+            return;
+        }
+
+        string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
+        string assetPath = "Assets/GameAssets/Data/ShopDatabase.asset";
+
+        ShopDatabase database = AssetDatabase.LoadAssetAtPath<ShopDatabase>(assetPath);
+        if (database == null)
+        {
+            database = ScriptableObject.CreateInstance<ShopDatabase>();
+            AssetDatabase.CreateAsset(database, assetPath);
+            Debug.Log("Created new ShopDatabase asset at: " + assetPath);
+        }
+
+        if (database.products == null)
+        {
+            database.products = new List<ShopData>();
+        }
+
+        database.products.Clear();
+
+        for (int i = 1; i < lines.Length; i++)
+        {
+            if (string.IsNullOrWhiteSpace(lines[i]))
+            {
+                continue;
+            }
+
+            string[] row = lines[i].Split(',');
+            if (row.Length < 4)
+            {
+                Debug.LogWarning($"[ShopImporter] Invalid row at line {i + 1}: {lines[i]}");
+                continue;
+            }
+
+            ShopData product = new ShopData
+            {
+                RewardType = row[0].Trim(),
+                RewardAmount = int.TryParse(row[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int rewardAmount) ? rewardAmount : 0,
+                PriceType = row[2].Trim(),
+                PriceAmount = int.TryParse(row[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int priceAmount) ? priceAmount : 0
+            };
+
+            database.products.Add(product);
+        }
+
+        EditorUtility.SetDirty(database);
+        AssetDatabase.SaveAssets();
+        SetAssetAddressable(assetPath);
+        Debug.Log("Shop data imported successfully from CSV.");
         AssetDatabase.Refresh();
     }
     #endregion

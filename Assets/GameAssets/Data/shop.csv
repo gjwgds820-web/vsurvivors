@@ -1,0 +1,3 @@
+RewardType,RewardAmount,PriceType,PriceAmount
+Gold,10000,Diamond,100
+Diamond,1000,Cash,0

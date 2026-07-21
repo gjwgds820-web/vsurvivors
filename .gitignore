@@ -123,3 +123,6 @@ Assets/BMJUA_ttf SDF.asset
 # VS Code workspace settings
 /.vscode/
 
+# Docs
+/Docs/
+

@@ -189,3 +189,12 @@ public class PortalData
     public int Monster4;
     public int Monster5;
 }
+
+[System.Serializable]
+public class ShopData
+{
+    public string RewardType;
+    public int RewardAmount;
+    public string PriceType;
+    public int PriceAmount;
+}

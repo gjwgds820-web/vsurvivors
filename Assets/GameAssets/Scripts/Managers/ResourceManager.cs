@@ -145,4 +145,27 @@ public class ResourceManager : MonoBehaviour, IAsyncInitializable
         }
         return null;
     }
+
+    public async UniTask<GameObject> InstantiateAddressableAsync(string address, Transform parent = null)
+    {
+        try
+        {
+            return await Addressables.InstantiateAsync(address, parent).Task;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to instantiate Addressable GameObject: {address} - {e.Message}");
+            return null;
+        }
+    }
+
+    public void ReleaseAddressableInstance(GameObject instance)
+    {
+        if (instance == null) return;
+
+        if (!Addressables.ReleaseInstance(instance))
+        {
+            Destroy(instance);
+        }
+    }
 }

@@ -23,6 +23,7 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
     public Dictionary<int, UpgradeGroupData> UpgradeGroupDict { get; private set; } = new Dictionary<int, UpgradeGroupData>();
     public Dictionary<int, StageData> StageDict { get; private set; } = new Dictionary<int, StageData>();
     public Dictionary<int, PortalData> PortalDict { get; private set; } = new Dictionary<int, PortalData>();
+    public List<ShopData> ShopProducts { get; private set; } = new List<ShopData>();
 
     public List<SkillData> SelectedOptions = new List<SkillData>();
 
@@ -240,7 +241,8 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
         InitializeUpgradeUserData();
         await LoadStageDataAsync();
         await LoadPortalDataAsync();
-        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeGroupDict.Count} Upgrade Groups, {StageDict.Count} Stages, {PortalDict.Count} Portals");
+        await LoadShopDataAsync();
+        Debug.Log($"Data Loaded: {SkillDict.Count} Skills, {CharacterDict.Count} Characters, {RelicDict.Count} Relics, {ShadowDict.Count} Shadows, {UpgradeGroupDict.Count} Upgrade Groups, {StageDict.Count} Stages, {PortalDict.Count} Portals, {ShopProducts.Count} Shop Products");
     }
 
     private async UniTask LoadSkillDataAsync()
@@ -413,6 +415,30 @@ public class DataManager : MonoBehaviour, IAsyncInitializable
             {
                 if (!PortalDict.ContainsKey(portal.ID)) PortalDict.Add(portal.ID, portal);
             }
+        }
+    }
+
+    private async UniTask LoadShopDataAsync()
+    {
+        var handle = Addressables.LoadAssetAsync<ShopDatabase>("ShopDatabase");
+        ShopDatabase shopDB = await handle.Task;
+
+        ShopProducts.Clear();
+        if (shopDB == null || shopDB.products == null)
+        {
+            Debug.LogWarning("[DataManager] ShopDatabase load failed or has no products.");
+            return;
+        }
+
+        for (int i = 0; i < shopDB.products.Count; i++)
+        {
+            ShopData row = shopDB.products[i];
+            if (row == null)
+            {
+                continue;
+            }
+
+            ShopProducts.Add(row);
         }
     }
     #endregion

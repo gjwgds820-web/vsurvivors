@@ -11,10 +11,13 @@ public class UI_UpgradeSection : UI_Base
     private static readonly string[] GroupOrder = { "survival", "shadow", "utility", "special" };
 
     [SerializeField] private float _panelPreferredHeight = 400f;
-    [SerializeField] private float _groupTitleHeight = 40f;
+    [SerializeField] private float _groupTitleHeight = 70f;
     [SerializeField] private float _groupSpacing = 8f;
+    [SerializeField] private int _groupPaddingLeft = 24;
+    [SerializeField] private int _groupPaddingRight = 0;
     [SerializeField] private int _groupPaddingTop = 12;
     [SerializeField] private int _groupPaddingBottom = 20;
+    [SerializeField] private float _groupTitleTextInsetX = 12f;
 
     enum GameObjects
     {
@@ -133,7 +136,7 @@ public class UI_UpgradeSection : UI_Base
         layoutGroup.childForceExpandWidth = true;
         layoutGroup.childForceExpandHeight = false;
         layoutGroup.spacing = _groupSpacing;
-        layoutGroup.padding = new RectOffset(0, 0, _groupPaddingTop, _groupPaddingBottom);
+        layoutGroup.padding = new RectOffset(_groupPaddingLeft, _groupPaddingRight, _groupPaddingTop, _groupPaddingBottom);
 
         ContentSizeFitter fitter = groupObject.AddComponent<ContentSizeFitter>();
         fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -142,12 +145,25 @@ public class UI_UpgradeSection : UI_Base
         GameObject headerObject = new GameObject("GroupTitle");
         headerObject.transform.SetParent(groupObject.transform, false);
 
+        RectTransform headerRect = headerObject.AddComponent<RectTransform>();
+        headerRect.anchorMin = new Vector2(0f, 1f);
+        headerRect.anchorMax = new Vector2(1f, 1f);
+        headerRect.pivot = new Vector2(0.5f, 1f);
+        headerRect.sizeDelta = new Vector2(0f, _groupTitleHeight);
+
         TMP_Text titleText = headerObject.AddComponent<TextMeshProUGUI>();
         titleText.text = string.IsNullOrWhiteSpace(groupName) ? "Group" : groupName;
         titleText.font = ResourceManager.Instance.LoadTMPFont("BMJUA_ttf SDF");
         titleText.fontSize = 100f;
         titleText.alignment = TextAlignmentOptions.Left;
         titleText.color = Color.white;
+        titleText.margin = new Vector4(_groupTitleTextInsetX, 0f, 0f, 0f);
+
+        RectTransform titleRect = titleText.rectTransform;
+        titleRect.anchorMin = Vector2.zero;
+        titleRect.anchorMax = Vector2.one;
+        titleRect.offsetMin = Vector2.zero;
+        titleRect.offsetMax = Vector2.zero;
 
         LayoutElement titleLayout = headerObject.AddComponent<LayoutElement>();
         titleLayout.preferredHeight = _groupTitleHeight;
@@ -156,7 +172,7 @@ public class UI_UpgradeSection : UI_Base
         return groupObject.transform;
     }
 
-    private void OnUpgradeRequested(int upgradeId)
+    private async void OnUpgradeRequested(int upgradeId)
     {
         UserData userData = DataManager.Instance.currentUserData;
         if (!DataManager.Instance.UpgradeGroupDict.TryGetValue(upgradeId, out UpgradeGroupData upgradeGroupData))
@@ -181,11 +197,13 @@ public class UI_UpgradeSection : UI_Base
         UpgradeData nextUpgrade = upgradeGroupData.Levels[currentLevel];
         if (!TryConsumeUpgradeCost(userData, nextUpgrade))
         {
+            await UIManager.Instance.ShowToastAsync("UI_ToastMessage", "재화가 부족합니다.", Color.red);
             return;
         }
 
         userData.Upgrade(upgradeId);
         //DataManager.Instance.SaveGame();
+        await UIManager.Instance.ShowToastAsync("UI_ToastMessage", $"{nextUpgrade.Name}이 업그레이드 되었습니다.", Color.yellow);
 
         OnUpgradeCompleted?.Invoke();
 
