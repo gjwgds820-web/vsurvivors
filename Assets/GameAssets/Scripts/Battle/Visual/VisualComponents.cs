@@ -32,7 +32,12 @@ public struct VisualAnimationState : IComponentData { public Unity.Mathematics.f
     public bool TriggerSummon;
     public bool TriggerHit;
     public bool TriggerAttack; // ??꾩슦, ????怨듦꺽 ?몃━嫄곗슜
+    public bool TriggerEnrage;
     public int AttackIndex;    // 怨듦꺽 醫낅쪟 ?몃뜳??(0: 湲곕낯, 1: ?뚯쭊, 2: ?ъ쿃 ??
+    public HitBoxShape TelegraphShape;
+    public float TelegraphRange;
+    public float TelegraphWidth;
+    public float TelegraphAngle;
     public bool IsDead;
     
     // ?좊땲???좊땲硫붿씠???대깽?몃? ?꾪븳 ?숆린???꾨뱶

@@ -1,4 +1,5 @@
 ﻿using Unity.Entities;
+using Unity.Collections;
 using Unity.Mathematics;
 
 public enum BossAttackPattern
@@ -13,7 +14,26 @@ public enum BossState
     Chasing,
     Prep,
     Hitting,
-    Cooldown
+    Cooldown,
+    Enraging
+}
+
+public enum BossSkillTarget : byte
+{
+    Nearest,
+    Player
+}
+
+public enum BossPassiveStat : byte
+{
+    Attack,
+    MoveSpeed
+}
+
+public struct BossSkillCooldownState
+{
+    public int SkillID;
+    public float Remaining;
 }
 
 public struct BossCombatData : IComponentData
@@ -27,9 +47,17 @@ public struct BossCombatData : IComponentData
     public quaternion AttackRotation;
     public float3 DashDirection;
     public float DashSpeed;
+    public float DashRemainingDistance;
     public float DashTimer; // Death 이벤트에서도 사용
     
     public float AttackCooldown;
+    public int CurrentPhase;
+    public int CurrentSkillID;
+    public int PendingStartSkillID;
+    public float BaseAttackPower;
+    public float BaseMoveSpeed;
+    public bool IsEnraged;
+    public FixedList128Bytes<BossSkillCooldownState> SkillCooldowns;
 }
 
 // 보스 대시 중 부착되는 히트박스 식별용 (단순 태그)
@@ -40,4 +68,65 @@ public struct BossAttackPrefabs : IComponentData
     public Entity MeleeHitBoxPrefab;
     public Entity AxeHitBoxPrefab;
     public Entity DashHitBoxPrefab;
+}
+
+public struct BossAuthoringConfig : IComponentData
+{
+    public float SizeReference;
+    public float ConeAngle;
+    public float BoxWidthRate;
+    public float EnrageDuration;
+}
+
+[InternalBufferCapacity(4)]
+public struct BossSkillPrefabElement : IBufferElementData
+{
+    public int SkillID;
+    public Entity Prefab;
+    public int AnimationIndex;
+    public bool IsProjectile;
+}
+
+public struct BossPatternDefBlob
+{
+    public int BossID;
+    public int Phase;
+    public float HealthRate;
+    public int StartSkillID;
+    public int Skill1;
+    public int Skill2;
+    public int Skill3;
+    public int Skill4;
+}
+
+public struct BossActiveSkillDefBlob
+{
+    public int SkillID;
+    public BossSkillTarget Target;
+    public float AttackRate;
+    public float Cooldown;
+    public bool IsForced;
+    public float GroggyDuration;
+    public float RangeRate;
+    public HitBoxShape Shape;
+}
+
+public struct BossPassiveEffectDefBlob
+{
+    public int SkillID;
+    public BossPassiveStat Stat;
+    public float BuffValue;
+    public float Duration;
+}
+
+public struct BossPatternDatabaseBlob
+{
+    public BlobArray<BossPatternDefBlob> Patterns;
+    public BlobArray<BossActiveSkillDefBlob> ActiveSkills;
+    public BlobArray<BossPassiveEffectDefBlob> PassiveEffects;
+}
+
+public struct BossPatternDatabaseComponent : IComponentData
+{
+    public BlobAssetReference<BossPatternDatabaseBlob> DatabaseRef;
 }

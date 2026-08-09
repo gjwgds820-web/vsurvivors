@@ -1,0 +1,4 @@
+skill_id,help,target,type,add_atk_rate,cooltime,force,groggy,range,telegraph_type,motion1,motion2,motion3,motion4,motion5
+32201011,bulltank_휘두르기,near,ACTIVE,150,5,FALSE,0.2,70,cone,AS_BullTank_Attack01,0,0,0,0
+32201012,bulltank_던지기,near,ACTIVE,125,10,FALSE,0.2,150,box,Attack03_Start,Attack03_End,Attack03_spawnAxeD,0,0
+32201013,bulltank_박치기,player,ACTIVE,200,20,TRUE,3,300,box,Attack02_Charge_Loop,Run,0,0,0

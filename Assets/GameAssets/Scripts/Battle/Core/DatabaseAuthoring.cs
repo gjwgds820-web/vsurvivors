@@ -29,8 +29,10 @@ public class DatabaseAuthoring : MonoBehaviour
                     {
                         ID = data.ID,
                         Type = data.Type,
+                        Rank = ParseEnemyRank(data),
                         MaxHealth = data.MaxHealth,
                         AttackPower = data.AttackPower,
+                        Defence = data.Def,
                         AttackRange = data.AttackRange,
                         AttackCooldown = data.AttackCooldown,
                         MoveSpeed = data.MoveSpeed,
@@ -47,6 +49,64 @@ public class DatabaseAuthoring : MonoBehaviour
                     DatabaseRef = blobRef,
                 });
 
+                builder.Dispose();
+            }
+
+            if (authoring._enemyDatabase != null && authoring._enemyDatabase.bossPatterns.Count > 0)
+            {
+                var builder = new BlobBuilder(Allocator.Temp);
+                ref var root = ref builder.ConstructRoot<BossPatternDatabaseBlob>();
+
+                var patterns = builder.Allocate(ref root.Patterns, authoring._enemyDatabase.bossPatterns.Count);
+                for (int i = 0; i < authoring._enemyDatabase.bossPatterns.Count; i++)
+                {
+                    var data = authoring._enemyDatabase.bossPatterns[i];
+                    patterns[i] = new BossPatternDefBlob
+                    {
+                        BossID = data.BossID,
+                        Phase = data.Phase,
+                        HealthRate = data.HealthRate,
+                        StartSkillID = data.StartSkillID,
+                        Skill1 = data.SkillIDs[0],
+                        Skill2 = data.SkillIDs[1],
+                        Skill3 = data.SkillIDs[2],
+                        Skill4 = data.SkillIDs[3]
+                    };
+                }
+
+                var activeSkills = builder.Allocate(ref root.ActiveSkills, authoring._enemyDatabase.bossActiveSkills.Count);
+                for (int i = 0; i < authoring._enemyDatabase.bossActiveSkills.Count; i++)
+                {
+                    var data = authoring._enemyDatabase.bossActiveSkills[i];
+                    activeSkills[i] = new BossActiveSkillDefBlob
+                    {
+                        SkillID = data.SkillID,
+                        Target = data.Target == "player" ? BossSkillTarget.Player : BossSkillTarget.Nearest,
+                        AttackRate = data.AttackRate,
+                        Cooldown = data.Cooldown,
+                        IsForced = data.IsForced,
+                        GroggyDuration = data.GroggyDuration,
+                        RangeRate = data.RangeRate,
+                        Shape = data.Shape
+                    };
+                }
+
+                var passiveEffects = builder.Allocate(ref root.PassiveEffects, authoring._enemyDatabase.bossPassiveSkillEffects.Count);
+                for (int i = 0; i < authoring._enemyDatabase.bossPassiveSkillEffects.Count; i++)
+                {
+                    var data = authoring._enemyDatabase.bossPassiveSkillEffects[i];
+                    passiveEffects[i] = new BossPassiveEffectDefBlob
+                    {
+                        SkillID = data.SkillID,
+                        Stat = data.Stat == "speed" ? BossPassiveStat.MoveSpeed : BossPassiveStat.Attack,
+                        BuffValue = data.BuffValue,
+                        Duration = data.Duration
+                    };
+                }
+
+                var blobRef = builder.CreateBlobAssetReference<BossPatternDatabaseBlob>(Allocator.Persistent);
+                AddBlobAsset(ref blobRef, out var hash);
+                AddComponent(entity, new BossPatternDatabaseComponent { DatabaseRef = blobRef });
                 builder.Dispose();
             }
 
@@ -86,6 +146,12 @@ public class DatabaseAuthoring : MonoBehaviour
 
                 builder.Dispose();
             }
+        }
+
+        private static EnemyRank ParseEnemyRank(EnemyData data)
+        {
+            if (data.EliteType == "elite") return EnemyRank.Elite;
+            return data.IsBoss ? EnemyRank.Boss : EnemyRank.Normal;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 public class TelegraphUI : MonoBehaviour
 {
-    public enum TelegraphShape { Cone, Box, Arrow }
+    public enum TelegraphShape { Cone, Box, Arrow, Circle }
     
     [Header("Shape Settings")]
     public TelegraphShape Shape;
@@ -21,12 +21,18 @@ public class TelegraphUI : MonoBehaviour
 
     private GameObject _fillObj;
 
-    public void Setup(Transform target, Vector3 posOffset, float duration, bool trackTarget)
+    public void Setup(Transform target, Vector3 posOffset, float duration, bool trackTarget,
+        HitBoxShape hitBoxShape, float range, float width, float angle)
     {
         _attachTo = target;
         _positionOffset = posOffset;
         _duration = duration;
         _isTracking = trackTarget;
+        Shape = hitBoxShape == HitBoxShape.Cone
+            ? TelegraphShape.Cone
+            : hitBoxShape == HitBoxShape.Box ? TelegraphShape.Box : TelegraphShape.Circle;
+        RadiusOrLength = range;
+        AngleOrWidth = hitBoxShape == HitBoxShape.Cone ? angle : width;
 
         if (_attachTo != null)
         {
@@ -69,7 +75,7 @@ public class TelegraphUI : MonoBehaviour
     private Mesh BuildMesh()
     {
         Mesh mesh = new Mesh();
-        if (Shape == TelegraphShape.Cone)
+        if (Shape == TelegraphShape.Cone || Shape == TelegraphShape.Circle)
         {
             // 부채꼴: 각도에 맞춰 원둘레 정점 생성
             int segments = 30; // 등분 수 (높을 수록 부드러운 곡선)
@@ -77,8 +83,9 @@ public class TelegraphUI : MonoBehaviour
             int[] tris = new int[segments * 3];
 
             verts[0] = Vector3.zero;
-            float startAngle = -AngleOrWidth / 2f;
-            float angleStep = AngleOrWidth / segments;
+            float shapeAngle = Shape == TelegraphShape.Circle ? 360f : AngleOrWidth;
+            float startAngle = -shapeAngle / 2f;
+            float angleStep = shapeAngle / segments;
 
             for (int i = 0; i <= segments; i++)
             {
@@ -142,7 +149,7 @@ public class TelegraphUI : MonoBehaviour
 
         if (_fillObj != null)
         {
-            if (Shape == TelegraphShape.Cone)
+            if (Shape == TelegraphShape.Cone || Shape == TelegraphShape.Circle)
             {
                 // 원뿔(근접)은 안쪽에서 바깥쪽으로 사방으로 커짐
                 _fillObj.transform.localScale = new Vector3(progress, 1f, progress);

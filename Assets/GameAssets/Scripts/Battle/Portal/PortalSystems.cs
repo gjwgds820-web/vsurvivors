@@ -124,7 +124,7 @@ public partial struct PortalInteractionSystem : ISystem
                         var bossEventEntity = ecb.CreateEntity();
                         ecb.AddComponent(bossEventEntity, new SpawnBossEventTag 
                         { 
-                            BossID = directorDataData.ValueRW.CurrentWave,
+                            BossID = cPortalData.ValueRO.Monster1,
                             IsIsolatedBoss = true 
                         });
 

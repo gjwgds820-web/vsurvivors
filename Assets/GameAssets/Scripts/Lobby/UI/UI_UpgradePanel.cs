@@ -80,7 +80,7 @@ public class UI_UpgradePanel : UI_Base
         }
 
         Button upgradeButton = GetButton((int)Buttons.UpgradeButton);
-        upgradeButton.interactable = !isMaxLevel;
+        upgradeButton.gameObject.SetActive(!isMaxLevel);
 
         TMP_Text buttonText = upgradeButton.GetComponentInChildren<TMP_Text>(true);
         if (buttonText != null)

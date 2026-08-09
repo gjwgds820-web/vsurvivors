@@ -127,24 +127,24 @@ public class VisualManager : MonoBehaviour
         return prefab;
     }
 
-    public void SpawnTelegraph(Transform bossTransform, int attackIndex, float duration)
+    public void SpawnTelegraph(Transform bossTransform, HitBoxShape shape, float range, float width, float angle, float duration)
     {
         GameObject prefabToSpawn = null;
         bool isTracking = false;
 
-        switch (attackIndex)
+        switch (shape)
         {
-            case 0: // Melee (Cone)
+            case HitBoxShape.Cone:
                 prefabToSpawn = TelegraphConePrefab;
-                isTracking = false; // 부채꼴은 보스 위치 시점에 고정
+                isTracking = false;
                 break;
-            case 1: // Dash (Arrow)
-                prefabToSpawn = TelegraphArrowPrefab;
-                isTracking = true;  // 화살표는 보스 이동을 실시간 추적
-                break;
-            case 2: // AxeThrow (Box)
+            case HitBoxShape.Box:
                 prefabToSpawn = TelegraphBoxPrefab;
-                isTracking = false; // 투척 투사체 경로 고정
+                isTracking = false;
+                break;
+            case HitBoxShape.Circle:
+                prefabToSpawn = TelegraphConePrefab;
+                isTracking = false;
                 break;
         }
 
@@ -154,8 +154,7 @@ public class VisualManager : MonoBehaviour
             TelegraphUI telegraphUI = telegraphGo.GetComponent<TelegraphUI>();
             if (telegraphUI != null)
             {
-                // 약간 바닥에서 위로 띄움 (Y 0.2)
-                telegraphUI.Setup(bossTransform, new Vector3(0, 0.2f, 0), duration, isTracking);
+                telegraphUI.Setup(bossTransform, new Vector3(0, 0.2f, 0), duration, isTracking, shape, range, width, angle);
             }
         }
     }

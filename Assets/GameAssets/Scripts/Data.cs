@@ -152,6 +152,42 @@ public class EnemyData
 
     public Sprite Icon;
 }
+
+[System.Serializable]
+public class BossPatternData
+{
+    public int BossID;
+    public int Phase;
+    public float HealthRate;
+    public int StartSkillID;
+    public int[] SkillIDs = new int[4];
+}
+
+[System.Serializable]
+public class BossActiveSkillData
+{
+    public int SkillID;
+    public string Description;
+    public string Target;
+    public float AttackRate;
+    public float Cooldown;
+    public bool IsForced;
+    public float GroggyDuration;
+    public float RangeRate;
+    public HitBoxShape Shape;
+    public string[] Motions = new string[5];
+}
+
+[System.Serializable]
+public class BossPassiveSkillEffectData
+{
+    public int SkillID;
+    public string Description;
+    public string Stat;
+    public float BuffValue;
+    public float Duration;
+    public string[] Motions = new string[5];
+}
 [System.Serializable]
 public class StageData
 {

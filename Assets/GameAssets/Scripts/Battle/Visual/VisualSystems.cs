@@ -554,6 +554,7 @@ public partial class VisualAnimationSyncSystem : SystemBase
             bool triggerHit = animState.ValueRW.TriggerHit;
             bool triggerSummon = animState.ValueRW.TriggerSummon;
             bool triggerAttack = animState.ValueRW.TriggerAttack;
+            bool triggerEnrage = animState.ValueRW.TriggerEnrage;
             bool isDead = animState.ValueRO.IsDead;
             bool isBoss = EntityManager.HasComponent<BossTag>(entity);
             int attackIdx = animState.ValueRO.AttackIndex;
@@ -566,6 +567,7 @@ public partial class VisualAnimationSyncSystem : SystemBase
 
                 if (triggerHit) animator.SafeSetTrigger("Hit");
                 if (triggerSummon) animator.SafeSetTrigger("Summon");
+                if (triggerEnrage) animator.SafeSetTrigger("Angry");
 
                 if (triggerAttack)
                 {
@@ -579,7 +581,13 @@ public partial class VisualAnimationSyncSystem : SystemBase
                             {
                                 float hitTime = eventReceiver.GetTimeToHitEvent();
                                 var visualModel = EntityManager.GetComponentObject<SubSceneVisualModel>(entity);
-                                VisualManager.Instance.SpawnTelegraph(visualModel.Value, attackIdx, hitTime);
+                                VisualManager.Instance.SpawnTelegraph(
+                                    visualModel.Value,
+                                    animState.ValueRO.TelegraphShape,
+                                    animState.ValueRO.TelegraphRange,
+                                    animState.ValueRO.TelegraphWidth,
+                                    animState.ValueRO.TelegraphAngle,
+                                    hitTime);
                             }
                         }
                     }
@@ -606,6 +614,7 @@ public partial class VisualAnimationSyncSystem : SystemBase
 
             if (triggerHit) animState.ValueRW.TriggerHit = false;
             if (triggerSummon) animState.ValueRW.TriggerSummon = false;
+            if (triggerEnrage) animState.ValueRW.TriggerEnrage = false;
             if (triggerAttack) animState.ValueRW.TriggerAttack = false;
         }
     }

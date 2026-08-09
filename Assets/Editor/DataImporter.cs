@@ -424,6 +424,9 @@ public class DataImporter
         }
 
         database.enemies.Clear();
+        database.bossPatterns.Clear();
+        database.bossActiveSkills.Clear();
+        database.bossPassiveSkillEffects.Clear();
 
         // 1. Load Monster CSV
         string monsterPath = Application.dataPath + "/GameAssets/Data/monster.csv";
@@ -470,7 +473,7 @@ public class DataImporter
             {
                 if (string.IsNullOrWhiteSpace(lines[i])) continue;
                 string[] row = lines[i].Split(',');
-                if (row.Length < 13) continue;
+                if (row.Length < 8) continue;
 
                 EnemyData enemy = new EnemyData
                 {
@@ -480,15 +483,10 @@ public class DataImporter
                     EliteType = row[3],
                     MaxHealth = float.Parse(row[4]),
                     AttackPower = float.Parse(row[5]),
-                    AttackCooldown = float.Parse(row[6]),
-                    AttackRange = float.Parse(row[7]),
-                    MaxPierce = int.Parse(row[8]),
-                    Def = float.Parse(row[9]),
-                    MoveSpeed = float.Parse(row[10]),
-                    Skill1 = int.TryParse(row[11], out int s1) ? s1 : 0,
-                    Skill2 = int.TryParse(row[12], out int s2) ? s2 : 0,
+                    Def = float.Parse(row[6]),
+                    MoveSpeed = float.Parse(row[7]),
                     IsBoss = true,
-                    IsPiercing = int.Parse(row[8]) > 0
+                    IsPiercing = false
                 };
                 enemy.Icon = LoadIconSprite("Assets/GameAssets/Icons/Enemies", enemy.Name);
                 database.enemies.Add(enemy);
@@ -499,11 +497,130 @@ public class DataImporter
             Debug.LogWarning("boss.csv file not found at: " + bossPath);
         }
 
+        ImportBossPatternRows(database, Application.dataPath + "/GameAssets/Data/boss_pattern.csv");
+        ImportBossActiveSkillRows(database, Application.dataPath + "/GameAssets/Data/boss_skill_active.csv");
+        ImportBossPassiveSkillRows(database, Application.dataPath + "/GameAssets/Data/boss_skill_passive.csv");
+
         EditorUtility.SetDirty(database);
         AssetDatabase.SaveAssets();
         SetAssetAddressable(assetPath);
         Debug.Log("Enemy data imported successfully from Monster and Boss CSVs.");
         AssetDatabase.Refresh();
+    }
+
+    private static void ImportBossPatternRows(EnemyDatabase database, string path)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning("boss_pattern.csv file not found at: " + path);
+            return;
+        }
+
+        string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] row = lines[i].Split(',');
+            if (row.Length < 8 || !int.TryParse(row[0].Trim(), out int bossID)) continue;
+
+            var pattern = new BossPatternData
+            {
+                BossID = bossID,
+                Phase = int.Parse(row[1], CultureInfo.InvariantCulture),
+                HealthRate = float.Parse(row[2], CultureInfo.InvariantCulture),
+                StartSkillID = int.Parse(row[3], CultureInfo.InvariantCulture)
+            };
+
+            for (int skillIndex = 0; skillIndex < pattern.SkillIDs.Length; skillIndex++)
+            {
+                pattern.SkillIDs[skillIndex] = int.Parse(row[4 + skillIndex], CultureInfo.InvariantCulture);
+            }
+
+            database.bossPatterns.Add(pattern);
+        }
+    }
+
+    private static void ImportBossActiveSkillRows(EnemyDatabase database, string path)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning("boss_skill_active.csv file not found at: " + path);
+            return;
+        }
+
+        string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] row = lines[i].Split(',');
+            if (row.Length < 15 || !int.TryParse(row[0].Trim(), out int skillID)) continue;
+
+            var skill = new BossActiveSkillData
+            {
+                SkillID = skillID,
+                Description = row[1].Trim(),
+                Target = row[2].Trim().ToLowerInvariant(),
+                AttackRate = float.Parse(row[4], CultureInfo.InvariantCulture) * 0.01f,
+                Cooldown = float.Parse(row[5], CultureInfo.InvariantCulture),
+                IsForced = bool.TryParse(row[6].Trim(), out bool isForced) && isForced,
+                GroggyDuration = float.Parse(row[7], CultureInfo.InvariantCulture),
+                RangeRate = float.Parse(row[8], CultureInfo.InvariantCulture) * 0.01f,
+                Shape = ParseBossSkillShape(row[9])
+            };
+
+            for (int motionIndex = 0; motionIndex < skill.Motions.Length; motionIndex++)
+            {
+                skill.Motions[motionIndex] = row[10 + motionIndex].Trim();
+            }
+
+            database.bossActiveSkills.Add(skill);
+        }
+    }
+
+    private static void ImportBossPassiveSkillRows(EnemyDatabase database, string path)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning("boss_skill_passive.csv file not found at: " + path);
+            return;
+        }
+
+        string[] lines = File.ReadAllLines(path, System.Text.Encoding.UTF8);
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] row = lines[i].Split(',');
+            if (row.Length < 11 || !int.TryParse(row[0].Trim(), out int skillID)) continue;
+
+            var effect = new BossPassiveSkillEffectData
+            {
+                SkillID = skillID,
+                Description = row[1].Trim(),
+                Stat = row[3].Trim().ToLowerInvariant(),
+                BuffValue = float.Parse(row[4], CultureInfo.InvariantCulture),
+                Duration = float.Parse(row[5], CultureInfo.InvariantCulture)
+            };
+
+            for (int motionIndex = 0; motionIndex < effect.Motions.Length; motionIndex++)
+            {
+                effect.Motions[motionIndex] = row[6 + motionIndex].Trim();
+            }
+
+            database.bossPassiveSkillEffects.Add(effect);
+        }
+    }
+
+    private static HitBoxShape ParseBossSkillShape(string value)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "cone":
+            case "corn":
+                return HitBoxShape.Cone;
+            case "box":
+                return HitBoxShape.Box;
+            case "circle":
+                return HitBoxShape.Circle;
+            default:
+                return HitBoxShape.Circle;
+        }
     }
     #endregion
 

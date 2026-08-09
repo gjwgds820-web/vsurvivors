@@ -24,6 +24,12 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
     [SerializeField] private float toastTextFadeOutDuration = 0.15f;
     [SerializeField] private float toastScreenFadeInDuration = 0.25f;
 
+    [Header("Floating Toast Settings")]
+    [SerializeField] private float floatingToastFadeInDuration = 0.12f;
+    [SerializeField] private float floatingToastVisibleDuration = 0.6f;
+    [SerializeField] private float floatingToastFadeOutDuration = 0.3f;
+    [SerializeField] private float floatingToastMoveUpDistance = 80f;
+
     private readonly Dictionary<string, GameObject> _popupInstanceCache = new Dictionary<string, GameObject>();
     private readonly Stack<GameObject> _activePopups = new Stack<GameObject>();
 
@@ -41,7 +47,15 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
     private bool _isToastShowing;
     private bool _toastSkipRequested;
 
+    private GameObject _activeFloatingToastInstance;
+    private CanvasGroup _activeFloatingToastCanvasGroup;
+    private TMP_Text _activeFloatingToastText;
+    private RectTransform _activeFloatingToastRect;
+    private CancellationTokenSource _floatingToastCts;
+    private bool _isFloatingToastShowing;
+
     public bool IsToastShowing => _isToastShowing;
+    public bool IsFloatingToastShowing => _isFloatingToastShowing;
 
     private void Awake()
     {
@@ -71,6 +85,7 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
         }
 
         CancelAndCleanupToast();
+        CancelAndCleanupFloatingToast();
     }
 
     private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -79,6 +94,7 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
         _activePopups.Clear();
 
         CancelAndCleanupToast();
+        CancelAndCleanupFloatingToast();
         FindAndAssingUIRoot();
     }
 
@@ -239,6 +255,101 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
 
             _isToastShowing = false;
             _toastSkipRequested = false;
+        }
+    }
+
+    public async UniTask<bool> ShowFloatingToastAsync(string toastAddress, string message, Color? textColor = null)
+    {
+        if (_isFloatingToastShowing)
+        {
+            return false;
+        }
+
+        if (ResourceManager.Instance == null)
+        {
+            Debug.LogError("[UIManager] ResourceManager.Instance is null. Cannot show floating toast.");
+            return false;
+        }
+
+        if (popupParent == null)
+        {
+            FindAndAssingUIRoot();
+            if (popupParent == null)
+            {
+                Debug.LogError("[UIManager] popupParent is null. Cannot show floating toast.");
+                return false;
+            }
+        }
+
+        _floatingToastCts = new CancellationTokenSource();
+        _isFloatingToastShowing = true;
+
+        try
+        {
+            _activeFloatingToastInstance = await ResourceManager.Instance.InstantiateAddressableAsync(toastAddress, popupParent);
+            if (_activeFloatingToastInstance == null)
+            {
+                Debug.LogError($"[UIManager] Floating toast prefab load failed. Address: {toastAddress}");
+                return false;
+            }
+
+            _activeFloatingToastInstance.transform.SetAsLastSibling();
+
+            _activeFloatingToastCanvasGroup = _activeFloatingToastInstance.GetComponent<CanvasGroup>();
+            if (_activeFloatingToastCanvasGroup == null)
+            {
+                _activeFloatingToastCanvasGroup = _activeFloatingToastInstance.AddComponent<CanvasGroup>();
+            }
+
+            _activeFloatingToastCanvasGroup.alpha = 0f;
+            _activeFloatingToastCanvasGroup.blocksRaycasts = false;
+            _activeFloatingToastCanvasGroup.interactable = false;
+
+            _activeFloatingToastText = _activeFloatingToastInstance.GetComponentInChildren<TMP_Text>(true);
+            if (_activeFloatingToastText != null)
+            {
+                _activeFloatingToastText.text = message;
+                if (textColor.HasValue)
+                {
+                    _activeFloatingToastText.color = textColor.Value;
+                }
+            }
+
+            _activeFloatingToastRect = _activeFloatingToastInstance.GetComponent<RectTransform>();
+            float startY = 0f;
+            if (_activeFloatingToastRect != null)
+            {
+                startY = _activeFloatingToastRect.anchoredPosition.y;
+            }
+
+            await AwaitTween(
+                _activeFloatingToastCanvasGroup.DOFade(1f, floatingToastFadeInDuration).SetUpdate(true),
+                _floatingToastCts.Token);
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, floatingToastVisibleDuration)), true, PlayerLoopTiming.Update, _floatingToastCts.Token);
+
+            Sequence fadeOutSequence = DOTween.Sequence().SetUpdate(true);
+            fadeOutSequence.Join(_activeFloatingToastCanvasGroup.DOFade(0f, floatingToastFadeOutDuration));
+            if (_activeFloatingToastRect != null)
+            {
+                fadeOutSequence.Join(_activeFloatingToastRect.DOAnchorPosY(startY + floatingToastMoveUpDistance, floatingToastFadeOutDuration).SetEase(Ease.OutCubic));
+            }
+
+            await AwaitTween(fadeOutSequence, _floatingToastCts.Token);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        finally
+        {
+            CleanupFloatingToastVisuals();
+
+            _floatingToastCts?.Dispose();
+            _floatingToastCts = null;
+
+            _isFloatingToastShowing = false;
         }
     }
 
@@ -405,6 +516,20 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
         _toastSkipRequested = false;
     }
 
+    private void CancelAndCleanupFloatingToast()
+    {
+        if (_floatingToastCts != null && !_floatingToastCts.IsCancellationRequested)
+        {
+            _floatingToastCts.Cancel();
+        }
+
+        CleanupFloatingToastVisuals();
+
+        _floatingToastCts?.Dispose();
+        _floatingToastCts = null;
+        _isFloatingToastShowing = false;
+    }
+
     private void CleanupToastVisuals()
     {
         if (_activeToastInstance != null)
@@ -434,6 +559,26 @@ public class UIManager : MonoBehaviour, IAsyncInitializable
         {
             _toastBlockerRoot.SetActive(false);
         }
+    }
+
+    private void CleanupFloatingToastVisuals()
+    {
+        if (_activeFloatingToastInstance != null)
+        {
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.ReleaseAddressableInstance(_activeFloatingToastInstance);
+            }
+            else
+            {
+                Destroy(_activeFloatingToastInstance);
+            }
+        }
+
+        _activeFloatingToastInstance = null;
+        _activeFloatingToastCanvasGroup = null;
+        _activeFloatingToastText = null;
+        _activeFloatingToastRect = null;
     }
 
     private static UniTask AwaitTween(Tween tween, CancellationToken token)

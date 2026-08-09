@@ -32,7 +32,9 @@ public partial struct GameDirectorSystem : ISystem
             float3 outward = new float3(math.cos(angle), 0f, math.sin(angle));
             float3 segPos = center + outward * radius;
 
-            quaternion segRot = quaternion.LookRotationSafe(outward, math.up());
+            quaternion segRot = math.mul(
+                quaternion.LookRotationSafe(outward, math.up()),
+                quaternion.RotateY(math.radians(90f)));
             float3 halfExtents = new float3(segmentThickness * 0.5f, segmentHeight * 0.5f, arcLength * 0.5f);
 
             var collider = Unity.Physics.BoxCollider.Create(new BoxGeometry
@@ -171,7 +173,7 @@ public partial struct GameDirectorSystem : ISystem
             ecb.AddComponent<ClearNormalEnemiesEventTag>(clearEventEntity);
 
             var bossEventEntity = ecb.CreateEntity();
-            ecb.AddComponent(bossEventEntity, new SpawnBossEventTag { BossID = data.ValueRO.CurrentWave });
+            ecb.AddComponent(bossEventEntity, new SpawnBossEventTag { BossID = 31201011 });
             return;
         }
 
@@ -254,7 +256,7 @@ public partial struct GameDirectorSystem : ISystem
                     ecb.SetComponent(enemyEntity, new HealthData
                     {
                         MaxHealth = enemyDef.MaxHealth * timeMultiplier, CurrentHealth = enemyDef.MaxHealth * timeMultiplier,
-                        DamageReduction = baseHealthData.DamageReduction, InvincibilityTimer = baseHealthData.InvincibilityTimer
+                        DamageReduction = enemyDef.Defence, InvincibilityTimer = baseHealthData.InvincibilityTimer
                     });
                     
                     ecb.AddComponent<EnemyTag>(enemyEntity);
@@ -334,7 +336,7 @@ public partial struct GameDirectorSystem : ISystem
                 ecb.SetComponent(bossEntity, new HealthData
                 {
                     MaxHealth = bossDef.MaxHealth * timeMultiplier, CurrentHealth = bossDef.MaxHealth * timeMultiplier,
-                    DamageReduction = baseBossHealth.DamageReduction, InvincibilityTimer = baseBossHealth.InvincibilityTimer
+                    DamageReduction = bossDef.Defence, InvincibilityTimer = baseBossHealth.InvincibilityTimer
                 });
 
                 ecb.AddComponent<EnemyTag>(bossEntity);
@@ -446,7 +448,7 @@ public partial struct GameDirectorSystem : ISystem
                     ecb.SetComponent(enemyEntity, new HealthData
                     {
                         MaxHealth = enemyDef.MaxHealth * timeMultiplier, CurrentHealth = enemyDef.MaxHealth * timeMultiplier,
-                        DamageReduction = baseHealthData.DamageReduction, InvincibilityTimer = baseHealthData.InvincibilityTimer
+                        DamageReduction = enemyDef.Defence, InvincibilityTimer = baseHealthData.InvincibilityTimer
                     });
                     
                     ecb.AddComponent<EnemyTag>(enemyEntity);
@@ -519,7 +521,7 @@ public partial struct GameDirectorSystem : ISystem
                 ecb.SetComponent(bossEntity, new HealthData
                 {
                     MaxHealth = bossDef.MaxHealth * timeMultiplier, CurrentHealth = bossDef.MaxHealth * timeMultiplier,
-                    DamageReduction = baseBossHealth.DamageReduction, InvincibilityTimer = baseBossHealth.InvincibilityTimer
+                    DamageReduction = bossDef.Defence, InvincibilityTimer = baseBossHealth.InvincibilityTimer
                 });
 
                 ecb.AddComponent<EnemyTag>(bossEntity);
@@ -669,7 +671,7 @@ public partial struct GameDirectorSystem : ISystem
             else chosenId = stageConfig.Portal3;
         }
         
-        PortalConfigElement chosenConfig = new PortalConfigElement { DelPortal = 3, SummonAmount = 1, Monster1 = 310100001 };
+        PortalConfigElement chosenConfig = new PortalConfigElement { DelPortal = 3, SummonAmount = 1, Monster1 = 31101011 };
         for (int p = 0; p < portalBuffer.Length; p++)
         {
             if (portalBuffer[p].ID == chosenId)

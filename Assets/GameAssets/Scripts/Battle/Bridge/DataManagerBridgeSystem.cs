@@ -67,7 +67,7 @@ public partial class DataManagerBridgeSystem : SystemBase
                 Portal2 = 42010002, Chance2 = 0,
                 Portal3 = 42010003, Chance3 = 0,
             };
-            buffer.Add(new PortalConfigElement { ID = 42010101, SummonAmount = 300, DelPortal = 0, Monster1 = 301000 });
+            buffer.Add(new PortalConfigElement { ID = 42010101, SummonAmount = 300, DelPortal = 0, Monster1 = 31101011 });
         }
 
         EntityManager.AddComponentData(entity, config);

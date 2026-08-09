@@ -1,0 +1,3 @@
+skill_id,help,type,stat,buff_value,duration,motion1,motion2,motion3,motion4,motion5
+32202011,bulltank_광폭화_공격력,PASSIVE,atk,1.5,0,Angry,0,0,0,0
+32202011,bulltank_광폭화_이동속도,PASSIVE,speed,1.5,0,0,0,0,0,0

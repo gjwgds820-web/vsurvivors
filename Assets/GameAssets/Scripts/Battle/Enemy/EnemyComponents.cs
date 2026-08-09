@@ -16,6 +16,13 @@ public enum EnemyState
     Attack,
     Blocked
 }
+
+public enum EnemyRank : byte
+{
+    Normal,
+    Elite,
+    Boss
+}
 #endregion
 
 #region EnemyData
@@ -52,8 +59,10 @@ public struct EnemyDefBlob
 {
     public int ID;
     public EnemyType Type;
+    public EnemyRank Rank;
     public float MaxHealth;
     public float AttackPower;
+    public float Defence;
     public float AttackRange;
     public float AttackCooldown;
     public float MoveSpeed;
