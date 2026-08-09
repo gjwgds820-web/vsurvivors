@@ -2656,6 +2656,7 @@ MonoBehaviour:
   PortalVisualPrefab: {fileID: 4780656851694749650, guid: 15a8ee98a81364348a647e5e241bc9ad, type: 3}
   EnemyVisualPrefab: {fileID: 110476, guid: f54aa042fbad4f549993cb628b4938c5, type: 3}
   BossVisualPrefab: {fileID: 204384775450305714, guid: 1387eaaf415895142a41e54bc33cf3a4, type: 3}
+  BossArenaFenceVisualPrefab: {fileID: 0}
   ShadowVisualPrefab: {fileID: 8603064644883837947, guid: 4bb11818d42a8b0419e5e54d411d1a56, type: 3}
   ExpVisualPrefab: {fileID: 8702333290169580024, guid: 34804830dc70364488f3604a56d15304, type: 3}
   GoldVisualPrefab: {fileID: 2513683365356168914, guid: 80aed45622fe1164d9f34fc88c9bdb89, type: 3}
