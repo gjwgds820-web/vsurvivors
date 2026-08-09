@@ -74,7 +74,7 @@ public class LevelDesignEditor : EditorWindow
     private void LoadPrefabs()
     {
         prefabs.Clear();
-        string folderPath = "Assets/Polyart/PolyartStudio/DreamscapeMeadows/Prefabs";
+        string folderPath = "Assets/AssetStore/Environment/Polyart/PolyartStudio/DreamscapeMeadows/Prefabs";
         string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { folderPath });
 
         foreach (string guid in guids)
