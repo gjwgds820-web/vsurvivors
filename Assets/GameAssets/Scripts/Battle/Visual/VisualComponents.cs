@@ -38,6 +38,7 @@ public struct VisualAnimationState : IComponentData { public Unity.Mathematics.f
     public float TelegraphRange;
     public float TelegraphWidth;
     public float TelegraphAngle;
+    public Unity.Mathematics.quaternion TelegraphRotation;
     public bool IsDead;
     
     // ?좊땲???좊땲硫붿씠???대깽?몃? ?꾪븳 ?숆린???꾨뱶

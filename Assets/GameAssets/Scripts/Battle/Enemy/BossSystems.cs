@@ -155,6 +155,9 @@ public partial struct BossCombatSystem : ISystem
     {
         if (!_deathLookup.HasComponent(entity)) return false;
 
+        boss.CurrentState = BossState.Cooldown;
+        boss.DashRemainingDistance = 0f;
+
         if (enemy.CurrentState != EnemyState.Chase)
         {
             enemy.CurrentState = EnemyState.Chase;
@@ -191,7 +194,10 @@ public partial struct BossCombatSystem : ISystem
 
                 if (TrySelectSkill(ref root, pattern, config, transform.Position, targetPosition, ref boss, out BossActiveSkillDefBlob skill))
                 {
-                    float3 selectedTarget = skill.Target == BossSkillTarget.Player && hasPlayer ? playerPosition : targetPosition;
+                    BossSkillExecutionType executionType = FindExecutionType(entity, skill.SkillID);
+                    float3 selectedTarget = executionType == BossSkillExecutionType.Charge
+                        ? targetPosition
+                        : skill.Target == BossSkillTarget.Player && hasPlayer ? playerPosition : targetPosition;
                     BeginSkill(entity, skill, config, selectedTarget, ref boss, ref enemy, ref transform);
                 }
                 break;
@@ -203,9 +209,21 @@ public partial struct BossCombatSystem : ISystem
                     if (TryFindActiveSkill(ref root, boss.CurrentSkillID, out BossActiveSkillDefBlob activeSkill))
                     {
                         SpawnSkill(entity, activeSkill, config, enemy, boss, transform, ref ecb);
-                        boss.CurrentState = BossState.Hitting;
-                        boss.StateTimer = math.max(0.1f, activeSkill.GroggyDuration);
                         SetCooldown(activeSkill, ref boss);
+
+                        BossSkillExecutionType executionType = FindExecutionType(entity, activeSkill.SkillID);
+                        if (executionType == BossSkillExecutionType.Charge)
+                        {
+                            boss.CurrentState = BossState.Charging;
+                            boss.StateTimer = boss.DashSpeed > 0f
+                                ? (boss.DashRemainingDistance / boss.DashSpeed) + 0.5f
+                                : 0.5f;
+                        }
+                        else
+                        {
+                            boss.CurrentState = BossState.Hitting;
+                            boss.StateTimer = math.max(0.1f, activeSkill.GroggyDuration);
+                        }
                     }
                     else FinishSkill(ref boss, ref enemy);
                 }
@@ -213,19 +231,27 @@ public partial struct BossCombatSystem : ISystem
 
             case BossState.Hitting:
                 boss.StateTimer -= deltaTime;
-                if (boss.DashRemainingDistance > 0f)
-                {
-                    float moveDistance = math.min(boss.DashSpeed * deltaTime, boss.DashRemainingDistance);
-                    transform.Position += boss.DashDirection * moveDistance;
-                    boss.DashRemainingDistance -= moveDistance;
-                }
-
-                if (TryConsumeAttackEnd(entity) || boss.StateTimer <= 0f ||
-                    (boss.CurrentPattern == BossAttackPattern.Dash && boss.DashRemainingDistance <= 0f))
+                if (TryConsumeAttackEnd(entity) || boss.StateTimer <= 0f)
                 {
                     boss.CurrentState = BossState.Cooldown;
                     boss.StateTimer = 0.2f;
                     enemy.IsAttacking = false;
+                }
+                break;
+
+            case BossState.Charging:
+                boss.StateTimer -= deltaTime;
+                float moveDistance = math.min(boss.DashSpeed * deltaTime, boss.DashRemainingDistance);
+                transform.Position += boss.DashDirection * moveDistance;
+                boss.DashRemainingDistance -= moveDistance;
+
+                if (boss.DashRemainingDistance <= 0f || boss.StateTimer <= 0f)
+                {
+                    boss.CurrentState = BossState.Cooldown;
+                    boss.StateTimer = TryFindActiveSkill(ref root, boss.CurrentSkillID, out BossActiveSkillDefBlob chargeSkill)
+                        ? math.max(0.1f, chargeSkill.GroggyDuration)
+                        : 0.2f;
+                    enemy.IsAttacking = true;
                 }
                 break;
 
@@ -247,10 +273,13 @@ public partial struct BossCombatSystem : ISystem
         boss.CurrentState = BossState.Prep;
         boss.StateTimer = 6f;
         boss.DashDirection = direction;
-        boss.DashRemainingDistance = skill.IsForced ? config.SizeReference * skill.RangeRate : 0f;
+        BossSkillExecutionType executionType = FindExecutionType(entity, skill.SkillID);
+        boss.DashRemainingDistance = executionType == BossSkillExecutionType.Charge
+            ? config.SizeReference * skill.RangeRate
+            : 0f;
         boss.AttackPosition = transform.Position;
         boss.AttackRotation = quaternion.LookRotationSafe(direction, math.up());
-        boss.CurrentPattern = skill.IsForced
+        boss.CurrentPattern = executionType == BossSkillExecutionType.Charge
             ? BossAttackPattern.Dash
             : skill.Shape == HitBoxShape.Cone ? BossAttackPattern.Melee : BossAttackPattern.AxeThrow;
         enemy.IsAttacking = true;
@@ -267,6 +296,7 @@ public partial struct BossCombatSystem : ISystem
             animation.TelegraphRange = config.SizeReference * skill.RangeRate;
             animation.TelegraphWidth = config.SizeReference * config.BoxWidthRate;
             animation.TelegraphAngle = config.ConeAngle;
+            animation.TelegraphRotation = boss.AttackRotation;
             _animationLookup[entity] = animation;
         }
     }
@@ -279,23 +309,33 @@ public partial struct BossCombatSystem : ISystem
         Entity hitbox = ecb.Instantiate(binding.Prefab);
         float range = config.SizeReference * skill.RangeRate;
         float3 spawnPosition = transform.Position;
-        spawnPosition.y = binding.IsProjectile ? 1f : 0.5f;
-        if (skill.Shape == HitBoxShape.Box && !skill.IsForced) spawnPosition += boss.DashDirection * (range * 0.5f);
+        bool isProjectile = binding.ExecutionType == BossSkillExecutionType.Projectile;
+        bool isCharge = binding.ExecutionType == BossSkillExecutionType.Charge;
+        spawnPosition.y = isProjectile ? 1f : 0.5f;
+        if (skill.Shape == HitBoxShape.Box && !isCharge) spawnPosition += boss.DashDirection * (range * 0.5f);
 
         ecb.SetComponent(hitbox, LocalTransform.FromPositionRotationScale(spawnPosition, boss.AttackRotation, 1f));
 
         HitBoxData hitboxData = _hitBoxLookup.HasComponent(binding.Prefab)
             ? _hitBoxLookup[binding.Prefab]
             : default;
-        hitboxData.Shape = skill.Shape;
+        hitboxData.Shape = isCharge ? HitBoxShape.Circle : skill.Shape;
         hitboxData.Damage = enemy.AttackPower * skill.AttackRate;
         hitboxData.TargetFaction = 1;
-        hitboxData.Radius = range;
+        hitboxData.Radius = isCharge ? config.BodyRadius : range;
         hitboxData.Angle = config.ConeAngle;
         hitboxData.BoxExtents = new float3(config.SizeReference * config.BoxWidthRate * 0.5f, 1f, range * 0.5f);
+        if (isCharge)
+        {
+            hitboxData.Duration = boss.DashSpeed > 0f ? (range / boss.DashSpeed) + 1f : 1f;
+            hitboxData.IsPiercing = true;
+            hitboxData.MaxPierceCount = 0;
+            hitboxData.CurrentPierceCount = 0;
+            hitboxData.TickRate = 0f;
+        }
         ecb.SetComponent(hitbox, hitboxData);
 
-        if (binding.IsProjectile)
+        if (isProjectile)
         {
             bool hasProjectile = _projectileLookup.HasComponent(binding.Prefab);
             ProjectileData projectile = hasProjectile
@@ -307,10 +347,9 @@ public partial struct BossCombatSystem : ISystem
             if (hasProjectile) ecb.SetComponent(hitbox, projectile);
             else ecb.AddComponent(hitbox, projectile);
         }
-        else if (skill.IsForced)
+        else if (isCharge)
         {
-            ecb.AddComponent(hitbox, new Parent { Value = owner });
-            ecb.AddComponent<BossDashHitBoxTag>(hitbox);
+            ecb.AddComponent(hitbox, new BossDashHitBoxTag { Owner = owner });
         }
     }
 
@@ -467,6 +506,13 @@ public partial struct BossCombatSystem : ISystem
         return TryFindSkillBinding(entity, skillID, out BossSkillPrefabElement binding) ? binding.AnimationIndex : 0;
     }
 
+    private BossSkillExecutionType FindExecutionType(Entity entity, int skillID)
+    {
+        return TryFindSkillBinding(entity, skillID, out BossSkillPrefabElement binding)
+            ? binding.ExecutionType
+            : BossSkillExecutionType.HitBox;
+    }
+
     private bool TryConsumeAttackHit(Entity entity)
     {
         if (!_animationLookup.HasComponent(entity)) return false;
@@ -507,5 +553,78 @@ public partial struct BossCombatSystem : ISystem
     [BurstCompile]
     public void OnDestroy(ref SystemState state)
     {
+    }
+}
+
+[BurstCompile]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(TransformSystemGroup))]
+[UpdateBefore(typeof(HitBoxCollisionSystem))]
+public partial struct BossChargeHitBoxFollowSystem : ISystem
+{
+    private EntityQuery _chargeHitBoxQuery;
+    private ComponentLookup<LocalToWorld> _ownerTransformLookup;
+    private ComponentLookup<BossCombatData> _bossLookup;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
+    {
+        _chargeHitBoxQuery = SystemAPI.QueryBuilder()
+            .WithAllRW<LocalTransform>()
+            .WithAll<BossDashHitBoxTag>()
+            .Build();
+        _ownerTransformLookup = state.GetComponentLookup<LocalToWorld>(true);
+        _bossLookup = state.GetComponentLookup<BossCombatData>(true);
+        state.RequireForUpdate(_chargeHitBoxQuery);
+    }
+
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        _ownerTransformLookup.Update(ref state);
+        _bossLookup.Update(ref state);
+
+        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        var job = new FollowChargeHitBoxJob
+        {
+            OwnerTransforms = _ownerTransformLookup,
+            Bosses = _bossLookup,
+            Ecb = ecb.AsParallelWriter()
+        };
+
+        state.Dependency = job.ScheduleParallel(_chargeHitBoxQuery, state.Dependency);
+        state.Dependency.Complete();
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();
+    }
+
+    [BurstCompile]
+    public void OnDestroy(ref SystemState state)
+    {
+    }
+}
+
+[BurstCompile]
+public partial struct FollowChargeHitBoxJob : IJobEntity
+{
+    [ReadOnly] public ComponentLookup<LocalToWorld> OwnerTransforms;
+    [ReadOnly] public ComponentLookup<BossCombatData> Bosses;
+    public EntityCommandBuffer.ParallelWriter Ecb;
+
+    private void Execute(Entity entity, [ChunkIndexInQuery] int chunkIndex,
+        ref LocalTransform transform, in BossDashHitBoxTag chargeHitBox)
+    {
+        if (!OwnerTransforms.HasComponent(chargeHitBox.Owner) ||
+            !Bosses.HasComponent(chargeHitBox.Owner) ||
+            Bosses[chargeHitBox.Owner].CurrentState != BossState.Charging)
+        {
+            Ecb.AddComponent(chunkIndex, entity, default(DestroyEntityTag));
+            return;
+        }
+
+        LocalToWorld ownerTransform = OwnerTransforms[chargeHitBox.Owner];
+        transform.Position = ownerTransform.Position;
+        transform.Rotation = ownerTransform.Rotation;
+        transform.Scale = 1f;
     }
 }

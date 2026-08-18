@@ -16,6 +16,7 @@ public class BossAuthoring : MonoBehaviour
     [Header("Boss Config")]
     public float DashSpeed = 15f;
     [Min(0.1f)] public float PatternSizeReference = 3f;
+    [Min(0.1f)] public float BodyRadius = 1.5f;
     [Range(1f, 360f)] public float ConeAngle = 90f;
     [Min(0.1f)] public float BoxWidthRate = 0.5f;
     [Min(0f)] public float EnrageDuration = 1.5f;
@@ -32,6 +33,7 @@ public class BossAuthoring : MonoBehaviour
             AddComponent(entity, new BossAuthoringConfig
             {
                 SizeReference = authoring.PatternSizeReference,
+                BodyRadius = authoring.BodyRadius,
                 ConeAngle = authoring.ConeAngle,
                 BoxWidthRate = authoring.BoxWidthRate,
                 EnrageDuration = authoring.EnrageDuration
@@ -50,21 +52,21 @@ public class BossAuthoring : MonoBehaviour
                 SkillID = authoring.MeleeSkillID,
                 Prefab = GetEntity(authoring.MeleeHitBoxPrefab, TransformUsageFlags.Dynamic),
                 AnimationIndex = 0,
-                IsProjectile = false
+                ExecutionType = BossSkillExecutionType.HitBox
             });
             skillPrefabs.Add(new BossSkillPrefabElement
             {
                 SkillID = authoring.AxeSkillID,
                 Prefab = GetEntity(authoring.AxeHitBoxPrefab, TransformUsageFlags.Dynamic),
                 AnimationIndex = 2,
-                IsProjectile = true
+                ExecutionType = BossSkillExecutionType.Projectile
             });
             skillPrefabs.Add(new BossSkillPrefabElement
             {
                 SkillID = authoring.DashSkillID,
                 Prefab = GetEntity(authoring.DashHitBoxPrefab, TransformUsageFlags.Dynamic),
                 AnimationIndex = 1,
-                IsProjectile = false
+                ExecutionType = BossSkillExecutionType.Charge
             });
         }
     }

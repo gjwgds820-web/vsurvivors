@@ -21,7 +21,7 @@ public class TelegraphUI : MonoBehaviour
 
     private GameObject _fillObj;
 
-    public void Setup(Transform target, Vector3 posOffset, float duration, bool trackTarget,
+    public void Setup(Transform target, Quaternion rotation, Vector3 posOffset, float duration, bool trackTarget,
         HitBoxShape hitBoxShape, float range, float width, float angle)
     {
         _attachTo = target;
@@ -37,7 +37,7 @@ public class TelegraphUI : MonoBehaviour
         if (_attachTo != null)
         {
             transform.position = _attachTo.position + _positionOffset;
-            transform.rotation = _attachTo.rotation;
+            transform.rotation = rotation;
         }
 
         GenerateMeshes();

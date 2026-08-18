@@ -127,7 +127,7 @@ public class VisualManager : MonoBehaviour
         return prefab;
     }
 
-    public void SpawnTelegraph(Transform bossTransform, HitBoxShape shape, float range, float width, float angle, float duration)
+    public void SpawnTelegraph(Transform bossTransform, Quaternion rotation, HitBoxShape shape, float range, float width, float angle, float duration)
     {
         GameObject prefabToSpawn = null;
         bool isTracking = false;
@@ -150,11 +150,11 @@ public class VisualManager : MonoBehaviour
 
         if (prefabToSpawn != null && duration > 0f)
         {
-            GameObject telegraphGo = Instantiate(prefabToSpawn, bossTransform.position, bossTransform.rotation);
+            GameObject telegraphGo = Instantiate(prefabToSpawn, bossTransform.position, rotation);
             TelegraphUI telegraphUI = telegraphGo.GetComponent<TelegraphUI>();
             if (telegraphUI != null)
             {
-                telegraphUI.Setup(bossTransform, new Vector3(0, 0.2f, 0), duration, isTracking, shape, range, width, angle);
+                telegraphUI.Setup(bossTransform, rotation, new Vector3(0, 0.2f, 0), duration, isTracking, shape, range, width, angle);
             }
         }
     }

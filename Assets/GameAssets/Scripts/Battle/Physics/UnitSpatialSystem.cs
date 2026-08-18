@@ -25,6 +25,9 @@ public partial struct UnitSpatialSystem : ISystem
     private EntityQuery _enemyQuery;
     private EntityQuery _shadowQuery;
     private EntityQuery _playerQuery;
+    private NativeParallelMultiHashMap<int2, Entity> _enemyGrid;
+    private NativeParallelMultiHashMap<int2, Entity> _shadowGrid;
+    private NativeParallelMultiHashMap<int2, Entity> _playerGrid;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -33,11 +36,15 @@ public partial struct UnitSpatialSystem : ISystem
         _shadowQuery = SystemAPI.QueryBuilder().WithAny<CShadowData, ShadowTag>().WithAll<LocalTransform>().Build();
         _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerData, LocalTransform>().Build();
 
+        _enemyGrid = new NativeParallelMultiHashMap<int2, Entity>(0, Allocator.Persistent);
+        _shadowGrid = new NativeParallelMultiHashMap<int2, Entity>(0, Allocator.Persistent);
+        _playerGrid = new NativeParallelMultiHashMap<int2, Entity>(0, Allocator.Persistent);
+
         var gridData = new SpatialGridData
         {
-            EnemyGrid = new NativeParallelMultiHashMap<int2, Entity>(0, Allocator.Persistent),
-            ShadowGrid = new NativeParallelMultiHashMap<int2, Entity>(0, Allocator.Persistent),
-            PlayerGrid = new NativeParallelMultiHashMap<int2, Entity>(0, Allocator.Persistent)
+            EnemyGrid = _enemyGrid,
+            ShadowGrid = _shadowGrid,
+            PlayerGrid = _playerGrid
         };
         state.EntityManager.AddComponentData(state.EntityManager.CreateEntity(), gridData);
     }
@@ -45,54 +52,52 @@ public partial struct UnitSpatialSystem : ISystem
     [BurstCompile]
     public void OnDestroy(ref SystemState state)
     {
-        if (SystemAPI.TryGetSingleton<SpatialGridData>(out var gridData))
-        {
-            if (gridData.EnemyGrid.IsCreated) gridData.EnemyGrid.Dispose();
-            if (gridData.ShadowGrid.IsCreated) gridData.ShadowGrid.Dispose();
-            if (gridData.PlayerGrid.IsCreated) gridData.PlayerGrid.Dispose();
-        }
+        state.Dependency.Complete();
+        if (_enemyGrid.IsCreated) _enemyGrid.Dispose();
+        if (_shadowGrid.IsCreated) _shadowGrid.Dispose();
+        if (_playerGrid.IsCreated) _playerGrid.Dispose();
     }
 
-        [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         if (!SystemAPI.TryGetSingletonRW<SpatialGridData>(out var gridDataRW)) return;
-        var enemyGrid = gridDataRW.ValueRW.EnemyGrid;
-        var shadowGrid = gridDataRW.ValueRW.ShadowGrid;
-        var playerGrid = gridDataRW.ValueRW.PlayerGrid;
 
         int enemyCount = _enemyQuery.CalculateEntityCount();
         int shadowCount = _shadowQuery.CalculateEntityCount();
         int playerCount = _playerQuery.CalculateEntityCount();
 
-        if (enemyGrid.Capacity < enemyCount * 2 + 256) 
+        if (_enemyGrid.Capacity < enemyCount * 2 + 256)
         {
-            if (enemyGrid.IsCreated) enemyGrid.Dispose();
-            enemyGrid = new NativeParallelMultiHashMap<int2, Entity>(enemyCount * 2 + 512, Allocator.Persistent);
+            state.Dependency.Complete();
+            if (_enemyGrid.IsCreated) _enemyGrid.Dispose();
+            _enemyGrid = new NativeParallelMultiHashMap<int2, Entity>(enemyCount * 2 + 512, Allocator.Persistent);
         }
-        enemyGrid.Clear();
+        _enemyGrid.Clear();
         
-        if (shadowGrid.Capacity < shadowCount * 2 + 256) 
+        if (_shadowGrid.Capacity < shadowCount * 2 + 256)
         {
-            if (shadowGrid.IsCreated) shadowGrid.Dispose();
-            shadowGrid = new NativeParallelMultiHashMap<int2, Entity>(shadowCount * 2 + 512, Allocator.Persistent);
+            state.Dependency.Complete();
+            if (_shadowGrid.IsCreated) _shadowGrid.Dispose();
+            _shadowGrid = new NativeParallelMultiHashMap<int2, Entity>(shadowCount * 2 + 512, Allocator.Persistent);
         }
-        shadowGrid.Clear();
+        _shadowGrid.Clear();
 
-        if (playerGrid.Capacity < playerCount * 2 + 256) 
+        if (_playerGrid.Capacity < playerCount * 2 + 256)
         {
-            if (playerGrid.IsCreated) playerGrid.Dispose();
-            playerGrid = new NativeParallelMultiHashMap<int2, Entity>(playerCount * 2 + 512, Allocator.Persistent);
+            state.Dependency.Complete();
+            if (_playerGrid.IsCreated) _playerGrid.Dispose();
+            _playerGrid = new NativeParallelMultiHashMap<int2, Entity>(playerCount * 2 + 512, Allocator.Persistent);
         }
-        playerGrid.Clear();
+        _playerGrid.Clear();
 
-        gridDataRW.ValueRW.EnemyGrid = enemyGrid;
-        gridDataRW.ValueRW.ShadowGrid = shadowGrid;
-        gridDataRW.ValueRW.PlayerGrid = playerGrid;
+        gridDataRW.ValueRW.EnemyGrid = _enemyGrid;
+        gridDataRW.ValueRW.ShadowGrid = _shadowGrid;
+        gridDataRW.ValueRW.PlayerGrid = _playerGrid;
 
-        var buildEnemyJob = new BuildGridJob { Grid = enemyGrid.AsParallelWriter() };
-        var buildShadowJob = new BuildGridJob { Grid = shadowGrid.AsParallelWriter() };
-        var buildPlayerJob = new BuildGridJob { Grid = playerGrid.AsParallelWriter() };
+        var buildEnemyJob = new BuildGridJob { Grid = _enemyGrid.AsParallelWriter() };
+        var buildShadowJob = new BuildGridJob { Grid = _shadowGrid.AsParallelWriter() };
+        var buildPlayerJob = new BuildGridJob { Grid = _playerGrid.AsParallelWriter() };
 
         var j1 = buildEnemyJob.ScheduleParallel(_enemyQuery, state.Dependency);
         var j2 = buildShadowJob.ScheduleParallel(_shadowQuery, state.Dependency);

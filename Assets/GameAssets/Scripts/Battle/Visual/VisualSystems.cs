@@ -581,8 +581,11 @@ public partial class VisualAnimationSyncSystem : SystemBase
                             {
                                 float hitTime = eventReceiver.GetTimeToHitEvent();
                                 var visualModel = EntityManager.GetComponentObject<SubSceneVisualModel>(entity);
+                                quaternion telegraphRotation = animState.ValueRO.TelegraphRotation;
                                 VisualManager.Instance.SpawnTelegraph(
                                     visualModel.Value,
+                                    new Quaternion(telegraphRotation.value.x, telegraphRotation.value.y,
+                                        telegraphRotation.value.z, telegraphRotation.value.w),
                                     animState.ValueRO.TelegraphShape,
                                     animState.ValueRO.TelegraphRange,
                                     animState.ValueRO.TelegraphWidth,

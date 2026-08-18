@@ -14,8 +14,16 @@ public enum BossState
     Chasing,
     Prep,
     Hitting,
+    Charging,
     Cooldown,
     Enraging
+}
+
+public enum BossSkillExecutionType : byte
+{
+    HitBox,
+    Projectile,
+    Charge
 }
 
 public enum BossSkillTarget : byte
@@ -60,8 +68,11 @@ public struct BossCombatData : IComponentData
     public FixedList128Bytes<BossSkillCooldownState> SkillCooldowns;
 }
 
-// 보스 대시 중 부착되는 히트박스 식별용 (단순 태그)
-public struct BossDashHitBoxTag : IComponentData { }
+// 돌진 중 보스 위치를 따라가는 접촉 히트박스입니다.
+public struct BossDashHitBoxTag : IComponentData
+{
+    public Entity Owner;
+}
 
 public struct BossAttackPrefabs : IComponentData
 {
@@ -73,6 +84,7 @@ public struct BossAttackPrefabs : IComponentData
 public struct BossAuthoringConfig : IComponentData
 {
     public float SizeReference;
+    public float BodyRadius;
     public float ConeAngle;
     public float BoxWidthRate;
     public float EnrageDuration;
@@ -84,7 +96,7 @@ public struct BossSkillPrefabElement : IBufferElementData
     public int SkillID;
     public Entity Prefab;
     public int AnimationIndex;
-    public bool IsProjectile;
+    public BossSkillExecutionType ExecutionType;
 }
 
 public struct BossPatternDefBlob

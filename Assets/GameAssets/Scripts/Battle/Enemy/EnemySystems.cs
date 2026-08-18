@@ -17,6 +17,9 @@ public partial struct EnemyMovementSystem : ISystem
     private ComponentLookup<LocalTransform> _transformLookup;
     private ComponentLookup<IsolatedBossTag> _isolatedBossLookup;
     private ComponentLookup<DeathTag> _deathLookup;
+    private ComponentLookup<HealthData> _healthLookup;
+    private ComponentLookup<BossAuthoringConfig> _bossConfigLookup;
+    private ComponentLookup<BossCombatData> _bossCombatLookup;
     private EntityQuery _playerQuery;
     
     [BurstCompile]
@@ -25,6 +28,9 @@ public partial struct EnemyMovementSystem : ISystem
         _transformLookup = state.GetComponentLookup<LocalTransform>(true);
         _isolatedBossLookup = state.GetComponentLookup<IsolatedBossTag>(true);
         _deathLookup = state.GetComponentLookup<DeathTag>(true);
+        _healthLookup = state.GetComponentLookup<HealthData>(true);
+        _bossConfigLookup = state.GetComponentLookup<BossAuthoringConfig>(true);
+        _bossCombatLookup = state.GetComponentLookup<BossCombatData>(true);
         _playerQuery = SystemAPI.QueryBuilder().WithAll<PlayerData, LocalTransform>().Build();
     }
 
@@ -42,6 +48,9 @@ public partial struct EnemyMovementSystem : ISystem
         _transformLookup.Update(ref state);
         _isolatedBossLookup.Update(ref state);
         _deathLookup.Update(ref state);
+        _healthLookup.Update(ref state);
+        _bossConfigLookup.Update(ref state);
+        _bossCombatLookup.Update(ref state);
 
         Entity playerEntity = Entity.Null;
         if (!_playerQuery.IsEmpty)
@@ -58,7 +67,10 @@ public partial struct EnemyMovementSystem : ISystem
             PlayerEntity = playerEntity,
             TransformLookup = _transformLookup,
             IsolatedBossLookup = _isolatedBossLookup,
-            DeathLookup = _deathLookup
+            DeathLookup = _deathLookup,
+            HealthLookup = _healthLookup,
+            BossConfigLookup = _bossConfigLookup,
+            BossCombatLookup = _bossCombatLookup
         };
 
         state.Dependency = job.ScheduleParallel(state.Dependency);
@@ -77,10 +89,16 @@ public partial struct EnemyMovementJob : IJobEntity
     [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
     [ReadOnly] public ComponentLookup<IsolatedBossTag> IsolatedBossLookup;
     [ReadOnly] public ComponentLookup<DeathTag> DeathLookup;
+    [ReadOnly] public ComponentLookup<HealthData> HealthLookup;
+    [ReadOnly] public ComponentLookup<BossAuthoringConfig> BossConfigLookup;
+    [ReadOnly] public ComponentLookup<BossCombatData> BossCombatLookup;
 
     private bool IsTargetInvalid(Entity target)
     {
-        return target == Entity.Null || !TransformLookup.HasComponent(target) || DeathLookup.HasComponent(target);
+        return target == Entity.Null ||
+            !TransformLookup.HasComponent(target) ||
+            DeathLookup.HasComponent(target) ||
+            (HealthLookup.HasComponent(target) && HealthLookup[target].CurrentHealth <= 0f);
     }
 
     private Entity FindBestShadowTarget(float3 currentPos, float searchRadiusSq, int2 cell)
@@ -124,6 +142,21 @@ public partial struct EnemyMovementJob : IJobEntity
 
         float3 currentPos = transform.Position;
         currentPos.y = 0.5f;
+        float stopDistance = enemyData.AttackRange;
+        if (BossConfigLookup.HasComponent(entity))
+        {
+            stopDistance = math.max(stopDistance, BossConfigLookup[entity].BodyRadius + 0.3f);
+        }
+
+        if (BossCombatLookup.HasComponent(entity))
+        {
+            BossState bossState = BossCombatLookup[entity].CurrentState;
+            if (bossState == BossState.Prep || bossState == BossState.Charging)
+            {
+                enemyData.PreviousPosition = transform.Position;
+                return;
+            }
+        }
 
         // 1. Universal Separation Logic (Avoid overlap regardless of state)
         float3 positionResolution = float3.zero;
@@ -182,7 +215,7 @@ public partial struct EnemyMovementJob : IJobEntity
                 {
                     do
                     {
-                        if (!TransformLookup.HasComponent(otherShadow)) continue;
+                        if (IsTargetInvalid(otherShadow)) continue;
 
                         float3 otherPos = TransformLookup[otherShadow].Position;
                         float3 diff = currentPos - otherPos;
@@ -353,7 +386,7 @@ public partial struct EnemyMovementJob : IJobEntity
                 float distance = math.length(toTarget);
 
                 // Adding a slightly larger check so they don't get stuck just outside strict hitboxes
-                if (distance <= enemyData.AttackRange + 0.3f)
+                if (distance <= stopDistance)
                 {
                     enemyData.CurrentState = EnemyState.Attack;
                     break; // Stop movement, switch state immediately
@@ -386,7 +419,7 @@ public partial struct EnemyMovementJob : IJobEntity
                 }
 
                 float moveDistSq = math.distancesq(transform.Position, enemyData.PreviousPosition);
-                bool shouldDetectBlocked = distance > enemyData.AttackRange + blockedDetectionDistance;
+                bool shouldDetectBlocked = distance > stopDistance + blockedDetectionDistance;
                 if (shouldDetectBlocked)
                 {
                     if (moveDistSq < blockedDetectionMoveThresholdSq)
@@ -417,9 +450,10 @@ public partial struct EnemyMovementJob : IJobEntity
                 enemyData.BlockedTimer = 0f;
                 enemyData.TargetOutOfRangeTimer = 0f;
 
-                if (targetData.CurrentTarget == Entity.Null || !TransformLookup.HasComponent(targetData.CurrentTarget))
+                if (IsTargetInvalid(targetData.CurrentTarget))
                 {
-                    enemyData.CurrentState = EnemyState.Scan;
+                    targetData.CurrentTarget = !IsTargetInvalid(PlayerEntity) ? PlayerEntity : Entity.Null;
+                    enemyData.CurrentState = targetData.CurrentTarget != Entity.Null ? EnemyState.Chase : EnemyState.Scan;
                     break;
                 }
 
@@ -428,7 +462,7 @@ public partial struct EnemyMovementJob : IJobEntity
                 toTarget.y = 0;
                 float distance = math.length(toTarget);
 
-                if (distance > enemyData.AttackRange + 0.6f) // Hysteresis buffer
+                if (distance > stopDistance + 0.3f) // Hysteresis buffer
                 {
                     enemyData.CurrentState = EnemyState.Chase;
                 }
